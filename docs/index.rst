@@ -16,7 +16,6 @@ scanning-squid is an instrument control and data acquisition package for scannin
    :maxdepth: 4
    :caption: Documentation:
 
-   pages/getting-started
    pages/microscope
    pages/config-files
    pages/units
