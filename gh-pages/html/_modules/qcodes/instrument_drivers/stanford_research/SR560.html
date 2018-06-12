@@ -1,0 +1,330 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>qcodes.instrument_drivers.stanford_research.SR560 &mdash; qcodes-squid  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> qcodes-squid
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pages/microscope.html">Microscope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pages/config-files.html">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pages/units.html">Physical Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pages/measurements.html">Measurements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pages/examples.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">qcodes-squid</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>qcodes.instrument_drivers.stanford_research.SR560</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for qcodes.instrument_drivers.stanford_research.SR560</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">qcodes.instrument.base</span> <span class="k">import</span> <span class="n">Instrument</span>
+<span class="kn">from</span> <span class="nn">qcodes.instrument.parameter</span> <span class="k">import</span> <span class="n">MultiParameter</span>
+<span class="kn">from</span> <span class="nn">qcodes.utils.validators</span> <span class="k">import</span> <span class="n">Bool</span><span class="p">,</span> <span class="n">Enum</span>
+
+
+
+
+<span class="k">class</span> <span class="nc">VoltageParameter</span><span class="p">(</span><span class="n">MultiParameter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Amplified voltage measurement via an SR560 preamp and a measured voltage.</span>
+
+<span class="sd">    To be used when you feed a voltage into an SR560, send the SR560&#39;s</span>
+<span class="sd">    output voltage to a lockin or other voltage amplifier, and you have</span>
+<span class="sd">    the voltage reading from that amplifier as a qcodes parameter.</span>
+
+<span class="sd">    ``VoltageParameter.get()`` returns ``(voltage_raw, voltage)``</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        measured_param (Parameter): a gettable parameter returning the</span>
+<span class="sd">            voltage read from the SR560 output.</span>
+
+<span class="sd">        v_amp_ins (SR560): an SR560 instance where you manually</span>
+<span class="sd">            maintain the present settings of the real SR560 amp.</span>
+
+<span class="sd">            Note: it should be possible to use other voltage preamps, if they</span>
+<span class="sd">            define parameters ``gain`` (V_out / V_in) and ``invert``</span>
+<span class="sd">            (bool, output is inverted)</span>
+
+<span class="sd">        name (str): the name of the current output. Default &#39;curr&#39;.</span>
+<span class="sd">            Also used as the name of the whole parameter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">measured_param</span><span class="p">,</span> <span class="n">v_amp_ins</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;volt&#39;</span><span class="p">,</span>
+                 <span class="n">snapshot_value</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">p_name</span> <span class="o">=</span> <span class="n">measured_param</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">(</span><span class="n">p_name</span><span class="o">+</span><span class="s1">&#39;_raw&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span> <span class="n">shapes</span><span class="o">=</span><span class="p">((),</span> <span class="p">()))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_measured_param</span> <span class="o">=</span> <span class="n">measured_param</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_instrument</span> <span class="o">=</span> <span class="n">v_amp_ins</span>
+
+        <span class="n">p_label</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">measured_param</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">p_unit</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">measured_param</span><span class="p">,</span> <span class="s1">&#39;unit&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="p">(</span><span class="n">p_label</span><span class="p">,</span> <span class="s1">&#39;Voltage&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="p">(</span><span class="n">p_unit</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">volt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_measured_param</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="n">volt_amp</span> <span class="o">=</span> <span class="p">(</span><span class="n">volt</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instrument</span><span class="o">.</span><span class="n">gain</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instrument</span><span class="o">.</span><span class="n">invert</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
+            <span class="n">volt_amp</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="n">volt</span><span class="p">,</span> <span class="n">volt_amp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_save_val</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+
+<div class="viewcode-block" id="SR560"><a class="viewcode-back" href="../../../../pages/components.html#qcodes.instrument_drivers.stanford_research.SR560.SR560">[docs]</a><span class="k">class</span> <span class="nc">SR560</span><span class="p">(</span><span class="n">Instrument</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is the qcodes driver for the SR 560 Voltage-preamplifier.</span>
+
+<span class="sd">    This is a virtual driver only and will not talk to your instrument.</span>
+
+<span class="sd">    Note:</span>
+
+<span class="sd">    - The ``cutoff_lo`` and ``cutoff_hi`` parameters will interact with</span>
+<span class="sd">      each other on the instrument (hi cannot be &lt;= lo) but this is not</span>
+<span class="sd">      managed here, you must ensure yourself that both are correct whenever</span>
+<span class="sd">      you change one of them.</span>
+
+<span class="sd">    - ``gain`` has a vernier setting, which does not yield a well-defined</span>
+<span class="sd">      output. We restrict this driver to only the predefined gain values.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">cutoffs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;DC&#39;</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span>
+                   <span class="mi">3000</span><span class="p">,</span> <span class="mi">10000</span><span class="p">,</span> <span class="mi">30000</span><span class="p">,</span> <span class="mi">100000</span><span class="p">,</span> <span class="mi">300000</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">]</span>
+
+        <span class="n">gains</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">2000</span><span class="p">,</span> <span class="mi">5000</span><span class="p">,</span>
+                 <span class="mi">10000</span><span class="p">,</span> <span class="mi">20000</span><span class="p">,</span> <span class="mi">50000</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;cutoff_lo&#39;</span><span class="p">,</span>
+                           <span class="n">get_cmd</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">set_cmd</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">initial_value</span><span class="o">=</span><span class="s1">&#39;DC&#39;</span><span class="p">,</span>
+                           <span class="n">label</span><span class="o">=</span><span class="s1">&#39;High pass&#39;</span><span class="p">,</span>
+                           <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Hz&#39;</span><span class="p">,</span>
+                           <span class="n">vals</span><span class="o">=</span><span class="n">Enum</span><span class="p">(</span><span class="o">*</span><span class="n">cutoffs</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;cutoff_hi&#39;</span><span class="p">,</span>
+                           <span class="n">get_cmd</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">set_cmd</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">initial_value</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span>
+                           <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Low pass&#39;</span><span class="p">,</span>
+                           <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Hz&#39;</span><span class="p">,</span>
+                           <span class="n">vals</span><span class="o">=</span><span class="n">Enum</span><span class="p">(</span><span class="o">*</span><span class="n">cutoffs</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;invert&#39;</span><span class="p">,</span>
+                           <span class="n">get_cmd</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">set_cmd</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">initial_value</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                           <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Inverted output&#39;</span><span class="p">,</span>
+                           <span class="n">vals</span><span class="o">=</span><span class="n">Bool</span><span class="p">())</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;gain&#39;</span><span class="p">,</span>
+                           <span class="n">get_cmd</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">set_cmd</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">initial_value</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                           <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Gain&#39;</span><span class="p">,</span>
+                           <span class="n">unit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">vals</span><span class="o">=</span><span class="n">Enum</span><span class="p">(</span><span class="o">*</span><span class="n">gains</span><span class="p">))</span>
+
+<div class="viewcode-block" id="SR560.get_idn"><a class="viewcode-back" href="../../../../pages/components.html#qcodes.instrument_drivers.stanford_research.SR560.SR560.get_idn">[docs]</a>    <span class="k">def</span> <span class="nf">get_idn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vendor</span> <span class="o">=</span> <span class="s1">&#39;Stanford Research Systems&#39;</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="s1">&#39;SR560&#39;</span>
+        <span class="n">serial</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">firmware</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;vendor&#39;</span><span class="p">:</span> <span class="n">vendor</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span>
+                <span class="s1">&#39;serial&#39;</span><span class="p">:</span> <span class="n">serial</span><span class="p">,</span> <span class="s1">&#39;firmware&#39;</span><span class="p">:</span> <span class="n">firmware</span><span class="p">}</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Logan Bishop-Van Horn.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

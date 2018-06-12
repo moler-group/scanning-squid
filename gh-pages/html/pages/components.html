@@ -1,0 +1,574 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Microscope Components &mdash; qcodes-squid  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Configuration Files" href="config-files.html" />
+    <link rel="prev" title="Microscope" href="microscope.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> qcodes-squid
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="microscope.html">Microscope</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Microscope Components</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#attocubes">Attocubes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scanner">Scanner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#squid">SQUID</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#daq">DAQ</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#others">Others</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lockins">Lockins</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pre-amps">Pre-Amps</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="config-files.html">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Physical Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="measurements.html">Measurements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">qcodes-squid</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="microscope.html">Microscope</a> &raquo;</li>
+        
+      <li>Microscope Components</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/pages/components.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+</style>
+<div class="section" id="microscope-components">
+<h1>Microscope Components<a class="headerlink" href="#microscope-components" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="attocubes">
+<h2>Attocubes<a class="headerlink" href="#attocubes" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><span class="target" id="module-atto"></span><dl class="class">
+<dt id="atto.AttocubeController">
+<em class="property">class </em><code class="descclassname">atto.</code><code class="descname">AttocubeController</code><span class="sig-paren">(</span><em>atto_config: Dict</em>, <em>temp: str</em>, <em>ureg: Any</em>, <em>timestamp_fmt: str</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/atto.html#AttocubeController"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for Attocube controller instrument.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>atto_config</strong> – Configuration dict loaded from microscope configuration json file.</li>
+<li><strong>temp</strong> – ‘LT’ or ‘RT’, depending on whether the attocubes are at room temp. or low temp.</li>
+<li><strong>ureg</strong> – pint UnitRegistry instance, used for managing physical units.</li>
+<li><strong>timestamp_fmt</strong> – Timestamp format to be used for logging.</li>
+<li><strong>**kwargs</strong> – Keyword arguments to be passed to VisaInstrument constructor.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="atto.AttocubeController.ask_raw">
+<code class="descname">ask_raw</code><span class="sig-paren">(</span><em>cmd: str</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/atto.html#AttocubeController.ask_raw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController.ask_raw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query instrument with cmd and return response.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cmd</strong> – Command to write to controller.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="atto.AttocubeController.check_response">
+<code class="descname">check_response</code><span class="sig-paren">(</span><em>response: str</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/atto.html#AttocubeController.check_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController.check_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raise an exception if controller responds with ‘ERROR’.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>response</strong> – Response from controller.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="atto.AttocubeController.clear_instances">
+<code class="descname">clear_instances</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atto.html#AttocubeController.clear_instances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController.clear_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove instrument instance.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="atto.AttocubeController.initialize">
+<code class="descname">initialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/atto.html#AttocubeController.initialize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize instrument with parameters from self.metadata.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="atto.AttocubeController.step">
+<code class="descname">step</code><span class="sig-paren">(</span><em>axis: Union[int, str], steps: int</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/atto.html#AttocubeController.step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs a given number of Attocube steps. steps &gt; 0 corresponds to stepu (up),
+steps &lt; 0 corresponds to stepd (down).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>axis</strong> – Either axis label (str, e.g. ‘y’) or index (int, e.g. 2)</li>
+<li><strong>steps</strong> – Number of steps to perform (&gt;0 for ‘u’, &lt;0 for ‘d’)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="atto.AttocubeController.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><em>axis: Union[int, str]</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/atto.html#AttocubeController.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stops all motion along axis and then grounds the output.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>axis</strong> – Either axis label (str, e.g. ‘y’) or index (int, e.g. 2)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="atto.AttocubeController.write_raw">
+<code class="descname">write_raw</code><span class="sig-paren">(</span><em>cmd: str</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/atto.html#AttocubeController.write_raw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController.write_raw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write cmd and don’t wait for response.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cmd</strong> – Command to write to controller.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="atto.ANC300">
+<em class="property">class </em><code class="descclassname">atto.</code><code class="descname">ANC300</code><span class="sig-paren">(</span><em>atto_config: Dict</em>, <em>temp: str</em>, <em>ureg: Any</em>, <em>timestamp_format: str</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/atto.html#ANC300"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.ANC300" title="Permalink to this definition">¶</a></dt>
+<dd><p>ANC300 Attocube controller instrument.</p>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="scanner">
+<h2>Scanner<a class="headerlink" href="#scanner" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><span class="target" id="module-scanner"></span><dl class="class">
+<dt id="scanner.Scanner">
+<em class="property">class </em><code class="descclassname">scanner.</code><code class="descname">Scanner</code><span class="sig-paren">(</span><em>scanner_config: Dict[str, Any], daq_config: Dict[str, Any], temp: str, ureg: Any, **kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/scanner.html#Scanner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scanner.Scanner" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="scanner.Scanner.goto">
+<code class="descname">goto</code><span class="sig-paren">(</span><em>new_pos: str</em>, <em>retract_first: Union[bool</em>, <em>NoneType] = False</em>, <em>speed: Union[str</em>, <em>NoneType] = None</em>, <em>quiet: Union[bool</em>, <em>NoneType] = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/scanner.html#Scanner.goto"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scanner.Scanner.goto" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move scanner to given position.
+By default moves all three axes simultaneously, if necessary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scanner.Scanner.retract">
+<code class="descname">retract</code><span class="sig-paren">(</span><em>speed: Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/scanner.html#Scanner.retract"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scanner.Scanner.retract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retracts z-bender fully based on whether temp is LT or RT.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="squid">
+<h2>SQUID<a class="headerlink" href="#squid" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><span class="target" id="module-squids"></span><dl class="class">
+<dt id="squids.SQUID">
+<em class="property">class </em><code class="descclassname">squids.</code><code class="descname">SQUID</code><span class="sig-paren">(</span><em>squid_config: Dict[str, Any], **kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/squids.html#SQUID"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#squids.SQUID" title="Permalink to this definition">¶</a></dt>
+<dd><p>SQUID sensor base class. Simply records sensor metadata.
+No gettable or settable parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>squid_config</strong> – SQUID configuration dict.
+Simply added to instrument metadata.</li>
+<li><strong>**kwargs</strong> – Keyword arguments passed to Instrument constructor.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="squids.Susceptometer">
+<em class="property">class </em><code class="descclassname">squids.</code><code class="descname">Susceptometer</code><span class="sig-paren">(</span><em>squid_config: Dict[str, Any], **kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/squids.html#Susceptometer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#squids.Susceptometer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Records SQUID susceptometer metadata.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>squid_config</strong> – SQUID configuration dict.
+Simply added to instrument metadata.</li>
+<li><strong>**kwargs</strong> – Keyword arguments passed to Instrument constructor.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="daq">
+<h2>DAQ<a class="headerlink" href="#daq" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><span class="target" id="module-daq"></span><dl class="class">
+<dt id="daq.DAQAnalogInputVoltages">
+<em class="property">class </em><code class="descclassname">daq.</code><code class="descname">DAQAnalogInputVoltages</code><span class="sig-paren">(</span><em>name: str, task: Any, samples_to_read: int, shape: Sequence[int], **kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/daq.html#DAQAnalogInputVoltages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daq.DAQAnalogInputVoltages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Acquires data from one or several DAQ analog inputs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> – Name of parameter (usually ‘voltage’).</li>
+<li><strong>task</strong> – nidaqmx.Task with appropriate analog inputs channels.</li>
+<li><strong>samples_to_read</strong> – Number of samples to read. Will be averaged based on shape.</li>
+<li><strong>shape</strong> – Desired shape of averaged array, i.e. (nchannels, target_points).</li>
+<li><strong>**kwargs</strong> – Keyword arguments to be passed to ArrayParameter constructor.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="daq.DAQAnalogInputVoltages.get_raw">
+<code class="descname">get_raw</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/daq.html#DAQAnalogInputVoltages.get_raw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daq.DAQAnalogInputVoltages.get_raw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Averages data to get <cite>self.target_points</cite> points per channel.
+If <cite>self.target_points</cite> == <cite>self.samples_to_read</cite>, no averaging is done.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daq.DAQAnalogInputs">
+<em class="property">class </em><code class="descclassname">daq.</code><code class="descname">DAQAnalogInputs</code><span class="sig-paren">(</span><em>name: str, dev_name: str, rate: Union[int, float], channels: Dict[str, int], task: Any, clock_src: Union[str, NoneType] = None, samples_to_read: Union[int, NoneType] = 2, target_points: Union[int, NoneType] = None, **kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/daq.html#DAQAnalogInputs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daq.DAQAnalogInputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instrument to acquire DAQ analog input data in a qcodes Loop or measurement.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> – Name of instrument (usually ‘daq_ai’).</li>
+<li><strong>dev_name</strong> – NI DAQ device name (e.g. ‘Dev1’).</li>
+<li><strong>rate</strong> – Desired DAQ sampling rate in Hz.</li>
+<li><strong>channels</strong> – Dict of analog input channel configuration.</li>
+<li><strong>task</strong> – fresh nidaqmx.Task to be populated with ai_channels.</li>
+<li><strong>clock_src</strong> – Sample clock source for analog inputs. Default: None</li>
+<li><strong>samples_to_read</strong> – Number of samples to acquire from the DAQ
+per channel per measurement/loop iteration.
+Default: 2 (minimum number of samples DAQ will acquire in this timing mode).</li>
+<li><strong>target_points</strong> – Number of points per channel we want in our final array.
+samples_to_read will be averaged down to target_points.</li>
+<li><strong>**kwargs</strong> – Keyword arguments to be passed to Instrument constructor.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="daq.DAQAnalogInputs.clear_instances">
+<code class="descname">clear_instances</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/daq.html#DAQAnalogInputs.clear_instances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daq.DAQAnalogInputs.clear_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear instances of DAQAnalogInputs Instruments.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="others">
+<h2>Others<a class="headerlink" href="#others" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="lockins">
+<h3>Lockins<a class="headerlink" href="#lockins" title="Permalink to this headline">¶</a></h3>
+<p>SR830 driver courtesy of <a class="reference external" href="http://qcodes.github.io/Qcodes/">QCoDeS</a>.</p>
+<blockquote>
+<div><span class="target" id="module-qcodes.instrument_drivers.stanford_research.SR830"></span><dl class="class">
+<dt id="qcodes.instrument_drivers.stanford_research.SR830.SR830">
+<em class="property">class </em><code class="descclassname">qcodes.instrument_drivers.stanford_research.SR830.</code><code class="descname">SR830</code><span class="sig-paren">(</span><em>name</em>, <em>address</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcodes/instrument_drivers/stanford_research/SR830.html#SR830"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qcodes.instrument_drivers.stanford_research.SR830.SR830" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the qcodes driver for the Stanford Research Systems SR830
+Lock-in Amplifier</p>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="pre-amps">
+<h3>Pre-Amps<a class="headerlink" href="#pre-amps" title="Permalink to this headline">¶</a></h3>
+<p>SR560 driver courtesy of <a class="reference external" href="http://qcodes.github.io/Qcodes/">QCoDeS</a>.</p>
+<blockquote>
+<div><span class="target" id="module-qcodes.instrument_drivers.stanford_research.SR560"></span><dl class="class">
+<dt id="qcodes.instrument_drivers.stanford_research.SR560.SR560">
+<em class="property">class </em><code class="descclassname">qcodes.instrument_drivers.stanford_research.SR560.</code><code class="descname">SR560</code><span class="sig-paren">(</span><em>name</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcodes/instrument_drivers/stanford_research/SR560.html#SR560"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qcodes.instrument_drivers.stanford_research.SR560.SR560" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the qcodes driver for the SR 560 Voltage-preamplifier.</p>
+<p>This is a virtual driver only and will not talk to your instrument.</p>
+<p>Note:</p>
+<ul class="simple">
+<li>The <code class="docutils literal notranslate"><span class="pre">cutoff_lo</span></code> and <code class="docutils literal notranslate"><span class="pre">cutoff_hi</span></code> parameters will interact with
+each other on the instrument (hi cannot be &lt;= lo) but this is not
+managed here, you must ensure yourself that both are correct whenever
+you change one of them.</li>
+<li><code class="docutils literal notranslate"><span class="pre">gain</span></code> has a vernier setting, which does not yield a well-defined
+output. We restrict this driver to only the predefined gain values.</li>
+</ul>
+<dl class="method">
+<dt id="qcodes.instrument_drivers.stanford_research.SR560.SR560.get_idn">
+<code class="descname">get_idn</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcodes/instrument_drivers/stanford_research/SR560.html#SR560.get_idn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qcodes.instrument_drivers.stanford_research.SR560.SR560.get_idn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a standard VISA ‘*IDN?’ response into an ID dict.</p>
+<p>Even though this is the VISA standard, it applies to various other
+types as well, such as IPInstruments, so it is included here in the
+Instrument base class.</p>
+<p>Override this if your instrument does not support ‘*IDN?’ or
+returns a nonstandard IDN string. This string is supposed to be a
+comma-separated list of vendor, model, serial, and firmware, but
+semicolon and colon are also common separators so we accept them here
+as well.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A dict containing vendor, model, serial, and firmware.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="config-files.html" class="btn btn-neutral float-right" title="Configuration Files" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="microscope.html" class="btn btn-neutral" title="Microscope" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Logan Bishop-Van Horn.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

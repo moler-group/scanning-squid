@@ -1,0 +1,185 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import json\n",
+    "from atto import ANC300\n",
+    "\n",
+    "from pint import UnitRegistry\n",
+    "ureg = UnitRegistry()\n",
+    "\n",
+    "import logging"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO:root:Logging started.\n"
+     ]
+    }
+   ],
+   "source": [
+    "with open('config_microscope.json') as f:\n",
+    "    config = json.load(f)\n",
+    "    \n",
+    "logging.basicConfig(level=logging.INFO, datefmt=config['info']['timestamp_format'])\n",
+    "logging.info('Logging started.')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO:atto:Initializing Attocube controller.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "atto:\n",
+      "\tparameter    value\n",
+      "--------------------------------------------------------------------------------\n",
+      "cap_ax1       :\t1690.1 (nF)\n",
+      "cap_ax2       :\t1642.9 (nF)\n",
+      "cap_ax3       :\t1063.2 (nF)\n",
+      "freq_ax1      :\t50 (Hz)\n",
+      "freq_ax2      :\t50 (Hz)\n",
+      "freq_ax3      :\t50 (Hz)\n",
+      "mode_ax1      :\tgnd \n",
+      "mode_ax2      :\tgnd \n",
+      "mode_ax3      :\tgnd \n",
+      "serialnum     :\tANC300B-C-1601-3007028 \n",
+      "serialnum_ax1 :\tANM150A-M-1609-3011045 \n",
+      "serialnum_ax2 :\tANM150A-M-1609-3011039 \n",
+      "serialnum_ax3 :\tANM150A-M-1609-3011030 \n",
+      "timeout       :\t5 (s)\n",
+      "version       :\tOK \n",
+      "voltage_ax1   :\t25 (V)\n",
+      "voltage_ax2   :\t25 (V)\n",
+      "voltage_ax3   :\t25 (V)\n"
+     ]
+    }
+   ],
+   "source": [
+    "atto = ANC300(config['instruments']['atto'], 'RT', ureg, config['info']['timestamp_format'])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO:atto:Performing 10 steps along axis x.\n"
+     ]
+    }
+   ],
+   "source": [
+    "atto.step('x', 10)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO:atto:Performing -10 steps along axis y.\n"
+     ]
+    }
+   ],
+   "source": [
+    "atto.step('y', -10)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO:atto:Performing -10 steps along axis z.\n"
+     ]
+    }
+   ],
+   "source": [
+    "atto.step('z', -10)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'2018-06-04_17:18:52': 'Moved 10 steps along x axis.',\n",
+       " '2018-06-04_17:19:14': 'Moved -10 steps along y axis.',\n",
+       " '2018-06-04_17:19:26': 'Moved -10 steps along z axis.'}"
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "atto.metadata['history']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.5"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
