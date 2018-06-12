@@ -1,6 +1,9 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+*.pyc
+
+*.DS_Store
 
 # .pyenv file
 .python-version
