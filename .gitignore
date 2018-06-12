@@ -27,9 +27,11 @@ var/
 *.egg
 
 # Sphinx documentation
-docs/_build/
+docs/_build
+docs/_static
+docs/_templates
 docs/_notebooks
-docs/api/generated/
+docs/api/generated
 docs/_auto
 
 # qcodes related
