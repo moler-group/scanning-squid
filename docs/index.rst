@@ -6,15 +6,16 @@
 Scanning SQUID measurement & control
 ====================================
 
-qcodes-squid is an instrument control and data acquisition package for scanning SQUID (Superconducting QUantum Interference Device) microscopy developed in the Moler Group at Stanford University. It is based on the `QCoDeS <http://qcodes.github.io/Qcodes/>`_ data acquisition framework.
+scanning-squid is an instrument control and data acquisition package for scanning SQUID (Superconducting QUantum Interference Device) microscopy developed in the Moler Group at Stanford University. It is based on the `QCoDeS <http://qcodes.github.io/Qcodes/>`_ data acquisition framework.
 
    .. image:: https://readthedocs.org/projects/scanning-squid/badge/?version=latest
       :target: https://scanning-squid.readthedocs.io/en/latest/?badge=latest
       :alt: Documentation Status
-      
+
 .. toctree::
    :caption: Documentation:
 
+   pages/getting-started
    pages/microscope
    pages/config-files
    pages/units

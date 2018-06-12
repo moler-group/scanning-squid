@@ -29,7 +29,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Microscope Components" href="components.html" />
-    <link rel="prev" title="qcodes-squid" href="../index.html" /> 
+    <link rel="prev" title="Getting Started" href="getting-started.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -84,6 +84,7 @@
             
               <p class="caption"><span class="caption-text">Documentation:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Microscope</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="components.html">Microscope Components</a></li>
 </ul>
@@ -91,7 +92,6 @@
 <li class="toctree-l1"><a class="reference internal" href="config-files.html">Configuration Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="units.html">Physical Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="measurements.html">Measurements</a></li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
 
             
@@ -190,172 +190,6 @@
 </li>
 </ul>
 </div>
-<span class="target" id="module-microscope"></span><dl class="class">
-<dt id="microscope.Microscope">
-<em class="property">class </em><code class="descclassname">microscope.</code><code class="descname">Microscope</code><span class="sig-paren">(</span><em>config_file: str</em>, <em>temp: str</em>, <em>ureg: Any = &lt;pint.registry.UnitRegistry object&gt;</em>, <em>log_level: Any = 20</em>, <em>log_name: str = None</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/microscope.html#Microscope"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.Microscope" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for scanning SQUID microscope.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>config_file</strong> – Path to microscope configuration JSON file.</li>
-<li><strong>temp</strong> – ‘LT’ or ‘RT’, depending on whether the microscope is cold or not.
-Sets the voltage limits for the scanner and Attocubes.</li>
-<li><strong>ureg</strong> – pint UnitRegistry for managing physical units.</li>
-<li><strong>log_level</strong> – e.g. logging.DEBUG or logging.INFO</li>
-<li><strong>log_name</strong> – Log file will be saved as logs/{log_name}.log.
-Default is the name of the microscope configuration file.</li>
-<li><strong>**kwargs</strong> – Keyword arguments to be passed to Station constructor.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
-<dt id="microscope.Microscope.goto">
-<code class="descname">goto</code><span class="sig-paren">(</span><em>new_position: List[Union[float, int]]</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/microscope.html#Microscope.goto"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.Microscope.goto" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for self.scanner.position.set() or equivalently self.scanner.goto().</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>new_position</strong> – List of [x, y, z] voltages to apply to benders.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="microscope.Microscope.remove_component">
-<code class="descname">remove_component</code><span class="sig-paren">(</span><em>name: str</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/microscope.html#Microscope.remove_component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.Microscope.remove_component" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove a component (instrument) from the microscope.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> – Name of component to remove.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="microscope.Microscope.set_lockins">
-<code class="descname">set_lockins</code><span class="sig-paren">(</span><em>measurement: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/microscope.html#Microscope.set_lockins"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.Microscope.set_lockins" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize lockins for given measurement.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>measurement</strong> – Dict of measurement parameters as defined
-in measurement configuration file.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="microscope.Microscope.tdCAP">
-<code class="descname">tdCAP</code><span class="sig-paren">(</span><em>tdc_params: Dict[str, Any], getting_plane: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/microscope.html#Microscope.tdCAP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.Microscope.tdCAP" title="Permalink to this definition">¶</a></dt>
-<dd><p>Capacitive touchdown.</p>
-<p>This is a work in progress!</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>tdc_params</strong> – Dict of capacitive touchdown parameters as defined
-in measurement configuration file.</li>
-<li><strong>getting_plane</strong> – Whether tdCAP() is being called in a loop to acquire a plane.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="microscope.SusceptometerMicroscope">
-<em class="property">class </em><code class="descclassname">microscope.</code><code class="descname">SusceptometerMicroscope</code><span class="sig-paren">(</span><em>config_file: str</em>, <em>temp: str</em>, <em>ureg: Any = &lt;pint.registry.UnitRegistry object&gt;</em>, <em>log_level: Any = 20</em>, <em>log_name: str = None</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/microscope.html#SusceptometerMicroscope"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.SusceptometerMicroscope" title="Permalink to this definition">¶</a></dt>
-<dd><p>Scanning SQUID susceptometer microscope class.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>config_file</strong> – Path to microscope configuration JSON file.</li>
-<li><strong>temp</strong> – ‘LT’ or ‘RT’, depending on whether the microscope is cold or not.
-Sets the voltage limits for the scanner and Attocubes.</li>
-<li><strong>ureg</strong> – pint UnitRegistry for managing physical units.</li>
-<li><strong>log_level</strong> – e.g. logging.DEBUG or logging.INFO</li>
-<li><strong>log_name</strong> – Log file will be saved as logs/{log_name}.log.
-Default is the name of the microscope configuration file.</li>
-<li><strong>**kwargs</strong> – Keyword arguments to be passed to Station constructor.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
-<dt id="microscope.SusceptometerMicroscope.get_prefactors">
-<code class="descname">get_prefactors</code><span class="sig-paren">(</span><em>measurement: Dict[str, Any], update: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/microscope.html#SusceptometerMicroscope.get_prefactors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.SusceptometerMicroscope.get_prefactors" title="Permalink to this definition">¶</a></dt>
-<dd><p>For each channel, calculate prefactors to convert DAQ voltage into real units.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>measurement</strong> – Dict of measurement parameters as defined
-in measurement configuration file.</li>
-<li><strong>update</strong> – Whether to query instrument parameters or simply trust the
-latest values (should this even be an option)?</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Dict of {channel_name: prefactor} where prefactor is a pint Quantity.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">prefactors</p>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition-todo admonition" id="index-0">
-<p class="first admonition-title">Todo</p>
-<p class="last">Add current imaging channel.</p>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="microscope.SusceptometerMicroscope.scan_plane">
-<code class="descname">scan_plane</code><span class="sig-paren">(</span><em>scan_params: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../_modules/microscope.html#SusceptometerMicroscope.scan_plane"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.SusceptometerMicroscope.scan_plane" title="Permalink to this definition">¶</a></dt>
-<dd><p>Scan the current plane while acquiring data in the channels defined in
-measurement configuration file (e.g. MAG, SUSCX, SUSCY, CAP).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>scan_params</strong> – Dict of scan parameters as defined
-in measuremnt configuration file.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
-<dt>data, plot</dt>
-<dd>qcodes DataSet containing acquired arrays and metdata,
-and ScanPlot instance populated with acquired data.</dd>
-</dl>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">Tuple[DataSet, Scanplot]</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
 </div></blockquote>
 </div>
 
@@ -370,7 +204,7 @@ and ScanPlot instance populated with acquired data.</dd>
         <a href="components.html" class="btn btn-neutral float-right" title="Microscope Components" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../index.html" class="btn btn-neutral" title="qcodes-squid" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="getting-started.html" class="btn btn-neutral" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
