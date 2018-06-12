@@ -23,7 +23,6 @@ dependencies:
  - scipy
  - ipympl
  - nidaqmx-python
- - pip
  - pip:
-  - qcodes
-  - sphinxcontrib-jsonschema
+    - qcodes
+    - sphinxcontrib-jsonschema
