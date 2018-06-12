@@ -31,12 +31,10 @@ class ScanPlot(object):
                                          gridspec_kw={"height_ratios":[0.075, 1, 0.5]})
         self.fig.patch.set_alpha(1)
         self.plots = {'colorbars': {}, 'images': {}, 'lines': {}}
-        i = 0
-        for ch in self.channels.keys():
+        for i, ch in enumerate(self.channels.keys()):
             self.plots['colorbars'].update({ch: {'cax': self.ax[0][i]}})
             self.plots['images'].update({ch: {'ax' :self.ax[1][i]}})
             self.plots['lines'].update({ch: self.ax[2][i]})
-            i += 1
         for ch, ax in self.plots['images'].items():
             ax['ax'].set_aspect('equal')
             ax['ax'].set_xlabel('x position [V]')
