@@ -14,12 +14,12 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../qcodes-squid'))
+sys.path.insert(0, os.path.abspath('../scanning-squid'))
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'qcodes-squid'
+project = 'scanning-squid'
 copyright = '2018, Logan Bishop-Van Horn'
 author = 'Logan Bishop-Van Horn'
 
