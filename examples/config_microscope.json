@@ -1,0 +1,105 @@
+{
+    "instruments": {
+        "daq": {
+            "model": "NI USB-6363",
+            "name": "Dev1",
+            "channels": {
+                "analog_inputs": {
+                    "MAG": 0,
+                    "SUSCX": 1,
+                    "SUSCY": 2,
+                    "CAP": 3},
+                "analog_outputs": {"x": 0,"y": 1,"z": 2}
+            },
+            "rate": "1 MHz",
+            "max_rate": {
+                "analog_inputs": {
+                    "1 channel": "2 MHz",
+                    "multichannel": "1 MHz",
+                    "comment": "Multichannel value is aggregate for all ai channels."},
+                "analog_outputs": {
+                    "1 channels": "2.86 MHz",
+                    "2 channels": "2.00 MHz",
+                    "3 channels": "1.54 MHz",
+                    "4 channels": "1.25 MHz",
+                    "comment": "Max ao rates are per channel."
+                }
+            }
+        },
+        "lockins": {
+            "SUSC": {
+                "model": "SR830",
+                "address": "GPIB0::12::7::INSTR"},
+            "CAP": {
+                "model": "SR830",
+                "address": "GPIB0::28::7::INSTR"
+            }
+        },
+        "atto": {
+            "name": "atto",
+            "model": "ANC300",
+            "address": "ASRL1::INSTR",
+            "timeout": 5,
+            "terminator": "\r\n",
+            "stopbits": 1,
+            "baud_rate" : 38400,
+            "axes": {"x": 1,"y": 2,"z": 3},
+            "voltage_limits": {
+                "RT":{"x": "25 V","y": "25 V","z": "25 V"},
+                "LT":{"x": "60 V","y": "60 V","z": "60 V"}
+            },
+            "default_frequency": {"x": "50 Hz", "y": "50 Hz", "z": "50 Hz"},
+            "constants":{
+                "x": "-0.66 um",
+                "y": "-0.55 um",
+                "z": "0.2 um",
+                "comment": "Approximate um/step at 3 K, 60 V. Sign is relative to scanner sign. 2018/02/22"},
+            "history": {}
+        },
+        "scanner": {
+            "name": "benders",
+            "constants": {
+                "x": "17 um/V",
+                "y": "18 um/V",
+                "z": "2 um/V",
+                "comment": "um/V_daq (2018/02)"},
+            "voltage_limits":{
+                "RT":{"x": "2 V","y": "2 V","z": "2 V"},
+                "LT":{"x": "10 V","y": "10 V","z": "10 V"},
+                "comment":"|V_daq| should not exceed voltage_limits."},
+            "voltage_retract":{"RT": "-2 V","LT": "-10 V"},
+            "speed": {
+                "value": "2 V/s",
+                "comment":"Rate of movement of the scanner (when not scanning)."
+            },
+            "position": {
+                "x": "0 V",
+                "y": "0 V",
+                "z": "0 V"
+            },
+            "cantilever": {
+                "calibration": "326 uV/pF",
+                "comment":"CAP lockin X reading, freq = [] Hz, amp = 1 V"
+            }
+        }
+    },
+    "SQUID": {
+        "name": "SQUID",
+        "type": "susceptometer",
+        "description": "IBM deep-etched 0.3um susceptometer",
+        "modulation_width": "1.0 V/Phi0",
+        "FC_PU_mutual": "0 Phi0/A",
+        "feedback": {
+            "type": "Red Pitaya + pyrpl"
+        },
+        "dimensions": {
+            "PU_ri": "0.3 um",
+            "PU_ro": "0.5 um",
+            "FC_ri": "1.0 um",
+            "FC_ro": "1.5 um"
+        }
+    },
+    "info": {
+        "timestamp_format":"%Y-%m-%d_%H:%M:%S"
+    }
+}

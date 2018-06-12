@@ -1,0 +1,1 @@
+name='qcodes_squid'

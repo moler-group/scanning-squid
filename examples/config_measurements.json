@@ -1,0 +1,86 @@
+{
+    "scan": {
+        "fname": "scan",
+        "dir": "",
+        "fast_ax": "x",
+        "range": {"x": "4 V", "y": "4 V"},
+        "center": {"x": "0 V", "y": "0 V"},
+        "height": "-0.2 V",
+        "scan_rate": "100 pixels/s",
+        "scan_size": {"x": 50, "y": 50},
+        "channels": {
+            "MAG": {
+                "label": "Magnetometry",
+                "gain": 1,
+                "filters": {
+                    "lowpass": {"cutoff": "30 kHz", "slope": "12 dB/octave"},
+                    "highpass": {"cutoff": "0 Hz","slope": "0 dB/octave"}
+                },
+                "unit": "mPhi0",
+                "unit_latex": "m$\\Phi_0$"
+            },
+            "SUSCX": {
+                "lockin": {
+                    "name": "SUSC",
+                    "amplitude": "1 V",
+                    "frequency": "131.79 Hz"
+                },
+                "label": "Susceptibility",
+                "gain": 1,
+                "r_lead": "1 kOhm",
+                "unit": "Phi0/A",
+                "unit_latex": "$\\Phi_0$/A"
+            },
+            "SUSCY": {
+                "lockin": {
+                    "name": "SUSC"
+                },
+                "label": "Susceptibility (out of phase)",
+                "gain": 1,
+                "r_lead": "1 kOhm",
+                "unit": "Phi0/A",
+                "unit_latex": "$\\Phi_0$/A"
+            },
+            "CAP": {
+                "lockin": {
+                    "name": "CAP",
+                    "amplitude": "1 V",
+                    "frequency": "18.437 kHz"
+                },
+                "label": "Capacitance",
+                "gain": 1,
+                "unit": "fF",
+                "unit_latex": "fF"
+            }
+        }
+    },
+    "tdCAP": {
+        "fname": "tdC",
+        "dir": "",
+        "dV": "0.1 V",
+        "range": ["-10 V","10 V"],
+        "channels": {
+            "CAP": {
+                "lockin": {
+                    "amplitude": "1 V",
+                    "frequency": "18.437 kHz"
+                },
+                "label": "Capacitance"
+            }
+        },
+        "constants": {
+            "max_slope": "0.5 pF/V",
+            "max_delta_cap": "0.15 pF/V",
+            "initial_cap":"0 pF",
+            "N_fit_min":15,
+            "N_fit_max":30,
+            "N_window":15,
+            "N_test":5,
+            "tol":8,
+            "sigma":0,
+            "new_sigma_weight":0.2,
+            "wait_factor":3},
+        "save_data":true,
+        "save_fig":true},
+    "tdSUSC":{}
+}
