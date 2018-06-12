@@ -13,6 +13,7 @@ scanning-squid is an instrument control and data acquisition package for scannin
       :alt: Documentation Status
 
 .. toctree::
+   :maxdepth: 4
    :caption: Documentation:
 
    pages/getting-started
@@ -20,4 +21,4 @@ scanning-squid is an instrument control and data acquisition package for scannin
    pages/config-files
    pages/units
    pages/measurements
-   pages/examples'
+   examples/DataSetExample

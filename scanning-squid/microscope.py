@@ -390,7 +390,7 @@ class SusceptometerMicroscope(Microscope):
         self.remove_component('daq_ai')
         return data, scan_plot
 
-    def get_prefactors(self, measurement: Dict[str, Any], update: bool=True):
+    def get_prefactors(self, measurement: Dict[str, Any], update: bool=True) -> Dict[str, Any]:
         """For each channel, calculate prefactors to convert DAQ voltage into real units.
 
         Args:
@@ -400,7 +400,8 @@ class SusceptometerMicroscope(Microscope):
                 latest values (should this even be an option)?
 
         Returns:
-            prefactors: Dict of {channel_name: prefactor} where prefactor is a pint Quantity.
+            Dict[str, Quantity]: prefactors
+                Dict of {channel_name: prefactor} where prefactor is a pint Quantity.
 
         .. TODO:: Add current imaging channel.
         """

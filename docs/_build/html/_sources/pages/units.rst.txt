@@ -1,4 +1,4 @@
 Physical Units
 ==============
 
-qcodes-squid knows about units.
+scanning-squid knows about units.

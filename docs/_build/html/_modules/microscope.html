@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>microscope &mdash; qcodes-squid  documentation</title>
+  <title>microscope &mdash; scanning-squid  documentation</title>
   
 
   
@@ -46,7 +46,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home"> qcodes-squid
+            <a href="../index.html" class="icon icon-home"> scanning-squid
           
 
           
@@ -87,6 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../pages/config-files.html">Configuration Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pages/units.html">Physical Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pages/measurements.html">Measurements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/DataSetExample.html">DataSet Example</a></li>
 </ul>
 
             
@@ -101,7 +102,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">qcodes-squid</a>
+          <a href="../index.html">scanning-squid</a>
         
       </nav>
 
@@ -542,7 +543,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">remove_component</span><span class="p">(</span><span class="s1">&#39;daq_ai&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">scan_plot</span></div>
 
-<div class="viewcode-block" id="SusceptometerMicroscope.get_prefactors"><a class="viewcode-back" href="../pages/microscope.html#microscope.SusceptometerMicroscope.get_prefactors">[docs]</a>    <span class="k">def</span> <span class="nf">get_prefactors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">measurement</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">update</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="SusceptometerMicroscope.get_prefactors"><a class="viewcode-back" href="../pages/microscope.html#microscope.SusceptometerMicroscope.get_prefactors">[docs]</a>    <span class="k">def</span> <span class="nf">get_prefactors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">measurement</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">update</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;For each channel, calculate prefactors to convert DAQ voltage into real units.</span>
 
 <span class="sd">        Args:</span>
@@ -552,7 +553,8 @@
 <span class="sd">                latest values (should this even be an option)?</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            prefactors: Dict of {channel_name: prefactor} where prefactor is a pint Quantity.</span>
+<span class="sd">            Dict[str, Quantity]: prefactors</span>
+<span class="sd">                Dict of {channel_name: prefactor} where prefactor is a pint Quantity.</span>
 
 <span class="sd">        .. TODO:: Add current imaging channel.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
