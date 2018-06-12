@@ -21,7 +21,6 @@ dependencies:
  - pyzmq
  - pint
  - scipy
- - ipympl
  - nidaqmx-python
  - pip:
     - qcodes
