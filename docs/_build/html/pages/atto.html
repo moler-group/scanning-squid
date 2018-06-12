@@ -1,0 +1,339 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Attocubes &mdash; qcodes-squid  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Scanner" href="scanner.html" />
+    <link rel="prev" title="Microscope" href="microscope.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> qcodes-squid
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="microscope.html">Microscope</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Attocubes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scanner.html">Scanner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="squids.html">SQUIDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="daq.html">DAQ</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scanner.html">Scanner</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">qcodes-squid</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="microscope.html">Microscope</a> &raquo;</li>
+        
+      <li>Attocubes</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/pages/atto.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="attocubes">
+<h1>Attocubes<a class="headerlink" href="#attocubes" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><span class="target" id="module-atto"></span><dl class="class">
+<dt id="atto.AttocubeController">
+<em class="property">class </em><code class="descclassname">atto.</code><code class="descname">AttocubeController</code><span class="sig-paren">(</span><em>atto_config: Dict</em>, <em>temp: str</em>, <em>ureg: Any</em>, <em>timestamp_fmt: str</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/atto.html#AttocubeController"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for Attocube controller instrument.</p>
+<dl class="attribute">
+<dt id="atto.AttocubeController.Q_">
+<code class="descname">Q_</code><em class="property"> = None</em><a class="headerlink" href="#atto.AttocubeController.Q_" title="Permalink to this definition">¶</a></dt>
+<dd><p>function for converting a string into a quantity with units</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="atto.AttocubeController.ask_raw">
+<code class="descname">ask_raw</code><span class="sig-paren">(</span><em>cmd: str</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/atto.html#AttocubeController.ask_raw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController.ask_raw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query instrument with cmd and return response.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cmd</strong> – Command to write to controller.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="atto.AttocubeController.check_response">
+<code class="descname">check_response</code><span class="sig-paren">(</span><em>response: str</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/atto.html#AttocubeController.check_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController.check_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raise an exception if controller responds with ‘ERROR’.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>response</strong> – Response from controller.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="atto.AttocubeController.clear_instances">
+<code class="descname">clear_instances</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atto.html#AttocubeController.clear_instances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController.clear_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove instrument instance.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="atto.AttocubeController.initialize">
+<code class="descname">initialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/atto.html#AttocubeController.initialize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize instrument with parameters from self.metadata.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="atto.AttocubeController.step">
+<code class="descname">step</code><span class="sig-paren">(</span><em>axis: Union[int, str], steps: int</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/atto.html#AttocubeController.step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs a given number of Attocube steps. steps &gt; 0 corresponds to stepu (up),
+steps &lt; 0 corresponds to stepd (down).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>axis</strong> – Either axis label (str, e.g. ‘y’) or index (int, e.g. 2)</li>
+<li><strong>steps</strong> – Number of steps to perform (&gt;0 for ‘u’, &lt;0 for ‘d’)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="atto.AttocubeController.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><em>axis: Union[int, str]</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/atto.html#AttocubeController.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stops all motion along axis and then grounds the output.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>axis</strong> – Either axis label (str, e.g. ‘y’) or index (int, e.g. 2)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="atto.AttocubeController.write_raw">
+<code class="descname">write_raw</code><span class="sig-paren">(</span><em>cmd: str</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/atto.html#AttocubeController.write_raw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController.write_raw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write cmd and don’t wait for response.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cmd</strong> – Command to write to controller.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="atto.ANC300">
+<em class="property">class </em><code class="descclassname">atto.</code><code class="descname">ANC300</code><span class="sig-paren">(</span><em>atto_config: Dict</em>, <em>temp: str</em>, <em>ureg: Any</em>, <em>timestamp_format: str</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/atto.html#ANC300"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.ANC300" title="Permalink to this definition">¶</a></dt>
+<dd><p>ANC300 Attocube controller instrument.</p>
+</dd></dl>
+
+</div></blockquote>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="scanner.html" class="btn btn-neutral float-right" title="Scanner" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="microscope.html" class="btn btn-neutral" title="Microscope" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Logan Bishop-Van Horn.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,5 @@
+DAQ
+===
+
+    .. automodule:: daq
+        :members:
