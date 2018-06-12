@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Scanning SQUID measurement & control based on `QCoDeS <http://qcodes.github.io/Qcodes/>`_.
-==========================================================================================
+Scanning SQUID measurement & control
+====================================
 
 qcodes-squid is an instrument control and data acquisition package for scanning SQUID (Superconducting QUantum Interference Device) microscopy developed in the Moler Group at Stanford University. It is based on the `QCoDeS <http://qcodes.github.io/Qcodes/>`_ data acquisition framework.
 
