@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="pages/installation.html" /> 
+    <link rel="next" title="Microscope" href="pages/microscope.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -81,12 +81,13 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Documentation:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="pages/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pages/microscope.html">Microscope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pages/config-files.html">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pages/units.html">Physical Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pages/measurements.html">Measurements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pages/examples.html">Examples</a></li>
 </ul>
 
             
@@ -151,17 +152,46 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="qcodes-squid">
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+</style>
+<div class="section" id="qcodes-squid">
 <h1>qcodes-squid<a class="headerlink" href="#qcodes-squid" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="scanning-squid-measurement-control-based-on-qcodes">
 <h2>Scanning SQUID measurement &amp; control based on <a class="reference external" href="http://qcodes.github.io/Qcodes/">QCoDeS</a>.<a class="headerlink" href="#scanning-squid-measurement-control-based-on-qcodes" title="Permalink to this headline">¶</a></h2>
-<p>Developed by the Moler Group at Stanford University.</p>
+<p>qcodes-squid is an instrument control and data acquisition package for scanning SQUID (Superconducting QUantum Interference Device) microscopy developed in the Moler Group at Stanford University. It is based on the <a class="reference external" href="http://qcodes.github.io/Qcodes/">QCoDeS</a> data acquisition framework.</p>
 <div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption"><span class="caption-text">Documentation:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="pages/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pages/microscope.html">Microscope</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pages/components.html">Microscope Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/components.html">Microscope Components</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pages/components.html#attocubes">Attocubes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pages/components.html#scanner">Scanner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pages/components.html#squid">SQUID</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pages/components.html#daq">DAQ</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pages/components.html#others">Others</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pages/components.html#lockins">Lockins</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pages/components.html#pre-amps">Pre-Amps</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pages/config-files.html">Configuration Files</a><ul>
@@ -169,9 +199,19 @@
 <li class="toctree-l2"><a class="reference internal" href="pages/config-files.html#measurement-configuration">Measurement Configuration</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="pages/units.html">Physical Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pages/measurements.html">Measurements</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pages/measurements.html#scanning">Scanning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pages/measurements.html#touchdowns">Touchdowns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/measurements.html#touchdowns">Touchdowns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pages/measurements.html#capacitive-touchdowns">Capacitive Touchdowns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pages/measurements.html#susceptibility-touchdowns">Susceptibility Touchdowns</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pages/examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pages/examples.html#scanning-example">Scanning Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/examples.html#dataset-example">DataSet Example</a></li>
 </ul>
 </li>
 </ul>
@@ -187,7 +227,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="pages/installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="pages/microscope.html" class="btn btn-neutral float-right" title="Microscope" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>

@@ -14,7 +14,7 @@ class DAQAnalogInputVoltages(ArrayParameter):
             name: Name of parameter (usually 'voltage').
             task: nidaqmx.Task with appropriate analog inputs channels.
             samples_to_read: Number of samples to read. Will be averaged based on shape.
-            shape: Desired shape of averaged array, i.e. (nchannels, desired_points).
+            shape: Desired shape of averaged array, i.e. (nchannels, target_points).
             **kwargs: Keyword arguments to be passed to ArrayParameter constructor.
         """
         super().__init__(name, shape, **kwargs)
@@ -24,7 +24,7 @@ class DAQAnalogInputVoltages(ArrayParameter):
         
     def get_raw(self):
         """Averages data to get `self.target_points` points per channel.
-        If self.target_points == self.samples_to_read, no averaging is done.
+        If `self.target_points` == `self.samples_to_read`, no averaging is done.
         """
         data_raw = np.array(self.task.read(number_of_samples_per_channel=self.samples_to_read))
         return np.mean(np.reshape(data_raw, (self.nchannels, self.target_points, -1)), 2)

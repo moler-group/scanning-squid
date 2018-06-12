@@ -1,5 +1,0 @@
-Scanner
-=======
-
-    .. automodule:: scanner
-        :members:

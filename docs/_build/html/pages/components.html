@@ -28,6 +28,7 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Configuration Files" href="config-files.html" />
     <link rel="prev" title="Microscope" href="microscope.html" /> 
 
   
@@ -81,9 +82,8 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Documentation:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="microscope.html">Microscope</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Microscope Components</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#attocubes">Attocubes</a></li>
@@ -99,6 +99,10 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="config-files.html">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Physical Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="measurements.html">Measurements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
 
             
@@ -165,7 +169,26 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="microscope-components">
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+</style>
+<div class="section" id="microscope-components">
 <h1>Microscope Components<a class="headerlink" href="#microscope-components" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="attocubes">
 <h2>Attocubes<a class="headerlink" href="#attocubes" title="Permalink to this headline">¶</a></h2>
@@ -174,6 +197,21 @@
 <dt id="atto.AttocubeController">
 <em class="property">class </em><code class="descclassname">atto.</code><code class="descname">AttocubeController</code><span class="sig-paren">(</span><em>atto_config: Dict</em>, <em>temp: str</em>, <em>ureg: Any</em>, <em>timestamp_fmt: str</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/atto.html#AttocubeController"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for Attocube controller instrument.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>atto_config</strong> – Configuration dict loaded from microscope configuration json file.</li>
+<li><strong>temp</strong> – ‘LT’ or ‘RT’, depending on whether the attocubes are at room temp. or low temp.</li>
+<li><strong>ureg</strong> – pint UnitRegistry instance, used for managing physical units.</li>
+<li><strong>timestamp_fmt</strong> – Timestamp format to be used for logging.</li>
+<li><strong>**kwargs</strong> – Keyword arguments to be passed to VisaInstrument constructor.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="atto.AttocubeController.ask_raw">
 <code class="descname">ask_raw</code><span class="sig-paren">(</span><em>cmd: str</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/atto.html#AttocubeController.ask_raw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atto.AttocubeController.ask_raw" title="Permalink to this definition">¶</a></dt>
@@ -302,12 +340,38 @@ By default moves all three axes simultaneously, if necessary.</p>
 <em class="property">class </em><code class="descclassname">squids.</code><code class="descname">SQUID</code><span class="sig-paren">(</span><em>squid_config: Dict[str, Any], **kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/squids.html#SQUID"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#squids.SQUID" title="Permalink to this definition">¶</a></dt>
 <dd><p>SQUID sensor base class. Simply records sensor metadata.
 No gettable or settable parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>squid_config</strong> – SQUID configuration dict.
+Simply added to instrument metadata.</li>
+<li><strong>**kwargs</strong> – Keyword arguments passed to Instrument constructor.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="class">
 <dt id="squids.Susceptometer">
 <em class="property">class </em><code class="descclassname">squids.</code><code class="descname">Susceptometer</code><span class="sig-paren">(</span><em>squid_config: Dict[str, Any], **kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/squids.html#Susceptometer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#squids.Susceptometer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Records SQUID susceptometer metadata.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>squid_config</strong> – SQUID configuration dict.
+Simply added to instrument metadata.</li>
+<li><strong>**kwargs</strong> – Keyword arguments passed to Instrument constructor.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div></blockquote>
@@ -319,11 +383,26 @@ No gettable or settable parameters.</p>
 <dt id="daq.DAQAnalogInputVoltages">
 <em class="property">class </em><code class="descclassname">daq.</code><code class="descname">DAQAnalogInputVoltages</code><span class="sig-paren">(</span><em>name: str, task: Any, samples_to_read: int, shape: Sequence[int], **kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/daq.html#DAQAnalogInputVoltages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daq.DAQAnalogInputVoltages" title="Permalink to this definition">¶</a></dt>
 <dd><p>Acquires data from one or several DAQ analog inputs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> – Name of parameter (usually ‘voltage’).</li>
+<li><strong>task</strong> – nidaqmx.Task with appropriate analog inputs channels.</li>
+<li><strong>samples_to_read</strong> – Number of samples to read. Will be averaged based on shape.</li>
+<li><strong>shape</strong> – Desired shape of averaged array, i.e. (nchannels, target_points).</li>
+<li><strong>**kwargs</strong> – Keyword arguments to be passed to ArrayParameter constructor.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="daq.DAQAnalogInputVoltages.get_raw">
 <code class="descname">get_raw</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/daq.html#DAQAnalogInputVoltages.get_raw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daq.DAQAnalogInputVoltages.get_raw" title="Permalink to this definition">¶</a></dt>
 <dd><p>Averages data to get <cite>self.target_points</cite> points per channel.
-If self.target_points == self.samples_to_read, no averaging is done.</p>
+If <cite>self.target_points</cite> == <cite>self.samples_to_read</cite>, no averaging is done.</p>
 </dd></dl>
 
 </dd></dl>
@@ -332,6 +411,28 @@ If self.target_points == self.samples_to_read, no averaging is done.</p>
 <dt id="daq.DAQAnalogInputs">
 <em class="property">class </em><code class="descclassname">daq.</code><code class="descname">DAQAnalogInputs</code><span class="sig-paren">(</span><em>name: str, dev_name: str, rate: Union[int, float], channels: Dict[str, int], task: Any, clock_src: Union[str, NoneType] = None, samples_to_read: Union[int, NoneType] = 2, target_points: Union[int, NoneType] = None, **kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/daq.html#DAQAnalogInputs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daq.DAQAnalogInputs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instrument to acquire DAQ analog input data in a qcodes Loop or measurement.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> – Name of instrument (usually ‘daq_ai’).</li>
+<li><strong>dev_name</strong> – NI DAQ device name (e.g. ‘Dev1’).</li>
+<li><strong>rate</strong> – Desired DAQ sampling rate in Hz.</li>
+<li><strong>channels</strong> – Dict of analog input channel configuration.</li>
+<li><strong>task</strong> – fresh nidaqmx.Task to be populated with ai_channels.</li>
+<li><strong>clock_src</strong> – Sample clock source for analog inputs. Default: None</li>
+<li><strong>samples_to_read</strong> – Number of samples to acquire from the DAQ
+per channel per measurement/loop iteration.
+Default: 2 (minimum number of samples DAQ will acquire in this timing mode).</li>
+<li><strong>target_points</strong> – Number of points per channel we want in our final array.
+samples_to_read will be averaged down to target_points.</li>
+<li><strong>**kwargs</strong> – Keyword arguments to be passed to Instrument constructor.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="daq.DAQAnalogInputs.clear_instances">
 <code class="descname">clear_instances</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/daq.html#DAQAnalogInputs.clear_instances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daq.DAQAnalogInputs.clear_instances" title="Permalink to this definition">¶</a></dt>
@@ -411,6 +512,8 @@ as well.</p>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="config-files.html" class="btn btn-neutral float-right" title="Configuration Files" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="microscope.html" class="btn btn-neutral" title="Microscope" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

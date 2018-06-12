@@ -48,7 +48,9 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinxcontrib.jsonschema',
+    'nbsphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -59,6 +61,8 @@ templates_path = ['_templates']
 #
 # source_suffix = ['.rst', '.md']
 source_suffix = '.rst'
+
+napoleon_include_special_with_doc=True
 
 # The master toctree document.
 master_doc = 'index'
@@ -165,6 +169,7 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
+texinfo_show_urls = 'footnote'
 
 # -- Extension configuration -------------------------------------------------
 
@@ -172,11 +177,28 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-                        'python': ('https://docs.python.org/', None),
-                        'qcodes': ('http://qcodes.github.io/Qcodes/', None)
-                        }
+    'matplotlib': ('http://matplotlib.org/', None),
+    'python': ('https://docs.python.org/3.5', None),
+    'numpy': ('https://docs.scipy.org/doc/numpy', None),
+    'py': ('http://pylib.readthedocs.io/en/stable/', None),
+    'python': ('https://docs.python.org/', None),
+    'qcodes': ('http://qcodes.github.io/Qcodes/', None)
+}
 
 # -- Options for todo extension ----------------------------------------------
 
+import sphinx_rtd_theme
+html_theme = "sphinx_rtd_theme"
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+autosummary_generate = False
+
+autoclass_content = "both" # classes should include both the class' and the __init__ method's docstring
+autosummary_generate = True
+autodoc_default_flags = [ 'members', 'undoc-members', 'inherited-members', 'show-inheritance' ]
+
+autodoc_default_flags = []
+
+nbsphinx_execute = 'never'

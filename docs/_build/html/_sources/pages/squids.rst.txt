@@ -1,5 +1,0 @@
-SQUID
-=====
-
-    .. automodule:: squids
-        :members: SQUID, Susceptometer

@@ -80,12 +80,13 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Documentation:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../pages/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pages/microscope.html">Microscope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pages/config-files.html">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pages/units.html">Physical Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pages/measurements.html">Measurements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pages/examples.html">Examples</a></li>
 </ul>
 
             
@@ -165,7 +166,7 @@
 <span class="sd">            name: Name of parameter (usually &#39;voltage&#39;).</span>
 <span class="sd">            task: nidaqmx.Task with appropriate analog inputs channels.</span>
 <span class="sd">            samples_to_read: Number of samples to read. Will be averaged based on shape.</span>
-<span class="sd">            shape: Desired shape of averaged array, i.e. (nchannels, desired_points).</span>
+<span class="sd">            shape: Desired shape of averaged array, i.e. (nchannels, target_points).</span>
 <span class="sd">            **kwargs: Keyword arguments to be passed to ArrayParameter constructor.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -175,7 +176,7 @@
         
 <div class="viewcode-block" id="DAQAnalogInputVoltages.get_raw"><a class="viewcode-back" href="../pages/components.html#daq.DAQAnalogInputVoltages.get_raw">[docs]</a>    <span class="k">def</span> <span class="nf">get_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Averages data to get `self.target_points` points per channel.</span>
-<span class="sd">        If self.target_points == self.samples_to_read, no averaging is done.</span>
+<span class="sd">        If `self.target_points` == `self.samples_to_read`, no averaging is done.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">data_raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">number_of_samples_per_channel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_to_read</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_raw</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nchannels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_points</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="mi">2</span><span class="p">)</span></div></div>

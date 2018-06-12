@@ -1,5 +1,0 @@
-Attocubes
-==========
-
-    .. automodule:: atto
-        :members: AttocubeController, ANC300
