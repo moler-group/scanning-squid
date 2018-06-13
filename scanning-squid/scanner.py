@@ -56,8 +56,6 @@ class Scanner(Instrument):
         """
         Add parameters to instrument upon initialization.
         """
-        #v_limits = sorted((self.voltage_limits[self.temp][axis].to('V').magnitude
-        #              for axis in ['x', 'y', 'z']))
         v_limits = []
         for axis in ['x', 'y', 'z']:
             lims = self.voltage_limits[self.temp][axis]
@@ -71,26 +69,29 @@ class Scanner(Instrument):
                             get_cmd=self.get_pos,
                             set_cmd=self.goto
                             )
-        for axis, idx in self.metadata['daq']['channels']['analog_outputs'].items():
-            #limit = self.voltage_limits[self.temp][axis].to('V').magnitude
+        #for axis, idx in self.metadata['daq']['channels']['analog_outputs'].items():
+        for i, axis in enumerate(['x', 'y', 'z']):
             lims = self.voltage_limits[self.temp][axis]
             lims_V = [lim.to('V').magnitude for lim in lims]
             self.add_parameter('position_{}'.format(axis),
                            label='{} position'.format(axis),
                            unit='V',
                            vals=vals.Numbers(min(lims_V), max(lims_V)),
-                           get_cmd=(lambda idx=idx: self.get_pos()[idx]),
+                           get_cmd=(lambda idx=i: self.get_pos()[idx]),
                            set_cmd=getattr(self, '_goto_{}'.format(axis))
                            )
         
-    def get_pos(self, form: str=None) -> Union[List, Dict]:
-        if form is 'dict':
-            pos = self.metadata['position']
-        else:
-            pos = []
-            for axis in ['x', 'y', 'z']:
-                p = self.Q_(self.metadata['position'][axis]).to('V').magnitude
-                pos.append(p)
+    def get_pos(self) -> List[float]:
+        """Get current scanner [x, y, z] position.
+        """
+        with nidaqmx.Task('get_pos_ai_task') as ai_task:
+            for ax in ['x', 'y', 'z']:
+                idx = self.metadata['daq']['channels']['analog_inputs'][ax]
+                channel = self.metadata['daq']['name'] + '/ai{}'.format(idx)
+                ai_task.ai_channels.add_ai_voltage_chan(channel, ax)
+            pos = list(ai_task.read())
+        for i, ax in enumerate(['x', 'y', 'z']):
+            self.metadata['position'].update({ax: '{} V'.format(pos[i])})
         return pos
     
     def goto(self,
