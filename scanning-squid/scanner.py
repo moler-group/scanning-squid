@@ -8,13 +8,21 @@ from nidaqmx.constants import AcquisitionType, TaskMode
 import logging
 log = logging.getLogger(__name__)
 
-class Scanner(Instrument):   
-    def __init__(self,
-                 scanner_config: Dict[str, Any],
-                 daq_config: Dict[str, Any],
-                 temp: str,
-                 ureg: Any,
-                 **kwargs) -> None:
+class Scanner(Instrument):
+    """Controls DAQ AOs to drive the scanner.
+    """   
+    def __init__(self, scanner_config: Dict[str, Any], daq_config: Dict[str, Any],
+                 temp: str, ureg: Any, **kwargs) -> None:
+        """
+        Args:
+            scanner_config: Scanner configuration dictionary as defined
+                in microscope configuration JSON file.
+            daq_config: DAQ configuration dictionary as defined
+                in microscope configuration JSON file.
+            temp: 'LT' or 'RT' - sets the scanner voltage limit for each axis
+                based on temperature mode.
+            ureg: pint UnitRegistry, manages units.
+        """
         super().__init__(scanner_config['name'], **kwargs)
         if temp.upper() not in ['LT', 'RT']:
             raise ValueError('Temperature mode must be "LT" or "RT".')
@@ -35,33 +43,42 @@ class Scanner(Instrument):
         self.constants = {'comment': self.metadata['constants']['comment']}
         self.voltage_limits = {'RT': {},
                                'LT': {},
+                               'unit': self.metadata['voltage_limits']['unit'],
                                'comment': self.metadata['voltage_limits']['comment']}
+        unit = self.voltage_limits['unit']
         for axis in ['x', 'y', 'z']:
             self.constants.update({axis: self.Q_(self.metadata['constants'][axis])})
             for temp in ['RT', 'LT']:
-                self.voltage_limits[temp].update(
-                    {axis: self.Q_(self.metadata['voltage_limits'][temp][axis])})
+                lims = [lim *self.ureg(unit) for lim in sorted(self.metadata['voltage_limits'][temp][axis])]
+                self.voltage_limits[temp].update({axis: lims})
                 
     def _initialize_parameters(self):
         """
         Add parameters to instrument upon initialization.
         """
-        v_limit = max((self.voltage_limits[self.temp][axis].to('V').magnitude
-                      for axis in ['x', 'y', 'z']))
+        #v_limits = sorted((self.voltage_limits[self.temp][axis].to('V').magnitude
+        #              for axis in ['x', 'y', 'z']))
+        v_limits = []
+        for axis in ['x', 'y', 'z']:
+            lims = self.voltage_limits[self.temp][axis]
+            lims_V = [lim.to('V').magnitude for lim in lims]
+            v_limits += lims_V
         self.add_parameter('position',
                             label='Scanner position',
                             unit='V',
                             vals=vals.Lists(
-                                elt_validator=vals.Numbers(-v_limit, v_limit)),
+                                elt_validator=vals.Numbers(min(v_limits), max(v_limits))),
                             get_cmd=self.get_pos,
                             set_cmd=self.goto
                             )
         for axis, idx in self.metadata['daq']['channels']['analog_outputs'].items():
-            limit = self.voltage_limits[self.temp][axis].to('V').magnitude
+            #limit = self.voltage_limits[self.temp][axis].to('V').magnitude
+            lims = self.voltage_limits[self.temp][axis]
+            lims_V = [lim.to('V').magnitude for lim in lims]
             self.add_parameter('position_{}'.format(axis),
                            label='{} position'.format(axis),
                            unit='V',
-                           vals=vals.Numbers(-limit, limit),
+                           vals=vals.Numbers(min(lims_V), max(lims_V)),
                            get_cmd=(lambda idx=idx: self.get_pos()[idx]),
                            set_cmd=getattr(self, '_goto_{}'.format(axis))
                            )
@@ -90,14 +107,12 @@ class Scanner(Instrument):
             speed = self.speed.to('V/s').magnitude
         else:
             speed = self.Q_(speed).to('V/s').magnitude
-        ax = list(self.metadata['voltage_limits'][self.temp].keys())
-        for i in range(len(new_pos)):
-            ax_lim = (self.Q_(self.metadata['voltage_limits'][self.temp]
-                              [ax[i]]).to('V').magnitude)
-            if abs(new_pos[i]) > ax_lim:
+        for i, ax in enumerate(['x', 'y', 'z']):
+            ax_lim = sorted([lim.to('V').magnitude for lim in self.voltage_limits[self.temp][ax]])
+            if new_pos[i] < min(ax_lim) or new_pos[i] > max(ax_lim):
                 err = 'Requested position is out of range for {} axis. '
-                err += 'Maximum absolute value is {} V.'
-                raise ValueError(err.format(ax[i], ax_lim))
+                err += 'Voltage limits are {} V.'
+                raise ValueError(err.format(ax, ax_lim))
         if not retract_first:
             ramp = self._make_ramp(old_pos, new_pos, speed)
             with nidaqmx.Task('goto_ao_task') as ao_task:
