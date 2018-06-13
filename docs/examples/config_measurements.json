@@ -3,7 +3,7 @@
         "fname": "scan",
         "dir": "",
         "fast_ax": "x",
-        "range": {"x": "4 V", "y": "4 V"},
+        "range": {"x": "3 V", "y": "3 V"},
         "center": {"x": "0 V", "y": "0 V"},
         "height": "-0.2 V",
         "scan_rate": "100 pixels/s",
@@ -49,8 +49,8 @@
                 },
                 "label": "Capacitance",
                 "gain": 1,
-                "unit": "fF",
-                "unit_latex": "fF"
+                "unit": "pF",
+                "unit_latex": "pF"
             }
         }
     },

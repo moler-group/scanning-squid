@@ -8,7 +8,10 @@
                     "MAG": 0,
                     "SUSCX": 1,
                     "SUSCY": 2,
-                    "CAP": 3},
+                    "CAP": 3,
+                    "x": 4,
+                    "y": 5,
+                    "z": 6},
                 "analog_outputs": {"x": 0,"y": 1,"z": 2}
             },
             "rate": "1 MHz",
