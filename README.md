@@ -23,6 +23,6 @@ scanning-squid is not yet packaged for [pip](https://pypi.org/) or [conda](https
 - Download [environment.yml](https://github.com/moler-group/scanning-squid/blob/master/environment.yml) from the scanning-squid repository
 - Launch a Terminal.
 - In the Terminal, navigate to the directory containing environment.yml (`cd <path-to-directory-containing-environment-file>`)
-- Run the following two commands in the Anaconda Prompt:
+- Run the following two commands in the Terminal:
   - `conda env create -f environment.yml`
   - `source activate scanning-squid`
