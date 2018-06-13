@@ -104,12 +104,13 @@ def validate_scan_params(scanner_config: Dict[str, Any], scan_params: Dict[str, 
         logger: Used to log the fact that the scan was validated.
     """
     Q_ = ureg.Quantity
-    for axis in ['x', 'y', 'z']:
-        limit = (Q_(scanner_config['voltage_limits'][temp][axis])
-                 .to('V').magnitude)
-        if np.max(np.abs(scan_grids[axis])) > limit:
-            err = 'Requested {} axis position is outside of allowed range: +/- {} V.'
-            raise ValueError(err.format(axis, limit))        
+    voltage_limits = scanner_config['voltage_limits'][temp]
+    unit = scanner_config['voltage_limits']['unit']
+    for ax in ['x', 'y', 'z']:
+        limits = [(lim * ureg(unit)).to('V').magnitude for lim in voltage_limits[ax]]
+        if np.max(scan_grids[ax]) < min(limits) or np.max(scan_grids[ax] > max(limits)):
+            err = 'Requested {} axis position is outside of allowed range: {} V.'
+            raise ValueError(err.format(ax, limits))        
     x_pixels = scan_params['scan_size']['x']
     y_pixels = scan_params['scan_size']['y']
     logger.info('Scan parameters are valid. Starting scan.')

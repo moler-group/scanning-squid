@@ -300,20 +300,6 @@ class SusceptometerMicroscope(Microscope):
         prefactor_strs = {}
         for ch, prefac in prefactors.items():
             prefactor_strs.update({ch: '{} {}'.format(prefac.magnitude, prefac.units)})
-        fast_ax_vec = qc.DataArray(name='position_{}'.format(fast_ax),
-                                   label='{} position'.format(fast_ax),
-                                   array_id='benders_position_{}_set'.format(fast_ax),
-                                   unit='V',
-                                   is_setpoint=True,
-                                   preset_data=scan_vectors[fast_ax]
-                                   )
-        slow_ax_vec = qc.DataArray(name='position_{}'.format(slow_ax),
-                                   label='{} position'.format(slow_ax),
-                                   array_id='benders_position_{}'.format(slow_ax),
-                                   unit='V',
-                                   is_setpoint=True,
-                                   preset_data=scan_vectors[slow_ax]
-                                   )
         with nidaqmx.Task('scan_plane_ai_task') as ai_task:
             self.remove_component('daq_ai')
             if hasattr(self, 'daq_ai'):
@@ -325,7 +311,6 @@ class SusceptometerMicroscope(Microscope):
                                           ai_task,
                                           samples_to_read=pts_per_line,
                                           target_points=pix_per_line,
-                                          setpoints=(fast_ax_vec,),
                                           #: Very important to synchronize AOs and AIs
                                           clock_src='ao/SampleClock'
                                          )
@@ -415,7 +400,7 @@ class SusceptometerMicroscope(Microscope):
             elif ch in ['SUSCX', 'SUSCY']:
                 r_lead = self.Q_(measurement['channels'][ch]['r_lead'])
                 snap = getattr(self, 'SUSC_lockin').snapshot(update=update)['parameters']
-                sens = snap['sensitivity']['value']
+                sensitivity = snap['sensitivity']['value']
                 amp = snap['amplitude']['value'] * self.ureg(snap['amplitude']['unit'])
                 #: The factor of 10 here is because SR830 output gain is 10/sensitivity
                 prefactor *=  (r_lead / amp) / (mod_width * 10 / sensitivity)
