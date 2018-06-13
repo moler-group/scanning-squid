@@ -85,7 +85,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="pages/microscope.html">Microscope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pages/config-files.html">Configuration Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pages/units.html">Physical Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/PhysicalUnits.html">Physical Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pages/measurements.html">Measurements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/DataSetExample.html">DataSet Example</a></li>
 </ul>
@@ -188,14 +188,18 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="pages/components.html#atto.AttocubeController.check_response">check_response() (atto.AttocubeController method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="pages/components.html#atto.AttocubeController.clear_instances">clear_instances() (atto.AttocubeController method)</a>
 
       <ul>
         <li><a href="pages/components.html#daq.DAQAnalogInputs.clear_instances">(daq.DAQAnalogInputs method)</a>
 </li>
+        <li><a href="pages/components.html#scanner.Scanner.clear_instances">(scanner.Scanner method)</a>
+</li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/components.html#scanner.Scanner.control_ao_task">control_ao_task() (scanner.Scanner method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -216,7 +220,7 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="pages/components.html#qcodes.instrument_drivers.stanford_research.SR560.SR560.get_idn">get_idn() (qcodes.instrument_drivers.stanford_research.SR560.SR560 method)</a>
+      <li><a href="pages/components.html#scanner.Scanner.get_pos">get_pos() (scanner.Scanner method)</a>
 </li>
       <li><a href="pages/microscope.html#microscope.SusceptometerMicroscope.get_prefactors">get_prefactors() (microscope.SusceptometerMicroscope method)</a>
 </li>
@@ -224,12 +228,10 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="pages/components.html#daq.DAQAnalogInputVoltages.get_raw">get_raw() (daq.DAQAnalogInputVoltages method)</a>
 </li>
-      <li><a href="pages/microscope.html#microscope.Microscope.goto">goto() (microscope.Microscope method)</a>
-
-      <ul>
-        <li><a href="pages/components.html#scanner.Scanner.goto">(scanner.Scanner method)</a>
+      <li><a href="pages/components.html#scanner.Scanner.goto">goto() (scanner.Scanner method)</a>
 </li>
-      </ul></li>
+      <li><a href="pages/components.html#scanner.Scanner.goto_start_of_next_line">goto_start_of_next_line() (scanner.Scanner method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -244,10 +246,12 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="pages/microscope.html#microscope.Microscope">Microscope (class in microscope)</a>
+      <li><a href="pages/components.html#scanner.Scanner.make_ramp">make_ramp() (scanner.Scanner method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/microscope.html#microscope.Microscope">Microscope (class in microscope)</a>
+</li>
       <li><a href="pages/microscope.html#module-microscope">microscope (module)</a>
 </li>
   </ul></td>
@@ -255,10 +259,6 @@
 
 <h2 id="Q">Q</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="pages/components.html#module-qcodes.instrument_drivers.stanford_research.SR560">qcodes.instrument_drivers.stanford_research.SR560 (module)</a>
-</li>
-  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="pages/components.html#module-qcodes.instrument_drivers.stanford_research.SR830">qcodes.instrument_drivers.stanford_research.SR830 (module)</a>
 </li>
@@ -280,6 +280,8 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/components.html#scanner.Scanner.scan_line">scan_line() (scanner.Scanner method)</a>
+</li>
       <li><a href="pages/microscope.html#microscope.SusceptometerMicroscope.scan_plane">scan_plane() (microscope.SusceptometerMicroscope method)</a>
 </li>
       <li><a href="pages/components.html#scanner.Scanner">Scanner (class in scanner)</a>
@@ -290,11 +292,9 @@
 </li>
       <li><a href="pages/components.html#squids.SQUID">SQUID (class in squids)</a>
 </li>
-      <li><a href="pages/components.html#module-squids">squids (module)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="pages/components.html#qcodes.instrument_drivers.stanford_research.SR560.SR560">SR560 (class in qcodes.instrument_drivers.stanford_research.SR560)</a>
+      <li><a href="pages/components.html#module-squids">squids (module)</a>
 </li>
       <li><a href="pages/components.html#qcodes.instrument_drivers.stanford_research.SR830.SR830">SR830 (class in qcodes.instrument_drivers.stanford_research.SR830)</a>
 </li>
@@ -337,7 +337,6 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018, Logan Bishop-Van Horn.
 
     </p>
   </div>

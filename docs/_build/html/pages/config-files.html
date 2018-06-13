@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Physical Units" href="units.html" />
+    <link rel="next" title="&lt;no title&gt;" href="../examples/PhysicalUnits.html" />
     <link rel="prev" title="Microscope Components" href="components.html" /> 
 
   
@@ -90,7 +90,6 @@
 <li class="toctree-l2"><a class="reference internal" href="#measurement-configuration">Measurement Configuration</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Physical Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="measurements.html">Measurements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/DataSetExample.html">DataSet Example</a></li>
 </ul>
@@ -193,7 +192,10 @@
                     <span class="nt">&quot;MAG&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
                     <span class="nt">&quot;SUSCX&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
                     <span class="nt">&quot;SUSCY&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-                    <span class="nt">&quot;CAP&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
+                    <span class="nt">&quot;CAP&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+                    <span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+                    <span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+                    <span class="nt">&quot;z&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">},</span>
                 <span class="nt">&quot;analog_outputs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span><span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span><span class="nt">&quot;z&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
             <span class="p">},</span>
             <span class="nt">&quot;rate&quot;</span><span class="p">:</span> <span class="s2">&quot;1 MHz&quot;</span><span class="p">,</span>
@@ -249,9 +251,10 @@
                 <span class="nt">&quot;z&quot;</span><span class="p">:</span> <span class="s2">&quot;2 um/V&quot;</span><span class="p">,</span>
                 <span class="nt">&quot;comment&quot;</span><span class="p">:</span> <span class="s2">&quot;um/V_daq (2018/02)&quot;</span><span class="p">},</span>
             <span class="nt">&quot;voltage_limits&quot;</span><span class="p">:{</span>
-                <span class="nt">&quot;RT&quot;</span><span class="p">:{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;2 V&quot;</span><span class="p">,</span><span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;2 V&quot;</span><span class="p">,</span><span class="nt">&quot;z&quot;</span><span class="p">:</span> <span class="s2">&quot;2 V&quot;</span><span class="p">},</span>
-                <span class="nt">&quot;LT&quot;</span><span class="p">:{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;10 V&quot;</span><span class="p">,</span><span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;10 V&quot;</span><span class="p">,</span><span class="nt">&quot;z&quot;</span><span class="p">:</span> <span class="s2">&quot;10 V&quot;</span><span class="p">},</span>
-                <span class="nt">&quot;comment&quot;</span><span class="p">:</span><span class="s2">&quot;|V_daq| should not exceed voltage_limits.&quot;</span><span class="p">},</span>
+                <span class="nt">&quot;RT&quot;</span><span class="p">:{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">-2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">-2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="nt">&quot;z&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">-2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]},</span>
+                <span class="nt">&quot;LT&quot;</span><span class="p">:{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">-10</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span><span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">-10</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="nt">&quot;z&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">-10</span><span class="p">,</span> <span class="mi">10</span><span class="p">]},</span>
+                <span class="nt">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;V&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;comment&quot;</span><span class="p">:</span><span class="s2">&quot;V_daq should never be outside of voltage_limits.&quot;</span><span class="p">},</span>
             <span class="nt">&quot;voltage_retract&quot;</span><span class="p">:{</span><span class="nt">&quot;RT&quot;</span><span class="p">:</span> <span class="s2">&quot;-2 V&quot;</span><span class="p">,</span><span class="nt">&quot;LT&quot;</span><span class="p">:</span> <span class="s2">&quot;-10 V&quot;</span><span class="p">},</span>
             <span class="nt">&quot;speed&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;2 V/s&quot;</span><span class="p">,</span>
@@ -301,7 +304,7 @@
         <span class="nt">&quot;fname&quot;</span><span class="p">:</span> <span class="s2">&quot;scan&quot;</span><span class="p">,</span>
         <span class="nt">&quot;dir&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
         <span class="nt">&quot;fast_ax&quot;</span><span class="p">:</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span>
-        <span class="nt">&quot;range&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;4 V&quot;</span><span class="p">,</span> <span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;4 V&quot;</span><span class="p">},</span>
+        <span class="nt">&quot;range&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;3 V&quot;</span><span class="p">,</span> <span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;3 V&quot;</span><span class="p">},</span>
         <span class="nt">&quot;center&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;0 V&quot;</span><span class="p">,</span> <span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;0 V&quot;</span><span class="p">},</span>
         <span class="nt">&quot;height&quot;</span><span class="p">:</span> <span class="s2">&quot;-0.2 V&quot;</span><span class="p">,</span>
         <span class="nt">&quot;scan_rate&quot;</span><span class="p">:</span> <span class="s2">&quot;100 pixels/s&quot;</span><span class="p">,</span>
@@ -347,8 +350,8 @@
                 <span class="p">},</span>
                 <span class="nt">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Capacitance&quot;</span><span class="p">,</span>
                 <span class="nt">&quot;gain&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="nt">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;fF&quot;</span><span class="p">,</span>
-                <span class="nt">&quot;unit_latex&quot;</span><span class="p">:</span> <span class="s2">&quot;fF&quot;</span>
+                <span class="nt">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;pF&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;unit_latex&quot;</span><span class="p">:</span> <span class="s2">&quot;pF&quot;</span>
             <span class="p">}</span>
         <span class="p">}</span>
     <span class="p">},</span>
@@ -396,7 +399,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="units.html" class="btn btn-neutral float-right" title="Physical Units" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../examples/PhysicalUnits.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="components.html" class="btn btn-neutral" title="Microscope Components" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -408,7 +411,6 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018, Logan Bishop-Van Horn.
 
     </p>
   </div>

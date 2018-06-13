@@ -19,6 +19,5 @@ See :ref:`/examples/ScanPlaneExample.ipynb` for a demonstration of scanning a pl
     .. TODO::
     	- Capacitive touchdowns.
     	- Susceptibility touchdowns.
-    	- Add room temperature preamps (SR560).
     	- :class:`microscope.SamplerMicroscope`
     	- :class:`microscope.DispersiveMicroscope`

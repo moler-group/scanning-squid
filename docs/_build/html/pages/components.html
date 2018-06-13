@@ -92,7 +92,6 @@
 <li class="toctree-l3"><a class="reference internal" href="#daq">DAQ</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#others">Others</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#lockins">Lockins</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pre-amps">Pre-amps</a></li>
 </ul>
 </li>
 </ul>
@@ -100,7 +99,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="config-files.html">Configuration Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Physical Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="measurements.html">Measurements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/DataSetExample.html">DataSet Example</a></li>
 </ul>
@@ -317,17 +315,157 @@ steps &lt; 0 corresponds to stepd (down).</p>
 <div><span class="target" id="module-scanner"></span><dl class="class">
 <dt id="scanner.Scanner">
 <em class="property">class </em><code class="descclassname">scanner.</code><code class="descname">Scanner</code><span class="sig-paren">(</span><em>scanner_config: Dict[str, Any], daq_config: Dict[str, Any], temp: str, ureg: Any, **kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/scanner.html#Scanner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scanner.Scanner" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>Controls DAQ AOs to drive the scanner.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>scanner_config</strong> – Scanner configuration dictionary as defined
+in microscope configuration JSON file.</li>
+<li><strong>daq_config</strong> – DAQ configuration dictionary as defined
+in microscope configuration JSON file.</li>
+<li><strong>temp</strong> – ‘LT’ or ‘RT’ - sets the scanner voltage limit for each axis
+based on temperature mode.</li>
+<li><strong>ureg</strong> – pint UnitRegistry, manages units.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="scanner.Scanner.clear_instances">
+<code class="descname">clear_instances</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scanner.html#Scanner.clear_instances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scanner.Scanner.clear_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear scanner instances.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scanner.Scanner.control_ao_task">
+<code class="descname">control_ao_task</code><span class="sig-paren">(</span><em>cmd: str</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/scanner.html#Scanner.control_ao_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scanner.Scanner.control_ao_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write commands to the DAQ AO Task. Used during qc.Loops.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cmd</strong> – What you want the Task to do. For example,
+self.control_ao_task(‘stop’) is equivalent to self.ao_task.stop()</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scanner.Scanner.get_pos">
+<code class="descname">get_pos</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List[float]<a class="reference internal" href="../_modules/scanner.html#Scanner.get_pos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scanner.Scanner.get_pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get current scanner [x, y, z] position.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="scanner.Scanner.goto">
-<code class="descname">goto</code><span class="sig-paren">(</span><em>new_pos: str</em>, <em>retract_first: Union[bool</em>, <em>NoneType] = False</em>, <em>speed: Union[str</em>, <em>NoneType] = None</em>, <em>quiet: Union[bool</em>, <em>NoneType] = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/scanner.html#Scanner.goto"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scanner.Scanner.goto" title="Permalink to this definition">¶</a></dt>
+<code class="descname">goto</code><span class="sig-paren">(</span><em>new_pos: List[float], retract_first: Union[bool, NoneType] = False, speed: Union[str, NoneType] = None, quiet: Union[bool, NoneType] = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/scanner.html#Scanner.goto"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scanner.Scanner.goto" title="Permalink to this definition">¶</a></dt>
 <dd><p>Move scanner to given position.
 By default moves all three axes simultaneously, if necessary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>new_pos</strong> – List of [x, y, z] scanner voltage to go to.</li>
+<li><strong>retract_first</strong> – If True, scanner retracts to value determined by self.temp,
+then moves in the x,y plane, then moves in z to new_pos. Default: False.</li>
+<li><strong>speed</strong> – Speed at which to move the scanner (e.g. ‘2 V/s’) in DAQ voltage units.
+Default set in microscope configuration JSON file.</li>
+<li><strong>quiet</strong> – If True, only logs changes in logging.DEBUG mode.
+(goto is called many times during, e.g., a scan.) Default: False.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scanner.Scanner.goto_start_of_next_line">
+<code class="descname">goto_start_of_next_line</code><span class="sig-paren">(</span><em>scan_grids: Dict[str, numpy.ndarray], counter: Any</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/scanner.html#Scanner.goto_start_of_next_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scanner.Scanner.goto_start_of_next_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Moves scanner to the start of the next line to scan.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>scan_grids</strong> – Dict of {axis_name: axis_meshgrid} from utils.make_scan_grids().</li>
+<li><strong>counter</strong> – utils.Counter instance, determines current line of the grid.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scanner.Scanner.make_ramp">
+<code class="descname">make_ramp</code><span class="sig-paren">(</span><em>pos0: List, pos1: List, speed: Union[int, float]</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/scanner.html#Scanner.make_ramp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scanner.Scanner.make_ramp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a ramp in x,y,z scanner voltage from point pos0 to point pos1 at given speed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pos0</strong> – List of initial [x, y, z] scanner voltages.</li>
+<li><strong>pos1</strong> – List of final [x, y, z] scanner votlages.</li>
+<li><strong>speed</strong> – Speed at which to go to pos0 to pos1, in DAQ voltage/second.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>Array of x, y, z values to write to DAQ AOs to move</dt>
+<dd><p class="first last">scanner from pos0 to pos1.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="scanner.Scanner.retract">
 <code class="descname">retract</code><span class="sig-paren">(</span><em>speed: Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/scanner.html#Scanner.retract"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scanner.Scanner.retract" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retracts z-bender fully based on whether temp is LT or RT.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>speed</strong> – Speed at which to move the scanner (e.g. ‘2 V/s’) in DAQ voltage units.
+Default set in microscope configuration JSON file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scanner.Scanner.scan_line">
+<code class="descname">scan_line</code><span class="sig-paren">(</span><em>scan_grids: Dict[str, numpy.ndarray], ao_channels: Dict[str, int], daq_rate: Union[int, float], counter: Any, reverse=False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/scanner.html#Scanner.scan_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scanner.Scanner.scan_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scan a single line of a plane.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>scan_grids</strong> – Dict of {axis_name: axis_meshgrid} from utils.make_scan_grids().</li>
+<li><strong>ao_channels</strong> – Dict of {axis_name: ao_index} for the scanner ao channels.</li>
+<li><strong>daq_rate</strong> – DAQ sampling rate in Hz.</li>
+<li><strong>counter</strong> – utils.Counter instance, determines current line of the grid.</li>
+<li><strong>reverse</strong> – Determines scan direction (i.e. forward or backward).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -460,50 +598,6 @@ Lock-in Amplifier</p>
 
 </div></blockquote>
 </div>
-<div class="section" id="pre-amps">
-<h3>Pre-amps<a class="headerlink" href="#pre-amps" title="Permalink to this headline">¶</a></h3>
-<p>SR560 driver courtesy of <a class="reference external" href="http://qcodes.github.io/Qcodes/">QCoDeS</a>.</p>
-<blockquote>
-<div><span class="target" id="module-qcodes.instrument_drivers.stanford_research.SR560"></span><dl class="class">
-<dt id="qcodes.instrument_drivers.stanford_research.SR560.SR560">
-<em class="property">class </em><code class="descclassname">qcodes.instrument_drivers.stanford_research.SR560.</code><code class="descname">SR560</code><span class="sig-paren">(</span><em>name</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcodes/instrument_drivers/stanford_research/SR560.html#SR560"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qcodes.instrument_drivers.stanford_research.SR560.SR560" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is the qcodes driver for the SR 560 Voltage-preamplifier.</p>
-<p>This is a virtual driver only and will not talk to your instrument.</p>
-<p>Note:</p>
-<ul class="simple">
-<li>The <code class="docutils literal notranslate"><span class="pre">cutoff_lo</span></code> and <code class="docutils literal notranslate"><span class="pre">cutoff_hi</span></code> parameters will interact with
-each other on the instrument (hi cannot be &lt;= lo) but this is not
-managed here, you must ensure yourself that both are correct whenever
-you change one of them.</li>
-<li><code class="docutils literal notranslate"><span class="pre">gain</span></code> has a vernier setting, which does not yield a well-defined
-output. We restrict this driver to only the predefined gain values.</li>
-</ul>
-<dl class="method">
-<dt id="qcodes.instrument_drivers.stanford_research.SR560.SR560.get_idn">
-<code class="descname">get_idn</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcodes/instrument_drivers/stanford_research/SR560.html#SR560.get_idn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qcodes.instrument_drivers.stanford_research.SR560.SR560.get_idn" title="Permalink to this definition">¶</a></dt>
-<dd><p>Parse a standard VISA ‘*IDN?’ response into an ID dict.</p>
-<p>Even though this is the VISA standard, it applies to various other
-types as well, such as IPInstruments, so it is included here in the
-Instrument base class.</p>
-<p>Override this if your instrument does not support ‘*IDN?’ or
-returns a nonstandard IDN string. This string is supposed to be a
-comma-separated list of vendor, model, serial, and firmware, but
-semicolon and colon are also common separators so we accept them here
-as well.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A dict containing vendor, model, serial, and firmware.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
-</div></blockquote>
-</div>
 </div>
 </div>
 
@@ -527,7 +621,6 @@ as well.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018, Logan Bishop-Van Horn.
 
     </p>
   </div>

@@ -89,7 +89,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="config-files.html">Configuration Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Physical Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="measurements.html">Measurements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/DataSetExample.html">DataSet Example</a></li>
 </ul>
@@ -219,20 +218,6 @@ Default is the name of the microscope configuration file.</li>
 </tr>
 </tbody>
 </table>
-<dl class="method">
-<dt id="microscope.Microscope.goto">
-<code class="descname">goto</code><span class="sig-paren">(</span><em>new_position: List[Union[float, int]]</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/microscope.html#Microscope.goto"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.Microscope.goto" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for self.scanner.position.set() or equivalently self.scanner.goto().</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>new_position</strong> – List of [x, y, z] voltages to apply to benders.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 <dl class="method">
 <dt id="microscope.Microscope.remove_component">
 <code class="descname">remove_component</code><span class="sig-paren">(</span><em>name: str</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/microscope.html#Microscope.remove_component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.Microscope.remove_component" title="Permalink to this definition">¶</a></dt>
@@ -373,7 +358,6 @@ and ScanPlot instance populated with acquired data.</dd>
 <ul class="last simple">
 <li>Capacitive touchdowns.</li>
 <li>Susceptibility touchdowns.</li>
-<li>Add room temperature preamps (SR560).</li>
 <li><code class="xref py py-class docutils literal notranslate"><span class="pre">microscope.SamplerMicroscope</span></code></li>
 <li><code class="xref py py-class docutils literal notranslate"><span class="pre">microscope.DispersiveMicroscope</span></code></li>
 </ul>
@@ -401,7 +385,6 @@ and ScanPlot instance populated with acquired data.</dd>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018, Logan Bishop-Van Horn.
 
     </p>
   </div>
