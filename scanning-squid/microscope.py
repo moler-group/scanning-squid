@@ -348,8 +348,6 @@ class SusceptometerMicroscope(Microscope):
         try:
             loop.run()
             log.info('Scan completed. DataSet saved to {}.'.format(data.location))
-            ai_task.stop()
-            ai_task.close()
         #: If loop is aborted by user:
         except KeyboardInterrupt:
             log.warning('Scan interrupted by user. Going to [0, 0, 0] V.')

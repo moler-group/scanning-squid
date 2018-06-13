@@ -34,6 +34,7 @@ class Scanner(Instrument):
         self.metadata.update({'daq': daq_config})
         self._parse_unitful_quantities()
         self._initialize_parameters()
+        self.goto([0, 0, 0])
         
     def _parse_unitful_quantities(self):
         """Parse strings from configuration dicts into Quantities with units.
