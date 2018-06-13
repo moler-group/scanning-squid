@@ -37,10 +37,3 @@ SR830 driver courtesy of `QCoDeS <http://qcodes.github.io/Qcodes/>`_.
 
 	.. automodule:: qcodes.instrument_drivers.stanford_research.SR830
 		:members: SR830
-
-Pre-amps
-~~~~~~~~
-SR560 driver courtesy of `QCoDeS <http://qcodes.github.io/Qcodes/>`_.
-
-	.. automodule:: qcodes.instrument_drivers.stanford_research.SR560
-		:members: SR560
