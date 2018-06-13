@@ -22,6 +22,7 @@ dependencies:
  - pint
  - scipy
  - nidaqmx-python
+ - jupyterlab
  - pip:
     - qcodes==0.1.11
     - sphinxcontrib-jsonschema
