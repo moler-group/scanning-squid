@@ -8,7 +8,10 @@
                     "MAG": 0,
                     "SUSCX": 1,
                     "SUSCY": 2,
-                    "CAP": 3},
+                    "CAP": 3,
+                    "x": 4,
+                    "y": 5,
+                    "z": 6},
                 "analog_outputs": {"x": 0,"y": 1,"z": 2}
             },
             "rate": "1 MHz",
@@ -64,9 +67,10 @@
                 "z": "2 um/V",
                 "comment": "um/V_daq (2018/02)"},
             "voltage_limits":{
-                "RT":{"x": "2 V","y": "2 V","z": "2 V"},
-                "LT":{"x": "10 V","y": "10 V","z": "10 V"},
-                "comment":"|V_daq| should not exceed voltage_limits."},
+                "RT":{"x": [-2, 2], "y": [-2, 2], "z": [-2, 2]},
+                "LT":{"x": [-10, 10],"y": [-10, 10], "z": [-10, 10]},
+                "unit": "V",
+                "comment":"V_daq should never be outside of voltage_limits."},
             "voltage_retract":{"RT": "-2 V","LT": "-10 V"},
             "speed": {
                 "value": "2 V/s",

@@ -14,12 +14,12 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../qcodes-squid'))
+sys.path.insert(0, os.path.abspath('../scanning-squid'))
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'qcodes-squid'
+project = 'scanning-squid'
 copyright = '2018, Logan Bishop-Van Horn'
 author = 'Logan Bishop-Van Horn'
 
@@ -47,7 +47,6 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
     'sphinx.ext.napoleon',
     'nbsphinx',
 ]
@@ -83,6 +82,7 @@ pygments_style = 'sphinx'
 
 
 # -- Options for HTML output -------------------------------------------------
+html_show_copyright = False
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.

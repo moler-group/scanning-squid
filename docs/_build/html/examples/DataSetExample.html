@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DataSet Example Notebook &mdash; qcodes-squid  documentation</title>
+  <title>DataSet Example &mdash; scanning-squid  documentation</title>
   
 
   
@@ -27,7 +27,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Measurements" href="../pages/measurements.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -46,7 +47,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home"> qcodes-squid
+            <a href="../index.html" class="icon icon-home"> scanning-squid
           
 
           
@@ -81,12 +82,17 @@
             
             
               <p class="caption"><span class="caption-text">Documentation:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../pages/getting-started.html">Getting Started</a></li>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../pages/microscope.html">Microscope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pages/config-files.html">Configuration Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../pages/units.html">Physical Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pages/measurements.html">Measurements</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DataSet Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Plotting">Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Explore-DataSet-metadata">Explore DataSet metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Convert-DataSet-to-arrays-with-real-units">Convert DataSet to arrays with real units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Export-data-to,-e.g.,-a-MAT-file:">Export data to, e.g., a MAT file:</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -101,7 +107,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">qcodes-squid</a>
+          <a href="../index.html">scanning-squid</a>
         
       </nav>
 
@@ -132,7 +138,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>DataSet Example Notebook</li>
+      <li>DataSet Example</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -334,8 +340,8 @@ div.nboutput div.output_area.stderr {
     margin-right: 4px;  /* make room for the exclamation icon */
 }
 </style>
-<div class="section" id="DataSet-Example-Notebook">
-<h1>DataSet Example Notebook<a class="headerlink" href="#DataSet-Example-Notebook" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="DataSet-Example">
+<h1>DataSet Example<a class="headerlink" href="#DataSet-Example" title="Permalink to this headline">¶</a></h1>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre>
 <span></span>In [2]:
@@ -387,8 +393,9 @@ div.nboutput div.output_area.stderr {
 </pre></div>
 </div>
 </div>
-<div class="section" id="Generate-interactive-plot-like-the-one-created-during-the-scan:">
-<h2>Generate interactive plot like the one created during the scan:<a class="headerlink" href="#Generate-interactive-plot-like-the-one-created-during-the-scan:" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="Plotting">
+<h2>Plotting<a class="headerlink" href="#Plotting" title="Permalink to this headline">¶</a></h2>
+<p>Generate interactive plot like the one created during the scan:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre>
 <span></span>In [5]:
@@ -405,9 +412,7 @@ div.nboutput div.output_area.stderr {
 <div class="output_area docutils container">
 <script type="application/vnd.jupyter.widget-view+json">{"model_id": "17871d0e52ef433c86f3afea9b1272c1", "version_major": 2, "version_minor": 0}</script></div>
 </div>
-</div>
-<div class="section" id="Display-plot-as-image-(not-interactive):">
-<h2>Display plot as image (not interactive):<a class="headerlink" href="#Display-plot-as-image-(not-interactive):" title="Permalink to this headline">¶</a></h2>
+<p>Display plot as image (not interactive):</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre>
 <span></span>In [6]:
@@ -424,13 +429,12 @@ div.nboutput div.output_area.stderr {
 </pre></div>
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_DataSetExample_7_0.png" src="../_images/examples_DataSetExample_7_0.png" />
-</div>
+<img alt="../_images/examples_DataSetExample_8_0.png" src="../_images/examples_DataSetExample_8_0.png" />
 </div>
 </div>
 </div>
 <div class="section" id="Explore-DataSet-metadata">
-<h1>Explore DataSet metadata<a class="headerlink" href="#Explore-DataSet-metadata" title="Permalink to this headline">¶</a></h1>
+<h2>Explore DataSet metadata<a class="headerlink" href="#Explore-DataSet-metadata" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre>
 <span></span>In [7]:
@@ -453,8 +457,7 @@ div.nboutput div.output_area.stderr {
 [&#39;fname&#39;, &#39;dir&#39;, &#39;fast_ax&#39;, &#39;range&#39;, &#39;center&#39;, &#39;height&#39;, &#39;scan_rate&#39;, &#39;scan_size&#39;, &#39;channels&#39;, &#39;prefactors&#39;]
 </pre></div></div>
 </div>
-<div class="section" id="Measurement-loop-metadata">
-<h2>Measurement loop metadata<a class="headerlink" href="#Measurement-loop-metadata" title="Permalink to this headline">¶</a></h2>
+<p>Measurement loop metadata</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre>
 <span></span>In [8]:
@@ -526,9 +529,7 @@ div.nboutput div.output_area.stderr {
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Instrument-snapshots">
-<h2>Instrument snapshots<a class="headerlink" href="#Instrument-snapshots" title="Permalink to this headline">¶</a></h2>
+<p>Instrument snapshots</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre>
 <span></span>In [10]:
@@ -591,11 +592,9 @@ buffer_npts 0
 </pre></div></div>
 </div>
 </div>
-</div>
 <div class="section" id="Convert-DataSet-to-arrays-with-real-units">
-<h1>Convert DataSet to arrays with real units<a class="headerlink" href="#Convert-DataSet-to-arrays-with-real-units" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="Leave-everything-in-DAQ-voltage-units">
-<h2>Leave everything in DAQ voltage units<a class="headerlink" href="#Leave-everything-in-DAQ-voltage-units" title="Permalink to this headline">¶</a></h2>
+<h2>Convert DataSet to arrays with real units<a class="headerlink" href="#Convert-DataSet-to-arrays-with-real-units" title="Permalink to this headline">¶</a></h2>
+<p>Leave everything in DAQ voltage units</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre>
 <span></span>In [11]:
@@ -632,9 +631,8 @@ buffer_npts 0
 (&#39;CAP&#39;, &lt;Unit(&#39;volt&#39;)&gt;)
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Convert--data-to-real-units,-but-leave--and--as-voltages">
-<h2>Convert <span class="math notranslate nohighlight">\(z\)</span>-data to real units, but leave <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span> as voltages<a class="headerlink" href="#Convert--data-to-real-units,-but-leave--and--as-voltages" title="Permalink to this headline">¶</a></h2>
+<p>Convert <span class="math notranslate nohighlight">\(z\)</span>-data to real units, but leave <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span>
+as voltages</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre>
 <span></span>In [13]:
@@ -671,9 +669,8 @@ buffer_npts 0
 (&#39;CAP&#39;, &lt;Unit(&#39;femtofarad&#39;)&gt;)
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Convert--data-to-real-units-and-,--to-:">
-<h2>Convert <span class="math notranslate nohighlight">\(z\)</span>-data to real units and <span class="math notranslate nohighlight">\(x\)</span>, <span class="math notranslate nohighlight">\(y\)</span> to <span class="math notranslate nohighlight">\(\mu\mathrm{m}\)</span>:<a class="headerlink" href="#Convert--data-to-real-units-and-,--to-:" title="Permalink to this headline">¶</a></h2>
+<p>Convert <span class="math notranslate nohighlight">\(z\)</span>-data to real units and <span class="math notranslate nohighlight">\(x\)</span>, <span class="math notranslate nohighlight">\(y\)</span> to
+<span class="math notranslate nohighlight">\(\mu\mathrm{m}\)</span>:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre>
 <span></span>In [15]:
@@ -728,9 +725,8 @@ buffer_npts 0
 (-34.0, &lt;Unit(&#39;micrometer&#39;)&gt;)
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Convert--data-to-real-units-and-,--to-:">
-<h2>Convert <span class="math notranslate nohighlight">\(z\)</span>-data to real units and <span class="math notranslate nohighlight">\(x\)</span>, <span class="math notranslate nohighlight">\(y\)</span> to <span class="math notranslate nohighlight">\(\mathrm{nm}\)</span>:<a class="headerlink" href="#Convert--data-to-real-units-and-,--to-:" title="Permalink to this headline">¶</a></h2>
+<p>Convert <span class="math notranslate nohighlight">\(z\)</span>-data to real units and <span class="math notranslate nohighlight">\(x\)</span>, <span class="math notranslate nohighlight">\(y\)</span> to
+<span class="math notranslate nohighlight">\(\mathrm{nm}\)</span>:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre>
 <span></span>In [18]:
@@ -786,9 +782,8 @@ buffer_npts 0
 </pre></div></div>
 </div>
 </div>
-</div>
 <div class="section" id="Export-data-to,-e.g.,-a-MAT-file:">
-<h1>Export data to, e.g., a MAT file:<a class="headerlink" href="#Export-data-to,-e.g.,-a-MAT-file:" title="Permalink to this headline">¶</a></h1>
+<h2>Export data to, e.g., a MAT file:<a class="headerlink" href="#Export-data-to,-e.g.,-a-MAT-file:" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre>
 <span></span>In [21]:
@@ -820,6 +815,7 @@ buffer_npts 0
 </div>
 </div>
 </div>
+</div>
 
 
            </div>
@@ -827,12 +823,18 @@ buffer_npts 0
           </div>
           <footer>
   
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../pages/measurements.html" class="btn btn-neutral" title="Measurements" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018, Logan Bishop-Van Horn.
 
     </p>
   </div>

@@ -1,4 +1,7 @@
 Physical Units
 ==============
 
-qcodes-squid knows about units.
+scanning-squid knows about units.
+
+.. TODO::
+	Add examples of manipulating units with :code:`pint`.

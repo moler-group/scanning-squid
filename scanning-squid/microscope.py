@@ -77,7 +77,6 @@ class Microscope(Station):
         self._add_scanner()
         self._add_SQUID()
         self._add_lockins()
-        self._add_preamps()
 
     def _add_atto(self):
         """Add Attocube controller to microscope.
@@ -129,13 +128,6 @@ class Microscope(Station):
             self.add_component(getattr(self, '{}_lockin'.format(lockin)))
             log.info('{} successfully added to microscope.'.format(name))
             
-    def _add_preamps(self) -> None:
-        """Add preamps (e.g. SR560) to microscope.
-
-        .. TODO:: Add SR560 preamps.
-        """
-        pass
-            
     def set_lockins(self, measurement: Dict[str, Any]) -> None:
         """Initialize lockins for given measurement.
 
@@ -154,14 +146,6 @@ class Microscope(Station):
                         value = self.Q_(channels[ch]['lockin'][param]).to(unit).magnitude
                         log.info('Setting {} on {} to {} {}.'.format(param, lockin, value, unit))
                         parameters[param].set(value)
-    
-    def goto(self, new_position: List[Union[float, int]]) -> None:
-        """Alias for self.scanner.position.set() or equivalently self.scanner.goto().
-
-        Args:
-            new_position: List of [x, y, z] voltages to apply to benders.
-        """
-        self.scanner.position(new_position)
 
     def tdCAP(self, tdc_params: Dict[str, Any], getting_plane: bool=False) -> None:
         """Capacitive touchdown.
@@ -212,8 +196,8 @@ class Microscope(Station):
                 pass
             except KeyboardInterrupt:
                 log.warning('Scan interrupted by user. Going back to {}.'.format(old_pos))
-                self.goto(old_pos)
-        self.goto(old_pos)
+                self.scanner.goto(old_pos)
+        self.scanner.goto(old_pos)
         return data
  
     def remove_component(self, name: str) -> None:
@@ -281,7 +265,7 @@ class SusceptometerMicroscope(Microscope):
         slow_ax = 'x' if fast_ax == 'y' else 'y'
         
         pix_per_line = scan_params['scan_size'][fast_ax]
-        line_duration = pix_per_line * self.Q_('pixels') / self.Q_(scan_params['scan_rate'])
+        line_duration = pix_per_line * self.ureg('pixels') / self.Q_(scan_params['scan_rate'])
         pts_per_line = int(daq_rate * line_duration.to('s').magnitude)
         
         plane = self.scanner.metadata['position']['plane']
@@ -292,7 +276,7 @@ class SusceptometerMicroscope(Microscope):
                                            pts_per_line, plane, height)
         utils.validate_scan_params(self.scanner.metadata, scan_params,
                                    scan_grids, self.temp, self.ureg, log)
-        self.goto([scan_grids[axis][0][0] for axis in ['x', 'y', 'z']])
+        self.scanner.goto([scan_grids[axis][0][0] for axis in ['x', 'y', 'z']])
         self.set_lockins(scan_params)
         #: get channel prefactors in pint Quantity form
         prefactors = self.get_prefactors(scan_params)
@@ -300,97 +284,90 @@ class SusceptometerMicroscope(Microscope):
         prefactor_strs = {}
         for ch, prefac in prefactors.items():
             prefactor_strs.update({ch: '{} {}'.format(prefac.magnitude, prefac.units)})
-        fast_ax_vec = qc.DataArray(name='position_{}'.format(fast_ax),
-                                   label='{} position'.format(fast_ax),
-                                   array_id='benders_position_{}_set'.format(fast_ax),
-                                   unit='V',
-                                   is_setpoint=True,
-                                   preset_data=scan_vectors[fast_ax]
-                                   )
-        slow_ax_vec = qc.DataArray(name='position_{}'.format(slow_ax),
-                                   label='{} position'.format(slow_ax),
-                                   array_id='benders_position_{}'.format(slow_ax),
-                                   unit='V',
-                                   is_setpoint=True,
-                                   preset_data=scan_vectors[slow_ax]
-                                   )
-        with nidaqmx.Task('scan_plane_ai_task') as ai_task:
-            self.remove_component('daq_ai')
-            if hasattr(self, 'daq_ai'):
-                self.daq_ai.clear_instances()
-            self.daq_ai = DAQAnalogInputs('daq_ai',
-                                          daq_name,
-                                          daq_rate,
-                                          channels,
-                                          ai_task,
-                                          samples_to_read=pts_per_line,
-                                          target_points=pix_per_line,
-                                          setpoints=(fast_ax_vec,),
-                                          #: Very important to synchronize AOs and AIs
-                                          clock_src='ao/SampleClock'
-                                         )
-            self.add_component(self.daq_ai)
-            slow_ax_position = getattr(self.scanner, 'position_{}'.format(slow_ax))
-            slow_ax_start = scan_vectors[slow_ax][0]
-            slow_ax_end = scan_vectors[slow_ax][-1]
-            slow_ax_step = scan_vectors[slow_ax][1] - scan_vectors[slow_ax][0]
-            #: There is probably a counter built in to qc.Loop, but I couldn't find it
-            loop_counter = utils.Counter()
-            scan_plot = ScanPlot(scan_params, prefactors, self.ureg)
-            loop = qc.Loop(slow_ax_position.sweep(start=slow_ax_start,
-                                                  stop=slow_ax_end,
-                                                  step=slow_ax_step), delay=0.1
-            ).each(
-                #: Create AO task and queue data to be written to AOs
-                qc.Task(self.scanner.scan_line, scan_grids, ao_channels, daq_rate, loop_counter),
-                #: Start AI task; acquisition won't start until AO task is started
-                qc.Task(ai_task.start),
-                #: Start AO task
-                qc.Task(self.scanner.control_ao_task, 'start'),
-                #: Acquire voltage from all active AI channels
-                self.daq_ai.voltage,
-                qc.Task(ai_task.wait_until_done),
-                qc.Task(self.scanner.control_ao_task, 'wait_until_done'),
-                qc.Task(ai_task.stop),
-                #: Stop and close AO task so that AOs can be used for goto
-                qc.Task(self.scanner.control_ao_task, 'stop'),
-                qc.Task(self.scanner.control_ao_task, 'close'),
-                qc.Task(self.scanner.goto_start_of_next_line, scan_grids, loop_counter),
-                #: Update and save plot
-                qc.Task(scan_plot.update, qc.loops.active_data_set, loop_counter),
-                qc.Task(scan_plot.save),
-                qc.Task(loop_counter.advance)
-            ).then(
-                qc.Task(self.daq_ai.clear_instances),
-                qc.Task(self.goto, old_pos),
-                qc.Task(self.CAP_lockin.amplitude, 0.004),
-                qc.Task(self.SUSC_lockin.amplitude, 0.004)
-            )
-            #: loop.metadata will be saved in DataSet
-            loop.metadata.update(scan_params)
-            loop.metadata.update({'prefactors': prefactor_strs})
-            for ch, idx in channels.items():
-                loop.metadata['channels'][ch].update({'ai': idx})
-            data = loop.get_data_set(name=scan_params['fname'])
-            #: Run the loop
+        #with nidaqmx.Task('scan_plane_ai_task') as ai_task:
+        ai_task = nidaqmx.Task('scan_plane_ai_task')
+        self.remove_component('daq_ai')
+        if hasattr(self, 'daq_ai'):
+            self.daq_ai.clear_instances()
+        self.daq_ai = DAQAnalogInputs('daq_ai',
+                                      daq_name,
+                                      daq_rate,
+                                      channels,
+                                      ai_task,
+                                      samples_to_read=pts_per_line,
+                                      target_points=pix_per_line,
+                                      #: Very important to synchronize AOs and AIs
+                                      clock_src='ao/SampleClock'
+                                     )
+        self.add_component(self.daq_ai)
+        slow_ax_position = getattr(self.scanner, 'position_{}'.format(slow_ax))
+        slow_ax_start = scan_vectors[slow_ax][0]
+        slow_ax_end = scan_vectors[slow_ax][-1]
+        slow_ax_step = scan_vectors[slow_ax][1] - scan_vectors[slow_ax][0]
+        #: There is probably a counter built in to qc.Loop, but I couldn't find it
+        loop_counter = utils.Counter()
+        scan_plot = ScanPlot(scan_params, prefactors, self.ureg)
+        loop = qc.Loop(slow_ax_position.sweep(start=slow_ax_start,
+                                              stop=slow_ax_end,
+                                              step=slow_ax_step), delay=0.1
+        ).each(
+            #: Create AO task and queue data to be written to AOs
+            qc.Task(self.scanner.scan_line, scan_grids, ao_channels, daq_rate, loop_counter),
+            #: Start AI task; acquisition won't start until AO task is started
+            qc.Task(ai_task.start),
+            #: Start AO task
+            qc.Task(self.scanner.control_ao_task, 'start'),
+            #: Acquire voltage from all active AI channels
+            self.daq_ai.voltage,
+            qc.Task(ai_task.wait_until_done),
+            qc.Task(self.scanner.control_ao_task, 'wait_until_done'),
+            qc.Task(ai_task.stop),
+            #: Stop and close AO task so that AOs can be used for goto
+            qc.Task(self.scanner.control_ao_task, 'stop'),
+            qc.Task(self.scanner.control_ao_task, 'close'),
+            qc.Task(self.scanner.goto_start_of_next_line, scan_grids, loop_counter),
+            #: Update and save plot
+            qc.Task(scan_plot.update, qc.loops.active_data_set, loop_counter),
+            qc.Task(scan_plot.save),
+            qc.Task(loop_counter.advance)
+        ).then(
+            qc.Task(ai_task.stop),
+            qc.Task(ai_task.close),
+            qc.Task(self.daq_ai.clear_instances),
+            qc.Task(self.scanner.goto, old_pos),
+            qc.Task(self.CAP_lockin.amplitude, 0.004),
+            qc.Task(self.SUSC_lockin.amplitude, 0.004)
+        )
+        #: loop.metadata will be saved in DataSet
+        loop.metadata.update(scan_params)
+        loop.metadata.update({'prefactors': prefactor_strs})
+        for ch, idx in channels.items():
+            loop.metadata['channels'][ch].update({'ai': idx})
+        data = loop.get_data_set(name=scan_params['fname'])
+        #: Run the loop
+        try:
+            loop.run()
+            log.info('Scan completed. DataSet saved to {}.'.format(data.location))
+        #: If loop is aborted by user:
+        except KeyboardInterrupt:
+            log.warning('Scan interrupted by user. Going to [0, 0, 0] V.')
+            #: Stop 'scan_plane_ai_task' so that we can read our current position
+            ai_task.stop()
+            ai_task.close()
+            #: If there's an active AO task, close it so that we can use goto
             try:
-                loop.run()
-                log.info('Scan completed. DataSet saved to {}.'.format(data.location))
-            #: If loop is aborted by user:
-            except KeyboardInterrupt:
-                log.warning('Scan interrupted by user. Going to {}.'.format(old_pos))
-                #: If there's an active AO task, close it so that we can use goto
-                if nidaqmx.system.System.local().tasks.task_names:
-                    self.scanner.control_ao_task('stop')
-                    self.scanner.control_ao_task('close')
-                self.goto(old_pos)
-                self.CAP_lockin.amplitude(0.004)
-                self.SUSC_lockin.amplitude(0.004)
-                log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
+                self.scanner.control_ao_task('stop')
+                self.scanner.control_ao_task('close')
+            except:
+                pass
+            self.scanner.goto([0, 0, 0])
+            self.CAP_lockin.amplitude(0.004)
+            self.SUSC_lockin.amplitude(0.004)
+            log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
         self.remove_component('daq_ai')
         return data, scan_plot
 
-    def get_prefactors(self, measurement: Dict[str, Any], update: bool=True):
+    def get_prefactors(self, measurement: Dict[str, Any], update: bool=True) -> Dict[str, Any]:
         """For each channel, calculate prefactors to convert DAQ voltage into real units.
 
         Args:
@@ -400,7 +377,8 @@ class SusceptometerMicroscope(Microscope):
                 latest values (should this even be an option)?
 
         Returns:
-            prefactors: Dict of {channel_name: prefactor} where prefactor is a pint Quantity.
+            Dict[str, Quantity]: prefactors
+                Dict of {channel_name: prefactor} where prefactor is a pint Quantity.
 
         .. TODO:: Add current imaging channel.
         """
@@ -414,7 +392,7 @@ class SusceptometerMicroscope(Microscope):
             elif ch in ['SUSCX', 'SUSCY']:
                 r_lead = self.Q_(measurement['channels'][ch]['r_lead'])
                 snap = getattr(self, 'SUSC_lockin').snapshot(update=update)['parameters']
-                sens = snap['sensitivity']['value']
+                sensitivity = snap['sensitivity']['value']
                 amp = snap['amplitude']['value'] * self.ureg(snap['amplitude']['unit'])
                 #: The factor of 10 here is because SR830 output gain is 10/sensitivity
                 prefactor *=  (r_lead / amp) / (mod_width * 10 / sensitivity)

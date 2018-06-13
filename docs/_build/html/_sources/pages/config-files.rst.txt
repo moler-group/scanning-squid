@@ -5,12 +5,14 @@ Parameters of both the microscope itself and of measurements it will perform are
 
 Microscope Configuration
 ------------------------
+Example configuration file for :class:`microscope.SusceptometerMicroscope`.
 
     .. literalinclude:: ../examples/config_microscope.json
         :language: json
 
 Measurement Configuration
 -------------------------
+Example configuration file for :meth:`microscope.SusceptometerMicroscope.scan_plane`.
 
     .. literalinclude:: ../examples/config_measurements.json
         :language: json

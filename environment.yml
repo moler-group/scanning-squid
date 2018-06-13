@@ -1,4 +1,4 @@
-name: qcodes-squid
+name: scanning-squid
 channels: 
  - defaults
  - conda-forge
@@ -22,7 +22,8 @@ dependencies:
  - pint
  - scipy
  - nidaqmx-python
+ - jupyterlab
  - pip:
-    - qcodes
+    - qcodes==0.1.11
     - sphinxcontrib-jsonschema
     - nbsphinx
