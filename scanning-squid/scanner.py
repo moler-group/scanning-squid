@@ -36,6 +36,8 @@ class Scanner(Instrument):
         self._initialize_parameters()
         
     def _parse_unitful_quantities(self):
+        """Parse strings from configuration dicts into Quantities with units.
+        """
         self.daq_rate = self.Q_(self.metadata['daq']['rate']).to('Hz').magnitude
         self.voltage_retract = {'RT': self.Q_(self.metadata['voltage_retract']['RT']),
                                 'LT': self.Q_(self.metadata['voltage_retract']['LT'])}
@@ -53,8 +55,7 @@ class Scanner(Instrument):
                 self.voltage_limits[temp].update({axis: lims})
                 
     def _initialize_parameters(self):
-        """
-        Add parameters to instrument upon initialization.
+        """Add parameters to instrument upon initialization.
         """
         v_limits = []
         for axis in ['x', 'y', 'z']:
@@ -69,7 +70,6 @@ class Scanner(Instrument):
                             get_cmd=self.get_pos,
                             set_cmd=self.goto
                             )
-        #for axis, idx in self.metadata['daq']['channels']['analog_outputs'].items():
         for i, axis in enumerate(['x', 'y', 'z']):
             lims = self.voltage_limits[self.temp][axis]
             lims_V = [lim.to('V').magnitude for lim in lims]
@@ -94,14 +94,19 @@ class Scanner(Instrument):
             self.metadata['position'].update({ax: '{} V'.format(pos[i])})
         return pos
     
-    def goto(self,
-             new_pos: str,
-             retract_first: Optional[bool]=False,
-             speed: Optional[str]=None,
-             quiet: Optional[bool]=False) -> None:
-        """
-        Move scanner to given position.
+    def goto(self, new_pos: List[float], retract_first: Optional[bool]=False,
+             speed: Optional[str]=None, quiet: Optional[bool]=False) -> None:
+        """Move scanner to given position.
         By default moves all three axes simultaneously, if necessary.
+
+        Args:
+            new_pos: List of [x, y, z] scanner voltage to go to.
+            retract_first: If True, scanner retracts to value determined by self.temp,
+                then moves in the x,y plane, then moves in z to new_pos. Default: False.
+            speed: Speed at which to move the scanner (e.g. '2 V/s') in DAQ voltage units.
+                Default set in microscope configuration JSON file.
+            quiet: If True, only logs changes in logging.DEBUG mode.
+                (goto is called many times during, e.g., a scan.) Default: False.
         """
         old_pos = self.position()
         if speed is None:
@@ -115,7 +120,7 @@ class Scanner(Instrument):
                 err += 'Voltage limits are {} V.'
                 raise ValueError(err.format(ax, ax_lim))
         if not retract_first:
-            ramp = self._make_ramp(old_pos, new_pos, speed)
+            ramp = self.make_ramp(old_pos, new_pos, speed)
             with nidaqmx.Task('goto_ao_task') as ao_task:
                 for axis in ['x', 'y', 'z']:
                     idx = self.metadata['daq']['channels']['analog_outputs'][axis]
@@ -142,23 +147,31 @@ class Scanner(Instrument):
                                           'z': '{} V'.format(current_pos[2])})
             
     def retract(self, speed: Optional[str]=None) -> None:
-        """
-        Retracts z-bender fully based on whether temp is LT or RT.
+        """Retracts z-bender fully based on whether temp is LT or RT.
+
+        Args:
+                speed: Speed at which to move the scanner (e.g. '2 V/s') in DAQ voltage units.
+                    Default set in microscope configuration JSON file.
         """
         if speed is None:
             speed = self.speed.to('V/s').magnitude
         else:
             speed = self.Q_(speed).to('V/s').magnitude
-        old_pos = self.position()
+        current_pos = self.position()
         v_retract = self.Q_(self.voltage_retract[self.temp]).to('V').magnitude
-        self.goto([old_pos[0], old_pos[1], v_retract], speed='{} V/s'.format(speed))
+        self.goto([current_pos[0], current_pos[1], v_retract], speed='{} V/s'.format(speed))
     
-    def scan_line(self,
-                  scan_grids: Dict[str, Any],
-                  ao_channels: Dict[str, int],
-                  daq_rate: Union[int, float],
-                  counter: Any,
-                  reverse=False) -> None:
+    def scan_line(self, scan_grids: Dict[str, np.ndarray], ao_channels: Dict[str, int],
+                  daq_rate: Union[int, float], counter: Any, reverse=False) -> None:
+        """Scan a single line of a plane.
+
+        Args:
+            scan_grids: Dict of {axis_name: axis_meshgrid} from utils.make_scan_grids().
+            ao_channels: Dict of {axis_name: ao_index} for the scanner ao channels.
+            daq_rate: DAQ sampling rate in Hz.
+            counter: utils.Counter instance, determines current line of the grid.
+            reverse: Determines scan direction (i.e. forward or backward).
+        """
         daq_name = self.metadata['daq']['name']
         self.ao_task = nidaqmx.Task('scan_line_ao_task')
         out = []
@@ -177,16 +190,23 @@ class Scanner(Instrument):
                                                 samps_per_chan=len(out[0]))
         log.debug('Writing line {}.'.format(line))
         self.ao_task.write(np.array(out), auto_start=False)
-        for axis in ['x', 'y', 'z']:
-            self.metadata['position'].update({
-                axis: '{} V'.format(scan_grids[axis][line][last_point])
-            })
+        # for axis in ['x', 'y', 'z']:
+        #     self.metadata['position'].update({
+        #         axis: '{} V'.format(scan_grids[axis][line][last_point])
+        #     })
         
-    def goto_start_of_next_line(self, scan_grids, counter):
+    def goto_start_of_next_line(self, scan_grids: Dict[str, np.ndarray], counter: Any) -> None:
+        """Moves scanner to the start of the next line to scan.
+
+        Args:
+            scan_grids: Dict of {axis_name: axis_meshgrid} from utils.make_scan_grids().
+            counter: utils.Counter instance, determines current line of the grid.
+        """
         line = counter.count
         try:
             start_of_next_line = [scan_grids[axis][line+1][0] for axis in ['x', 'y', 'z']]
             self.goto(start_of_next_line, quiet=True)
+        #: If `line` is the last line in the scan, do nothing.
         except IndexError:
             pass
 
@@ -194,17 +214,32 @@ class Scanner(Instrument):
         self.scanner.td_has_occurred = False
     
     def clear_instances(self):
+        """Clear scanner instances.
+        """
         for inst in self.instances():
             self.remove_instance(inst)
             
-    def control_ao_task(self, cmd):
+    def control_ao_task(self, cmd: str) -> None:
+        """Write commands to the DAQ AO Task. Used during qc.Loops.
+
+        Args:
+            cmd: What you want the Task to do. For example,
+                self.control_ao_task('stop') is equivalent to self.ao_task.stop()
+        """
         if hasattr(self, 'ao_task'):
             getattr(self.ao_task, cmd)()
 
-    def _make_ramp(self, pos0: List, pos1: List, speed: Union[int, float]) -> np.ndarray:
-        """
-        Generates a ramp in x,y,z scanner voltage from
-        point pos0 to point pos1 at given speed.
+    def make_ramp(self, pos0: List, pos1: List, speed: Union[int, float]) -> np.ndarray:
+        """Generates a ramp in x,y,z scanner voltage from point pos0 to point pos1 at given speed.
+
+        Args:
+            pos0: List of initial [x, y, z] scanner voltages.
+            pos1: List of final [x, y, z] scanner votlages.
+            speed: Speed at which to go to pos0 to pos1, in DAQ voltage/second.
+
+        Returns:
+            np.ndarray: Array of x, y, z values to write to DAQ AOs to move
+                scanner from pos0 to pos1.
         """
         if speed > self.speed.to('V/s').magnitude:
             msg = 'Setting ramp speed to maximum allowed: {} V/s.'
@@ -219,14 +254,29 @@ class Scanner(Instrument):
             ramp.append(np.linspace(pos0[i], pos1[i], npts))
         return np.array(ramp)
     
-    def _goto_x(self, xpos: List[float]):
-        pos = self.get_pos() 
-        self.goto([xpos, pos[1], pos[2]], quiet=True)
+    def _goto_x(self, xpos: float) -> None:
+        """Go to give x position.
+
+        Args:
+            xpos: x position to go to, in DAQ voltage.
+        """
+        current_pos = self.get_pos() 
+        self.goto([xpos, current_pos[1], current_pos[2]], quiet=True)
         
-    def _goto_y(self, ypos: List[float]):
-        pos = self.get_pos()
-        self.goto([pos[0], ypos, pos[2]], quiet=True)
+    def _goto_y(self, ypos: float) -> None:
+        """Go to give y position.
+
+        Args:
+            ypos: y position to go to, in DAQ voltage.
+        """
+        current_pos = self.position()
+        self.goto([current_pos[0], ypos, current_pos[2]], quiet=True)
     
-    def _goto_z(self, zpos: List[float]):
-        pos = self.get_pos()
-        self.goto([pos[0], pos[1], zpos], quiet=True)
+    def _goto_z(self, zpos: float) -> None:
+        """Go to give z position.
+
+        Args:
+            zpos: z position to go to, in DAQ voltage.
+        """
+        current_pos = self.position()
+        self.goto([current_pos[0], current_pos[1], zpos], quiet=True)
