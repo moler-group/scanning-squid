@@ -125,9 +125,6 @@ class Scanner(Instrument):
                 pts = ao_task.write(ramp, auto_start=False)
                 ao_task.start()
                 ao_task.wait_until_done()
-                self.metadata['position'].update({'x': '{} V'.format(new_pos[0]),
-                                                  'y': '{} V'.format(new_pos[1]),
-                                                  'z': '{} V'.format(new_pos[2])})
                 log.debug('Wrote {} samples to {}.'.format(pts, ao_task.channel_names))
         else:
             self.retract(speed=speed)
@@ -135,10 +132,14 @@ class Scanner(Instrument):
             self.goto([new_pos[0], new_pos[1], cur_pos[2]], speed=speed)
             cur_pos = self.get_pos()
             self.goto([cur_pos[0], cur_pos[1], new_pos[2]], speed=speed)
+        current_pos = self.position()
         if quiet:
-            log.debug('Moved scanner from {} V to {} V.'.format(old_pos, new_pos))
+            log.debug('Moved scanner from {} V to {} V.'.format(old_pos, current_pos))
         else:
-             log.info('Moved scanner from {} V to {} V.'.format(old_pos, new_pos))
+             log.info('Moved scanner from {} V to {} V.'.format(old_pos, current_pos))
+        self.metadata['position'].update({'x': '{} V'.format(current_pos[0]),
+                                          'y': '{} V'.format(current_pos[1]),
+                                          'z': '{} V'.format(current_pos[2])})
             
     def retract(self, speed: Optional[str]=None) -> None:
         """

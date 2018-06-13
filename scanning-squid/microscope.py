@@ -147,13 +147,13 @@ class Microscope(Station):
                         log.info('Setting {} on {} to {} {}.'.format(param, lockin, value, unit))
                         parameters[param].set(value)
     
-    def goto(self, new_position: List[Union[float, int]]) -> None:
-        """Alias for self.scanner.position.set() or equivalently self.scanner.goto().
+    # def goto(self, new_position: List[Union[float, int]]) -> None:
+    #     """Alias for self.scanner.position.set() or equivalently self.scanner.goto().
 
-        Args:
-            new_position: List of [x, y, z] voltages to apply to benders.
-        """
-        self.scanner.position(new_position)
+    #     Args:
+    #         new_position: List of [x, y, z] voltages to apply to benders.
+    #     """
+    #     self.scanner.position(new_position)
 
     def tdCAP(self, tdc_params: Dict[str, Any], getting_plane: bool=False) -> None:
         """Capacitive touchdown.
@@ -204,8 +204,8 @@ class Microscope(Station):
                 pass
             except KeyboardInterrupt:
                 log.warning('Scan interrupted by user. Going back to {}.'.format(old_pos))
-                self.goto(old_pos)
-        self.goto(old_pos)
+                self.scanner.goto(old_pos)
+        self.scanner.goto(old_pos)
         return data
  
     def remove_component(self, name: str) -> None:
@@ -284,7 +284,7 @@ class SusceptometerMicroscope(Microscope):
                                            pts_per_line, plane, height)
         utils.validate_scan_params(self.scanner.metadata, scan_params,
                                    scan_grids, self.temp, self.ureg, log)
-        self.goto([scan_grids[axis][0][0] for axis in ['x', 'y', 'z']])
+        self.scanner.goto([scan_grids[axis][0][0] for axis in ['x', 'y', 'z']])
         self.set_lockins(scan_params)
         #: get channel prefactors in pint Quantity form
         prefactors = self.get_prefactors(scan_params)
@@ -339,7 +339,7 @@ class SusceptometerMicroscope(Microscope):
                 qc.Task(loop_counter.advance)
             ).then(
                 qc.Task(self.daq_ai.clear_instances),
-                qc.Task(self.goto, old_pos),
+                qc.Task(self.scanner.goto, old_pos),
                 qc.Task(self.CAP_lockin.amplitude, 0.004),
                 qc.Task(self.SUSC_lockin.amplitude, 0.004)
             )
@@ -360,7 +360,7 @@ class SusceptometerMicroscope(Microscope):
                 if nidaqmx.system.System.local().tasks.task_names:
                     self.scanner.control_ao_task('stop')
                     self.scanner.control_ao_task('close')
-                self.goto(old_pos)
+                self.scanner.goto(old_pos)
                 self.CAP_lockin.amplitude(0.004)
                 self.SUSC_lockin.amplitude(0.004)
                 log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
