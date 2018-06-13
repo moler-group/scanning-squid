@@ -77,7 +77,6 @@ class Microscope(Station):
         self._add_scanner()
         self._add_SQUID()
         self._add_lockins()
-        self._add_preamps()
 
     def _add_atto(self):
         """Add Attocube controller to microscope.
@@ -128,13 +127,6 @@ class Microscope(Station):
             setattr(self, name, instr)
             self.add_component(getattr(self, '{}_lockin'.format(lockin)))
             log.info('{} successfully added to microscope.'.format(name))
-            
-    def _add_preamps(self) -> None:
-        """Add preamps (e.g. SR560) to microscope.
-
-        .. TODO:: Add SR560 preamps.
-        """
-        pass
             
     def set_lockins(self, measurement: Dict[str, Any]) -> None:
         """Initialize lockins for given measurement.
