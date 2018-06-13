@@ -26,3 +26,5 @@ scanning-squid is not yet packaged for [pip](https://pypi.org/) or [conda](https
 - Run the following two commands in the Terminal:
   - `conda env create -f environment.yml`
   - `source activate scanning-squid`
+
+After cloning this repository, to run scanning-squid from a Windows (Mac) machine, open the Anaconda Prompt (Terminal) and run `activate scanning-squid` (`source activate scanning-squid`), and launch a `jupyter notebook` or `jupyter lab`.
