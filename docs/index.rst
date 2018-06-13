@@ -18,6 +18,6 @@ scanning-squid is an instrument control and data acquisition package for scannin
 
    pages/microscope
    pages/config-files
-   pages/units
+   examples/PhysicalUnits
    pages/measurements
    examples/DataSetExample
