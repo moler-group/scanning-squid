@@ -90,7 +90,7 @@ class Scanner(Instrument):
                 idx = self.metadata['daq']['channels']['analog_inputs'][ax]
                 channel = self.metadata['daq']['name'] + '/ai{}'.format(idx)
                 ai_task.ai_channels.add_ai_voltage_chan(channel, ax)
-            pos = list(ai_task.read())
+            pos = list(np.round(ai_task.read(), decimals=3))
         for i, ax in enumerate(['x', 'y', 'z']):
             self.metadata['position'].update({ax: '{} V'.format(pos[i])})
         return pos
