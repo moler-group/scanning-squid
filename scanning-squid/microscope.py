@@ -3,6 +3,7 @@ import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
+np.set_printoptions(precision=4)
 import json
 from typing import Dict, List, Sequence, Any, Union
 
