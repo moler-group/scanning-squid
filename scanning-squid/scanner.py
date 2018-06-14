@@ -82,7 +82,7 @@ class Scanner(Instrument):
                            set_cmd=getattr(self, '_goto_{}'.format(axis))
                            )
         
-    def get_pos(self) -> List[float]:
+    def get_pos(self) -> np.ndarray:
         """Get current scanner [x, y, z] position.
         """
         with nidaqmx.Task('get_pos_ai_task') as ai_task:
@@ -90,7 +90,7 @@ class Scanner(Instrument):
                 idx = self.metadata['daq']['channels']['analog_inputs'][ax]
                 channel = self.metadata['daq']['name'] + '/ai{}'.format(idx)
                 ai_task.ai_channels.add_ai_voltage_chan(channel, ax)
-            pos = list(np.round(ai_task.read(), decimals=3))
+            pos = np.round(ai_task.read(), decimals=3)
         for i, ax in enumerate(['x', 'y', 'z']):
             self.metadata['position'].update({ax: '{} V'.format(pos[i])})
         return pos
