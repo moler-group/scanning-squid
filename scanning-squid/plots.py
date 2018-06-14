@@ -25,9 +25,12 @@ class ScanPlot(object):
         self.fast_ax = scan_params['fast_ax']
         self.slow_ax = 'y' if self.fast_ax == 'x' else 'x'
         self.line_colors = ['#d80202' ,'#545454' ,'#777777' ,'#a8a8a8', '#d1d1d1']
-        cols = len(self.channels.keys())
-        rows = 3
-        self.fig, self.ax = plt.subplots(rows, cols, figsize=(10,4.5), tight_layout=True,
+        MAXN_COLS = 4
+        N = len(self.channels.keys())
+        cols = N if N < MAXN_COLS else MAXN_COLS
+        plot_rows = int(np.ceil(N / cols))
+        rows = 3 * plot_rows
+        self.fig, self.ax = plt.subplots(rows, cols, figsize=(10,4.5 * plot_rows), tight_layout=True,
                                          gridspec_kw={"height_ratios":[0.075, 1, 0.5]})
         self.fig.patch.set_alpha(1)
         self.plots = {'colorbars': {}, 'images': {}, 'lines': {}}
@@ -93,7 +96,6 @@ class ScanPlot(object):
             self.plots['colorbars'][ch]['cbar'].set_label(r'{}'.format(self.channels[ch]['unit_latex']))
             self.plots['colorbars'][ch]['cbar'].update_normal(self.plots['images'][ch]['quad'])
             self.plots['images'][ch]['ax'].relim()
-            #self.plots['colorbars'][ch]['cax'].relim()
             self.plots['lines'][ch].relim()
             self.plots['colorbars'][ch]['cax'].minorticks_on()
             #: Update linecuts
@@ -116,7 +118,7 @@ class ScanPlot(object):
                 If fname is None, saves to data location as scan.png
         """
         if fname is None:
-            fname = self.location + '/scan.png'
+            fname = self.location + '/' + self.scan_params['fname'] +'.png'
         plt.savefig(fname)
         
     def _to_real_units(self, data_set: Any) -> Any:
@@ -164,3 +166,52 @@ class ScanPlotFromDataSet(ScanPlot):
         meta = scan_data.metadata['loop']['metadata']
         super().__init__(meta, meta['prefactors'], ureg)
         self.update(scan_data, None, offline=True)
+
+class TDCPlot(object):
+    """Plot displaying capacitance as a function of z voltage, updated live during a scan.
+    """
+    def __init__(self, tdc_params: Dict[str, Any], prefactors: Dict[str, Any],
+        ureg: Any) -> None:
+        """
+        Args:
+            tdc_params: Touchdown parameters as defined in measurement configuration file.
+            prefactors: Dict of pint quantities defining conversion factor from
+                DAQ voltage to real units for each measurement channel.
+            ureg: pint UnitRegistry, manages units.
+        """
+        self.tdc_params = tdc_params
+        self.ureg = ureg
+        self.Q_ = ureg.Quantity
+        self.prefactors = prefactors
+        self.fig, self.ax = plt.subplots(figsize=(4,3), tight_layout=True)
+        self.fig.patch.set_alpha(1)
+
+    def _to_real_units(self, data_set: Any) -> Any:
+        """Converts DataSet arrays from DAQ voltage to real units using recorded metadata.
+        Args:
+            data_set: qcodes DataSet created by Microscope.scan_plane
+        Returns:
+            numpy ndarray like the DataSet array, but in real units as prescribed by
+                factors in DataSet metadata.
+        """
+        data = np.full_like(data_set.daq_ai_voltage, np.nan, dtype=np.double)
+        meta = data_set.metadata['loop']['metadata']
+        for ch in self.channels.keys():
+            idx = meta['channels'][ch]['ai']
+            array = data_set.daq_ai_voltage[:,idx,:] * self.ureg('V')
+            unit = self.scan_params['channels'][ch]['unit']
+            data[:,idx,:] = (array * self.Q_(self.prefactors[ch])).to(unit)
+        return data
+
+    def _clear_artists(self, ax):
+        """Clears lines and collections of lines from given matplotlib axis.
+        Args:
+            ax: axis to clear.
+        """
+        for artist in ax.lines + ax.collections:
+            artist.remove()
+
+
+
+
+

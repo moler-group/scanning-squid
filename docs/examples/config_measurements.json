@@ -54,8 +54,8 @@
             }
         }
     },
-    "tdCAP": {
-        "fname": "tdC",
+    "td_cap": {
+        "fname": "td_cap",
         "dir": "",
         "dV": "0.1 V",
         "range": ["-10 V","10 V"],
@@ -81,6 +81,7 @@
             "new_sigma_weight":0.2,
             "wait_factor":3},
         "save_data":true,
-        "save_fig":true},
+        "save_fig":true
+    },
     "tdSUSC":{}
 }

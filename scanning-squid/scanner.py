@@ -191,10 +191,6 @@ class Scanner(Instrument):
                                                 samps_per_chan=len(out[0]))
         log.debug('Writing line {}.'.format(line))
         self.ao_task.write(np.array(out), auto_start=False)
-        # for axis in ['x', 'y', 'z']:
-        #     self.metadata['position'].update({
-        #         axis: '{} V'.format(scan_grids[axis][line][last_point])
-        #     })
         
     def goto_start_of_next_line(self, scan_grids: Dict[str, np.ndarray], counter: Any) -> None:
         """Moves scanner to the start of the next line to scan.
@@ -211,7 +207,7 @@ class Scanner(Instrument):
         except IndexError:
             pass
 
-    def check_for_td(self, loop, tdc_params):
+    def check_for_td(self, data_set, constants):
         self.scanner.td_has_occurred = False
     
     def clear_instances(self):

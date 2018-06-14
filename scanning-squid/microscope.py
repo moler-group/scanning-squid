@@ -147,7 +147,7 @@ class Microscope(Station):
                         log.info('Setting {} on {} to {} {}.'.format(param, lockin, value, unit))
                         parameters[param].set(value)
 
-    def tdCAP(self, tdc_params: Dict[str, Any], getting_plane: bool=False) -> None:
+    def td_cap(self, tdc_params: Dict[str, Any], getting_plane: bool=False) -> None:
         """Capacitive touchdown.
 
         This is a work in progress!
@@ -162,7 +162,7 @@ class Microscope(Station):
         ai_channels = daq_config['channels']['analog_inputs']
         meas_channels = tdc_params['channels']
         channels = {} 
-        for ch, _ in meas_channels.items():
+        for ch in meas_channels.keys():
             channels.update({ch: ai_channels[ch]})
         nchannels = len(channels.keys())
         daq_config = self.config['isntruments']['daq']
@@ -173,31 +173,50 @@ class Microscope(Station):
         startV, endV = [self.Q_(lim).to('V').magnitude for lim in tdc_params['range']]
         npts = int((tdc_params['range'][1] - tdc_params['range'][0]) / dV)
         heights = np.linspace(startV, endV, npnts)
-        caps = np.empty_like(heights)
         delay = constants['wait_factor'] * self.CAP_lockin.time_constant()
-        with nidaqmx.Task('tdcap_ai_task') as ai_task:
-            self.remove_component('daq_ai')
-            if hasattr(self, 'daq_ai'):
-                self.daq_ai.clear_instances()
-            self.daq_ai = DAQAnalogInputs('daq_ai',
-                                          daq_name,
-                                          daq_rate,
-                                          channels,
-                                          ai_task
-                                         )
-            loop = qc.Loop(self.scanner.height.sweep(startV, endV, dV), delay=delay
-                ).each(
-                    self.daq_ai.voltage,
-                    self.daq_ai.CAP,
-                    qc.Task(utils.check_for_td)
-                ).then()
-            data = loop.get_data_set(name=tdc_params['fname'])
-            try:
-                pass
-            except KeyboardInterrupt:
-                log.warning('Scan interrupted by user. Going back to {}.'.format(old_pos))
-                self.scanner.goto(old_pos)
-        self.scanner.goto(old_pos)
+        prefactors = self.get_prefactors(tdc_params)
+        #: get channel prefactors in string form so they can be saved in metadata
+        prefactor_strs = {}
+        for ch, prefac in prefactors.items():
+            prefactor_strs.update({ch: '{} {}'.format(prefac.magnitude, prefac.units)})
+        ai_task =  nidaqmx.Task('tdcap_ai_task')
+        self.remove_component('daq_ai')
+        if hasattr(self, 'daq_ai'):
+            self.daq_ai.clear_instances()
+        self.daq_ai = DAQAnalogInputs('daq_ai',
+                                      daq_name,
+                                      daq_rate,
+                                      channels,
+                                      ai_task
+                                     )
+        loop_counter = utils.Counter()
+        #tdc_plot = plots.TDCPlot(tdc_params, prefactors, self.ureg)
+        loop = qc.Loop(self.scanner.height.sweep(startV, endV, dV), delay=delay
+            ).each(
+                self.daq_ai.voltage,
+                #qc.Task(tdc_plot.update, loop.active_data_set, loop_counter),
+                #qc.Task(tdc_plot.save),
+                #qc.Task(self.scanner.check_for_td, loop.active_data_set, constants),
+                qc.BreakIf(self.scanner.check_for_td, loop.active_data_set, constants),
+                qc.Task(loop_counter.advance)
+            ).then(
+                qc.Task(ai_task.stop),
+                qc.Task(ai_task.close),
+                qc.Task(self.CAP_lockin.amplitude, 0.004)
+            )
+        data = loop.get_data_set(name=tdc_params['fname'])
+        try:
+            loop.run()
+            self.scanner.goto(old_pos)
+        except KeyboardInterrupt:
+            log.warning('Scan interrupted by user. Going to [0, 0, 0] V.')
+            #: Stop 'scan_plane_ai_task' so that we can read our current position
+            ai_task.stop()
+            ai_task.close()
+            self.scanner.goto([0, 0, 0])
+            self.CAP_lockin.amplitude(0.004)
+            self.SUSC_lockin.amplitude(0.004)
+            log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
         return data
  
     def remove_component(self, name: str) -> None:
@@ -284,7 +303,6 @@ class SusceptometerMicroscope(Microscope):
         prefactor_strs = {}
         for ch, prefac in prefactors.items():
             prefactor_strs.update({ch: '{} {}'.format(prefac.magnitude, prefac.units)})
-        #with nidaqmx.Task('scan_plane_ai_task') as ai_task:
         ai_task = nidaqmx.Task('scan_plane_ai_task')
         self.remove_component('daq_ai')
         if hasattr(self, 'daq_ai'):
