@@ -1,7 +1,6 @@
 {
     "scan": {
         "fname": "scan",
-        "dir": "",
         "fast_ax": "x",
         "range": {"x": "3 V", "y": "3 V"},
         "center": {"x": "0 V", "y": "0 V"},
@@ -55,32 +54,35 @@
         }
     },
     "tdCAP": {
-        "fname": "tdC",
-        "dir": "",
-        "dV": "0.1 V",
-        "range": ["-10 V","10 V"],
+        "fname": "tdCAP",
+        "dV": "0.04 V",
+        "range": ["-1.9 V","1.9 V"],
         "channels": {
             "CAP": {
                 "lockin": {
+                    "name": "CAP",
                     "amplitude": "1 V",
                     "frequency": "18.437 kHz"
                 },
-                "label": "Capacitance"
+                "label": "Capacitance",
+                "gain": 1,
+                "unit": "pF",
+                "unit_latex": "pF"
             }
         },
         "constants": {
-            "max_slope": "0.5 pF/V",
-            "max_delta_cap": "0.15 pF/V",
+            "max_slope": "0.25 pF/V",
+            "max_delta_cap": "0.15 pF",
             "initial_cap":"0 pF",
-            "N_fit_min":15,
+            "N_fit_min":5,
             "N_fit_max":30,
-            "N_window":15,
+            "N_window":5,
             "N_test":5,
             "tol":8,
             "sigma":0,
             "new_sigma_weight":0.2,
-            "wait_factor":3},
-        "save_data":true,
-        "save_fig":true},
+            "wait_factor":3
+        }
+    },
     "tdSUSC":{}
 }
