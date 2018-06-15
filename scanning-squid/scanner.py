@@ -1,6 +1,7 @@
 import qcodes as qc
 from qcodes.instrument.base import Instrument
 import qcodes.utils.validators as vals
+from utils import fit_line
 from typing import Dict, List, Optional, Sequence, Any, Union
 import numpy as np
 import nidaqmx
@@ -207,8 +208,68 @@ class Scanner(Instrument):
         except IndexError:
             pass
 
-    def check_for_td(self, data_set, constants):
-        self.scanner.td_has_occurred = False
+    def check_for_td(self, tdc_plot: Any, counter: Any) -> bool:
+        """Check whether touchdown has occurred during a capacitive touchdown.
+
+        Args:
+            tdc_plot: plots.TDCPlot instance, which contains current data and parameters
+                of the touchdown Loop.
+            counter: utils.Counter intance to keep track of which point in the Loop we're at.
+
+        Returns:
+            bool: 
+                True to break Loop if touchdown is detected or something went wrong, else False.
+        """
+        self.td_has_occurred = False
+        self.td_height = None
+        pt = counter.count
+        #: Some safety checks:
+        cap_unit = tdc_plot.channels['CAP']['unit']
+        max_deltaC = self.Q_(tdc_plot.constants['max_delta_cap']).to(cap_unit).magnitude
+        initial_cap = self.Q_(tdc_plot.constants['initial_cap']).to(cap_unit).magnitude
+        max_slope = self.Q_(tdc_plot.constants['max_slope']).to('{}/V'.format(cap_unit)).magnitude
+        prefactor = tdc_plot.prefactors['CAP']
+        nfitmin = tdc_plot.constants['N_fit_min']
+        nwindow = tdc_plot.constants['N_window']
+        cdata = tdc_plot.data[:pt+1,0,0]
+        if pt > 1:
+            if any(abs(cdata[pt-i] - initial_cap) > max_deltaC for i in range(2)):
+                log.warning('Capacitance bridge is too unbalanced to continue.')
+                return True
+            if any(abs(cdata[pt-i] * self.ureg(cap_unit)/prefactor) > self.Q_('5 V') for i in range(2)):
+                log.warning('CAP_lockin is railing.')
+                return True
+        #: Partition data into two subsets, fit a line to each subset, and repeat for next partition
+        #: TD point is the partition point that minimizes the sum of squared residuals
+        if pt < len(tdc_plot.heights) and pt > nfitmin + nwindow:
+            imin = nfitmin-1 # index of partition boundary corresponding to minimum SSR
+            ssrmin = np.inf # minimum SSR
+            for i in range(pt - nfitmin - nwindow, pt-nfitmin):
+                p0, ssr0 = fit_line(tdc_plot.heights[i:i+nwindow+1], cdata[i:i+nwindow+1])
+                p1, ssr1 = fit_line(tdc_plot.heights[i+nwindow:pt+1], cdata[i+nwindow:])
+                ssr = ssr0 + ssr1
+                if ssr < ssrmin:
+                    imin = i
+                    ssrmin = ssr
+            #: Get the slope of the two lines that minimize SSR
+            x0 = tdc_plot.heights[:imin+1]
+            p0, _ = fit_line(x0, cdata[:imin+1])
+            x1 = tdc_plot.heights[imin:pt+1]
+            p1, _ = fit_line(x1, cdata[imin:])
+            tdc_plot.ax.plot(tdc_plot.heights[:pt+1], p0[0] * tdc_plot.heights[:pt+1] + p0[1], 'r-')
+            #: If the slopes are different enough, a touchdown has occurred
+            if abs(p0[0] - p1[0]) > max_slope:
+                self.td_has_occurred = True
+                self.td_height = (p1[1] - p0[1]) / (p0[0]-p1[0])
+                #self.metadata['position'].update({'z': self.td_height})
+                tdc_plot.ax.plot(x1, p1[0] * x1 + p1[1], 'r-')
+                tdc_plot.ax.set_title('Touchdown: {:.4} V'.format(self.td_height))
+                log.info('Touchdown occured at {:.4} V.'.format(self.td_height))
+            tdc_plot.fig.canvas.draw()
+            tdc_plot.fig.show()
+        if pt >= len(tdc_plot.heights):
+            log.info('Touchdown did not occur in range {} V.'.format(tdc_plot.tdc_params['range']))
+        return self.td_has_occurred
     
     def clear_instances(self):
         """Clear scanner instances.
