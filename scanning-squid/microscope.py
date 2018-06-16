@@ -1,11 +1,13 @@
 import os
 import sys
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+from IPython.display import clear_output
 
 import json
-from typing import Dict, List, Sequence, Any, Union
+from typing import Dict, List, Sequence, Any, Union, Tuple
 
 import qcodes as qc
 from qcodes.station import Station
@@ -147,14 +149,16 @@ class Microscope(Station):
                         value = self.Q_(channels[ch]['lockin'][param]).to(unit).magnitude
                         log.info('Setting {} on {} to {} {}.'.format(param, lockin, value, unit))
                         parameters[param].set(value)
+        time.sleep(1)
 
-    def td_cap(self, tdc_params: Dict[str, Any], getting_plane: bool=False) -> None:
+    def td_cap(self, tdc_params: Dict[str, Any], update_snap: bool=True) -> Tuple[Any]:
         """Performs a capacitive touchdown.
 
         Args:
             tdc_params: Dict of capacitive touchdown parameters as defined
                 in measurement configuration file.
-            getting_plane: Whether tdCAP() is being called in a loop to acquire a plane.
+            update_snap: Whether to update the microscope snapshot. Default True.
+                (You may want this to be False when getting a plane or approaching.)
 
         Returns:
             Tuple[qcodes.DataSet, plots.TDCPlot]: data, tdc_plot
@@ -172,6 +176,7 @@ class Microscope(Station):
         nchannels = len(channels.keys())
         daq_rate = self.Q_(daq_config['rate']).to('Hz').magnitude / nchannels
         self.set_lockins(tdc_params)
+        self.snapshot(update=update_snap)
         dV = self.Q_(tdc_params['dV']).to('V').magnitude
         startV, endV = sorted([self.Q_(lim).to('V').magnitude for lim in tdc_params['range']])
         npnts = int((endV - startV) / dV)
@@ -186,43 +191,22 @@ class Microscope(Station):
         self.remove_component('daq_ai')
         if hasattr(self, 'daq_ai'):
             self.daq_ai.clear_instances()
-        self.daq_ai = DAQAnalogInputs('daq_ai',
-                                      daq_name,
-                                      daq_rate,
-                                      channels,
-                                      ai_task
-                                     )
+        self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, daq_rate, channels, ai_task)
         loop_counter = utils.Counter()
-        tdc_plot = TDCPlot(tdc_params, prefactors, self.ureg)
-        #
-        #: To fake a touchdown for testing.
-        #
-        # def fake_td(array, counter):
-        #     i = counter.count
-        #     if i < len(array)-1:
-        #         self.scanner.position_x(array[i])
-        # fake_td_data = np.zeros_like(heights)
-        # i0 = np.argmin(np.abs(heights-1))
-        # for i in range(len(fake_td_data)):
-        #     fake_td_data[i] += 0.02 * np.random.normal() + 1e-3*i
-        #     if i >= i0:
-        #         fake_td_data[i] += 2 * (heights[i] - heights[i0])
-        #
-        #
-        #    
+        tdc_plot = TDCPlot(tdc_params, prefactors, self.ureg) 
         loop = qc.Loop(self.scanner.position_z.sweep(startV, endV, dV), delay=delay
             ).each(
-                #: To fake a touchdown for testing.
-                #qc.Task(fake_td, fake_td_data, loop_counter),
                 self.daq_ai.voltage,
-                qc.Task(tdc_plot.update, qc.loops.active_data_set, loop_counter, getting_plane),
-                qc.BreakIf(lambda plot=tdc_plot, counter=loop_counter: self.scanner.check_for_td(plot, counter)),
+                qc.Task(self.scanner.check_for_td, tdc_plot, qc.loops.active_data_set, loop_counter),
+                qc.Task(self.scanner.get_td_height, tdc_plot),
+                qc.BreakIf(lambda scanner=self.scanner: scanner.break_loop or scanner.td_has_occurred),
                 qc.Task(loop_counter.advance)
             ).then(
                 qc.Task(ai_task.stop),
                 qc.Task(ai_task.close),
                 qc.Task(self.CAP_lockin.amplitude, 0.004),
                 qc.Task(self.scanner.retract),
+                qc.Task(tdc_plot.fig.show),
                 qc.Task(tdc_plot.save)
             )
         #: loop.metadata will be saved in DataSet
@@ -236,15 +220,44 @@ class Microscope(Station):
             loop.run()
         except KeyboardInterrupt:
             log.warning('Scan interrupted by user. Retracting scanner.')
+            self.scanner.break_loop = True
             #: Stop 'td_cap_ai_task' so that we can read our current position
             ai_task.stop()
             ai_task.close()
             self.scanner.retract()
             self.CAP_lockin.amplitude(0.004)
-            self.SUSC_lockin.amplitude(0.004)
             tdc_plot.save()
             log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
         return data, tdc_plot
+
+    def approach(self, tdc_params: Dict[str, Any], attosteps: int=100) -> None:
+        """Approach the sample by iteratively stepping atto z and performing td_cap().
+
+        Args:
+            tdc_params: Dict of capacitive touchdown parameters as defined
+                in measurement configuration file.
+            attosteps: Number of z atto steps to perform per iteration. Default 100
+        """
+        if attosteps <= 0:
+            raise ValueError('attosteps must be a positive integer.')
+        self.snapshot(update=True)
+        log.info('Attempting to approach sample.')
+        data, tdc_plot = self.td_cap(tdc_params, update_snap=False)
+        plt.close(tdc_plot.fig)
+        clear_output(wait=True)
+        while not self.scanner.break_loop:
+            self.atto.step('z', attosteps)
+            data, tdc_plot = self.td_cap(tdc_params, update_snap=False)
+            plt.close(tdc_plot.fig)
+            clear_output(wait=True)
+        if self.scanner.td_has_occurred:
+            log.info('Touchdown detected. Performing tc_cap() to confirm.')    
+            data, tdc_plot = self.td_cap(tdc_params, update_snap=False)
+            if not self.scanner.td_has_occurred:
+                log.warning('Could not confirm touchdown.')
+            else:
+                log.info('Touchdown confirmed.')
+
 
     def get_prefactors(self, measurement: Dict[str, Any], update: bool=True) -> Dict[str, Any]:
         """For each channel, calculate prefactors to convert DAQ voltage into real units.
