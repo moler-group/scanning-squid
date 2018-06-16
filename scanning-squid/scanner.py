@@ -230,8 +230,10 @@ class Scanner(Instrument):
         max_slope = self.Q_(tdc_plot.constants['max_slope']).to('{}/V'.format(cap_unit)).magnitude
         prefactor = tdc_plot.prefactors['CAP']
         nfitmin = tdc_plot.constants['N_fit_min']
+        nfitmax = tdc_plot.constants['N_fit_max']
         nwindow = tdc_plot.constants['N_window']
         cdata = tdc_plot.data[:pt+1,0,0]
+        hdata = tdc_plot.heights[:pt+1]
         if pt > 1:
             if any(abs(cdata[pt-i] - initial_cap) > max_deltaC for i in range(2)):
                 log.warning('Capacitance bridge is too unbalanced to continue.')
@@ -241,22 +243,26 @@ class Scanner(Instrument):
                 return True
         #: Partition data into two subsets, fit a line to each subset, and repeat for next partition
         #: TD point is the partition point that minimizes the sum of squared residuals
-        if pt < len(tdc_plot.heights) and pt > nfitmin + nwindow:
-            imin = nfitmin-1 # index of partition boundary corresponding to minimum SSR
-            ssrmin = np.inf # minimum SSR
-            for i in range(pt - nfitmin - nwindow, pt-nfitmin):
-                p0, ssr0 = fit_line(tdc_plot.heights[i:i+nwindow+1], cdata[i:i+nwindow+1])
-                p1, ssr1 = fit_line(tdc_plot.heights[i+nwindow:pt+1], cdata[i+nwindow:])
-                ssr = ssr0 + ssr1
-                if ssr < ssrmin:
+        if pt < len(tdc_plot.heights) and pt > nwindow + 10:
+            imin = pt - nwindow + nfitmin # index of partition boundary corresponding to minimum SSR
+            rmsmin = np.inf # minimum SSR
+            for i in range(pt - nwindow + nfitmin, pt - nfitmin):
+                p0, rms0 = fit_line(hdata[pt-nwindow:i+1], cdata[pt-nwindow:i+1])
+                p1, rms1 = fit_line(hdata[i:], cdata[i:])
+                rms = rms0 + rms1
+                if rms < rmsmin:
                     imin = i
-                    ssrmin = ssr
+                    rmsmin = rms
             #: Get the slope of the two lines that minimize SSR
-            x0 = tdc_plot.heights[:imin+1]
-            p0, _ = fit_line(x0, cdata[:imin+1])
-            x1 = tdc_plot.heights[imin:pt+1]
+            x0 = hdata[pt-nwindow:imin+1]
+            p0, _ = fit_line(x0, cdata[pt-nwindow:imin+1])
+            x1 = hdata[imin:]
             p1, _ = fit_line(x1, cdata[imin:])
-            tdc_plot.ax.plot(tdc_plot.heights[:pt+1], p0[0] * tdc_plot.heights[:pt+1] + p0[1], 'r-')
+            tdc_plot.ax.plot(x0, p0[0] * x0 + p0[1], 'r-')
+            tdc_plot.ax.plot(x1, p1[0] * x1 + p1[1], 'r-')
+            if abs(p0[0]) > max_slope:
+                log.warning('Pre-touchdown slope +/- {} {}/V is too big.'.format(p0[0], cap_unit))
+                return True
             #: If the slopes are different enough, a touchdown has occurred
             if abs(p0[0] - p1[0]) > max_slope:
                 self.td_has_occurred = True
@@ -264,11 +270,18 @@ class Scanner(Instrument):
                 #self.metadata['position'].update({'z': self.td_height})
                 tdc_plot.ax.plot(x1, p1[0] * x1 + p1[1], 'r-')
                 tdc_plot.ax.set_title('Touchdown: {:.4} V'.format(self.td_height))
+                tdc_plot.td_height = self.td_height
+                tdc_plot.pre_td_slope = '{} {}/V'.format(p0[0], cap_unit)
+                tdc_plot.post_td_slope = '{} {}/V'.format(p1[0], cap_unit)
                 log.info('Touchdown occured at {:.4} V.'.format(self.td_height))
             tdc_plot.fig.canvas.draw()
             tdc_plot.fig.show()
         if pt >= len(tdc_plot.heights):
-            log.info('Touchdown did not occur in range {} V.'.format(tdc_plot.tdc_params['range']))
+            log.info('Touchdown did not occur in range {}.'.format(tdc_plot.tdc_params['range']))
+            tdc_plot.td_height = None
+            tdc_plot.pre_td_slope = None
+            tdc_plot.post_td_slope = None
+            return True
         return self.td_has_occurred
     
     def clear_instances(self):

@@ -237,9 +237,9 @@ def fit_line(x: Union[list, np.ndarray], y: Union[list, np.ndarray]) -> Tuple[np
         y: List or np.ndarry, dependent variable.
 
     Returns:
-        Tuple[np.ndarray, float]: p, ssr
-            Array of best-fit polynomial coefficients, sum of squared residuals from fit.
+        Tuple[np.ndarray, float]: p, rms
+            Array of best-fit polynomial coefficients, rms of residuals.
     """
     p, residuals, _, _, _ = np.polyfit(x, y, 1, full=True)
-    ssr = np.sum(np.square(residuals))
-    return p, ssr
+    rms = np.sqrt(np.mean(np.square(residuals)))
+    return p, rms

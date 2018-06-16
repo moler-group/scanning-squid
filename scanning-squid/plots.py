@@ -230,8 +230,10 @@ class TDCPlot(object):
             self._clear_artists(self.ax)
             for i, ch in enumerate(self.channels.keys()):
                 data_ch = self.data[:,i,0]
+                self.xavg, self.yavg = moving_avg(self.heights[:pt+1], data_ch[:pt+1], 5)
                 self.ax.plot(self.heights[:pt+1], data_ch[:pt+1], 'b.')
                 self.ax.plot(self.heights[pt], data_ch[pt], 'r.')
+                #self.ax.plot(self.xavg, self.yavg, 'k-')
                 self.ax.relim()
             self.fig.canvas.draw()
             self.fig.show()

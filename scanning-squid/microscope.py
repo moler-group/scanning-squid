@@ -197,23 +197,23 @@ class Microscope(Station):
         #
         #: To fake a touchdown for testing.
         #
-        def fake_td(array, counter):
-            i = counter.count
-            if i < len(array)-1:
-                self.scanner.position_x(array[i])
-        fake_td_data = np.zeros_like(heights)
-        i0 = np.argmin(np.abs(heights-0.5))
-        for i in range(len(fake_td_data)):
-            fake_td_data[i] += 0.01 * np.random.normal()
-            if i >= i0:
-                fake_td_data[i] += 0 * (heights[i] - heights[i0])
+        # def fake_td(array, counter):
+        #     i = counter.count
+        #     if i < len(array)-1:
+        #         self.scanner.position_x(array[i])
+        # fake_td_data = np.zeros_like(heights)
+        # i0 = np.argmin(np.abs(heights-1))
+        # for i in range(len(fake_td_data)):
+        #     fake_td_data[i] += 0.02 * np.random.normal() + 1e-3*i
+        #     if i >= i0:
+        #         fake_td_data[i] += 2 * (heights[i] - heights[i0])
         #
         #
         #    
         loop = qc.Loop(self.scanner.position_z.sweep(startV, endV, dV), delay=delay
             ).each(
                 #: To fake a touchdown for testing.
-                qc.Task(fake_td, fake_td_data, loop_counter),
+                #qc.Task(fake_td, fake_td_data, loop_counter),
                 self.daq_ai.voltage,
                 qc.Task(tdc_plot.update, qc.loops.active_data_set, loop_counter, getting_plane),
                 qc.BreakIf(lambda plot=tdc_plot, counter=loop_counter: self.scanner.check_for_td(plot, counter)),
