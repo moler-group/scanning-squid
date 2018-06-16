@@ -37,12 +37,14 @@ class AttocubeController(VisaInstrument):
         self.add_parameter('version',
                             label='Version',
                             get_cmd='ver',
-                            get_parser=str
+                            get_parser=str,
+                            snapshot_get=False
                             )
         self.add_parameter('serialnum',
                             label='Controller serial number',
                             get_cmd='getcser',
-                            get_parser=str
+                            get_parser=str,
+                            snapshot_get=False
                             )
         for axis, idx in self.axes.items():
             self.voltage_limits.update(
@@ -51,7 +53,8 @@ class AttocubeController(VisaInstrument):
             self.add_parameter('serialnum_ax{}'.format(idx),
                                 label='{} axis serial number'.format(axis),
                                 get_cmd='getser {}'.format(idx),
-                                get_parser=str
+                                get_parser=str,
+                                snapshot_get=False
                                 )
             #: axis mode (gettable and settable)
             self.add_parameter('mode_ax{}'.format(idx),
@@ -60,7 +63,8 @@ class AttocubeController(VisaInstrument):
                                 get_cmd='getm {}'.format(idx),
                                 set_cmd='setm {} {{}}'.format(idx),
                                 vals=vals.Enum('gnd', 'inp', 'cap', 'stp', 'off', 'stp+', 'stp-'),
-                                get_parser=self._mode_parser
+                                get_parser=self._mode_parser,
+                                snapshot_get=False
                                 )
             #: axis voltage, with limits set according to temperature mode (gettable and settable)
             self.add_parameter('voltage_ax{}'.format(idx),
@@ -69,7 +73,8 @@ class AttocubeController(VisaInstrument):
                                 get_cmd='getv {}'.format(idx),
                                 set_cmd='setv {} {{:.3f}}'.format(idx),
                                 vals=vals.Numbers(min_value=0, max_value=self.voltage_limits[axis]),
-                                get_parser=self._voltage_parser
+                                get_parser=self._voltage_parser,
+                                snapshot_get=False
                                 )
             #: axis frequency (gettable and settable)
             self.add_parameter('freq_ax{}'.format(idx),
@@ -78,7 +83,8 @@ class AttocubeController(VisaInstrument):
                                 get_cmd=(lambda idx=idx: self._get_freq(idx)),
                                 set_cmd='setf {} {{:.0f}}'.format(idx),
                                 vals=vals.Numbers(min_value=1, max_value=10000),
-                                get_parser=self._freq_parser
+                                get_parser=self._freq_parser,
+                                snapshot_get=False
                                 )
             #: axis capacitance (gettable, will fail if Attocubes are grounded with e.g. a GND cap)
             self.add_parameter('cap_ax{}'.format(idx),
@@ -86,10 +92,9 @@ class AttocubeController(VisaInstrument):
                                unit='nF',
                                get_cmd=(lambda idx=idx: self._get_cap(idx)),
                                get_parser=self._cap_parser,
-                               snapshot_get=False #: don't query capacitance when getting a snapshot
+                               snapshot_get=False
                               )
         self.initialize()
-        self.snapshot(update=True) #: query all parameters for which snapshot_get=True
 
     def initialize(self) -> None:
         """Initialize instrument with parameters from self.metadata.
@@ -102,6 +107,10 @@ class AttocubeController(VisaInstrument):
             self.parameters['voltage_ax{}'.format(idx)].set(voltage_lim)
             self.parameters['mode_ax{}'.format(idx)].set('gnd')
         self.version() #: sometimes returns 'OK' instead of version info on the first try
+        self.serialnum()
+        self.serialnum_ax1()
+        self.serialnum_ax2()
+        self.serialnum_ax3()
         print(self.version())
     
     def ask_raw(self, cmd: str) -> str:
