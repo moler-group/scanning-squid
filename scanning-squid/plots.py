@@ -2,14 +2,13 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.colors as colors
 import numpy as np
-from utils import make_scan_vectors, make_scan_grids, moving_avg
+from utils import make_scan_vectors, make_scan_grids, moving_avg, to_real_units
 from typing import Dict, List, Optional, Sequence, Any, Union, Tuple
 
 class ScanPlot(object):
     """Plot displaying acquired images in all measurement channels, updated live during a scan.
     """
-    def __init__(self,  scan_params: Dict[str, Any], prefactors: Any,
-                 ureg: Any, **kwargs) -> None:
+    def __init__(self,  scan_params: Dict[str, Any], ureg: Any, **kwargs) -> None:
         """
         Args:
             scan_params: Scan parameters as defined in measurement configuration file.
@@ -20,7 +19,6 @@ class ScanPlot(object):
         self.scan_params = scan_params
         self.ureg = ureg
         self.Q_ = ureg.Quantity
-        self.prefactors = prefactors
         self.channels = scan_params['channels']
         self.fast_ax = scan_params['fast_ax']
         self.slow_ax = 'y' if self.fast_ax == 'x' else 'x'
@@ -73,11 +71,12 @@ class ScanPlot(object):
                 Currently can only handle num_lines <= 5.
             offline: False if this is being called during a scan.
 
-        TODO: Add support for arbitrary num_lines.
+        ..TODO:: Add support for arbitrary num_lines?
         """
         self.location = data_set.location
         self.fig.suptitle(self.location, x=0.5, y=1) 
-        data = self._to_real_units(data_set)
+        #data = self._to_real_units(data_set)
+        data = to_real_units(data_set)
         meta = data_set.metadata['loop']['metadata']
         slow_ax = 'x' if meta['fast_ax'] == 'y' else 'y'
         line = loop_counter.count if not offline else meta['scan_size'][slow_ax] - 1
@@ -89,7 +88,8 @@ class ScanPlot(object):
             self._clear_artists(self.plots['images'][ch]['ax'])
             self._clear_artists(self.plots['lines'][ch])
             norm = colors.Normalize().autoscale(np.ma.masked_invalid(data_ch))
-            self.plots['images'][ch]['quad'] = self.plots['images'][ch]['ax'].pcolormesh(self.X, self.Y, np.ma.masked_invalid(data_ch), norm=norm)
+            self.plots['images'][ch]['quad'] = self.plots['images'][ch]['ax'].pcolormesh(
+                self.X, self.Y, np.ma.masked_invalid(data_ch), norm=norm)
             self.plots['colorbars'][ch]['cbar'] = self.fig.colorbar(self.plots['images'][ch]['quad'],
                                                                     cax=self.plots['colorbars'][ch]['cax'],
                                                                     orientation='horizontal')
@@ -133,11 +133,12 @@ class ScanPlot(object):
         Returns:
             numpy ndarray like the DataSet array, but in real units as prescribed by
                 factors in DataSet metadata.
+                
+        .. TODO:: Get rid of this.
         """
         data = np.full_like(data_set.daq_ai_voltage, np.nan, dtype=np.double)
         meta = data_set.metadata['loop']['metadata']
         for i, ch in enumerate(self.channels.keys()):
-            #idx = meta['channels'][ch]['ai']
             array = data_set.daq_ai_voltage[:,i,:] * self.ureg('V')
             unit = self.scan_params['channels'][ch]['unit']
             data[:,i,:] = (array * self.Q_(self.prefactors[ch])).to(unit)
@@ -176,13 +177,10 @@ class ScanPlotFromDataSet(ScanPlot):
 class TDCPlot(object):
     """Plot displaying capacitance as a function of z voltage, updated live during a scan.
     """
-    def __init__(self, tdc_params: Dict[str, Any], prefactors: Dict[str, Any],
-        ureg: Any) -> None:
+    def __init__(self, tdc_params: Dict[str, Any], ureg: Any) -> None:
         """
         Args:
             tdc_params: Touchdown parameters as defined in measurement configuration file.
-            prefactors: Dict of pint quantities defining conversion factor from
-                DAQ voltage to real units for each measurement channel.
             ureg: pint UnitRegistry, manages units.
         """
         self.tdc_params = tdc_params
@@ -190,22 +188,22 @@ class TDCPlot(object):
         self.channels = tdc_params['channels']
         self.ureg = ureg
         self.Q_ = ureg.Quantity
-        self.prefactors = prefactors
         self.fig, self.ax = plt.subplots(figsize=(4,3), tight_layout=True)
         self.fig.patch.set_alpha(1)
         self.init_empty()
 
     def init_empty(self):
-        """Initialize the plot with all images empty. They will be filled during the scan.
+        """Initialize the plot with no data.
         """
         dV = self.Q_(self.tdc_params['dV']).to('V').magnitude
         startV, endV = sorted([self.Q_(lim).to('V').magnitude for lim in self.tdc_params['range']])
         npnts = int((endV - startV) / dV)
         self.heights = np.linspace(startV, endV, npnts)
-        empty = np.full_like(self.heights, np.nan, dtype=np.double)
+        #empty = np.full_like(self.heights, np.nan, dtype=np.double)
+        #: There's only one channel, but no harm in iterating
         for ch in self.channels.keys():
             self.ax.set_xlim(min(self.heights), max(self.heights))
-            self.ax.plot(self.heights, empty, 'bo')
+            #self.ax.plot(self.heights, empty, 'bo')
             self.ax.grid()
             self.ax.set_xlabel('z position [V]')
             self.ax.set_ylabel(r'{} [{}]'.format(self.channels[ch]['label'], self.channels[ch]['unit_latex']))
@@ -219,8 +217,10 @@ class TDCPlot(object):
             data_set: DataSet generated by Loop in Microscope.td_cap().
         """
         self.location = data_set.location
-        data = self._to_real_units(data_set)
-        self.meta = data_set.metadata['loop']['metadata']
+        #data = self._to_real_units(data_set)
+        data = to_real_units(data_set)
+        #self.meta = data_set.metadata['loop']['metadata']
+        #: There's only one channel, but no harm in iterating
         for i, ch in enumerate(self.channels.keys()):
             self.cdata = data[:,i,0][np.isfinite(data[:,i,0])]
             self.hdata = self.heights[:len(self.cdata)]
@@ -252,6 +252,8 @@ class TDCPlot(object):
         Returns:
             numpy ndarray like the DataSet array, but in real units as prescribed by
                 factors in DataSet metadata.
+        
+        .. TODO:: Get rid of this.
         """
         data = np.full_like(data_set.daq_ai_voltage, np.nan, dtype=np.double)
         meta = data_set.metadata['loop']['metadata']
@@ -269,8 +271,3 @@ class TDCPlot(object):
         """
         for artist in self.ax.lines + self.ax.collections:
             artist.remove()
-
-
-
-
-
