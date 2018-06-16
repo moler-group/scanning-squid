@@ -243,3 +243,31 @@ def fit_line(x: Union[list, np.ndarray], y: Union[list, np.ndarray]) -> Tuple[np
     p, residuals, _, _, _ = np.polyfit(x, y, 1, full=True)
     rms = np.sqrt(np.mean(np.square(residuals)))
     return p, rms
+
+def to_real_units(self, data_set: Any, prefactors: Dict[str, Any], ureg: Any=None) -> Any:
+    """Converts DataSet arrays from DAQ voltage to real units using recorded metadata.
+        Preserves shape of DataSet arrays.
+
+    Args:
+        data_set: qcodes DataSet created by Microscope.scan_plane
+        prefactors: Dict of {channel_name: prefactor}.
+        ureg: Pint UnitRegistry. Default None.
+    Returns:
+        numpy ndarray like the DataSet array, but in real units as prescribed by
+            factors in DataSet metadata.
+    """
+    if ureg is None:
+        from pint import UnitRegistry
+        ureg = UnitRegistry()
+        #: Tell the UnitRegistry what a Phi0 is, and that ohm = Ohm
+        with open('squid_units.txt', 'w') as f:
+            f.write('Phi0 = 2.067833831e-15 * Wb\n')
+            f.write('Ohm = ohm\n')
+        ureg.load_definitions('./squid_units.txt')
+    meta = data_set.metadata['loop']['metadata']
+    data = np.full_like(data_set.daq_ai_voltage, np.nan, dtype=np.double)
+    for i, ch in enumerate(self.channels.keys()):
+        array = data_set.daq_ai_voltage[:,i,:] * ureg('V')
+        unit = meta['channels'][ch]['unit']
+        data[:,i,:] = (array * ureg.Quantity(meta['prefactors'][ch])).to(unit)
+    return data
