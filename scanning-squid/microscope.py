@@ -177,10 +177,10 @@ class Microscope(Station):
         daq_rate = self.Q_(daq_config['rate']).to('Hz').magnitude / nchannels
         self.set_lockins(tdc_params)
         self.snapshot(update=update_snap)
+        #: z position voltage step
         dV = self.Q_(tdc_params['dV']).to('V').magnitude
+        #: Start and end z position voltages
         startV, endV = sorted([self.Q_(lim).to('V').magnitude for lim in tdc_params['range']])
-        npnts = int((endV - startV) / dV)
-        heights = np.linspace(startV, endV, npnts)
         delay = constants['wait_factor'] * self.CAP_lockin.time_constant()
         prefactors = self.get_prefactors(tdc_params)
         #: get channel prefactors in string form so they can be saved in metadata
@@ -220,28 +220,31 @@ class Microscope(Station):
             loop.run()
         except KeyboardInterrupt:
             log.warning('Scan interrupted by user. Retracting scanner.')
+            #: Set break_loop = True so that get_plane() and approach() will be aborted
             self.scanner.break_loop = True
             #: Stop 'td_cap_ai_task' so that we can read our current position
             ai_task.stop()
             ai_task.close()
             self.scanner.retract()
             self.CAP_lockin.amplitude(0.004)
+            tdc_plot.fig.show()
             tdc_plot.save()
             log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
         return data, tdc_plot
 
     def approach(self, tdc_params: Dict[str, Any], attosteps: int=100) -> None:
-        """Approach the sample by iteratively stepping atto z and performing td_cap().
+        """Approach the sample by iteratively stepping z Attocube and performing td_cap().
 
         Args:
             tdc_params: Dict of capacitive touchdown parameters as defined
                 in measurement configuration file.
-            attosteps: Number of z atto steps to perform per iteration. Default 100
+            attosteps: Number of z atto steps to perform per iteration. Default 100.
         """
         if attosteps <= 0:
             raise ValueError('attosteps must be a positive integer.')
         self.snapshot(update=True)
         log.info('Attempting to approach sample.')
+        #: Perform an initial touchdown to make sure we're not close to the sample.
         data, tdc_plot = self.td_cap(tdc_params, update_snap=False)
         plt.close(tdc_plot.fig)
         clear_output(wait=True)
