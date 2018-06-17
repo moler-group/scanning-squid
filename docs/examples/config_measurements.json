@@ -55,11 +55,6 @@
     },
     "td_cap": {
         "fname": "td_cap",
-        "dir": "",
-        "dV": "0.1 V",
-        "range": ["-10 V","10 V"],
-    "tdCAP": {
-        "fname": "tdCAP",
         "dV": "0.04 V",
         "range": ["-1.9 V","1.9 V"],
         "channels": {
