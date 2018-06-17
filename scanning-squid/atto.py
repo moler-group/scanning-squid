@@ -121,6 +121,10 @@ class AttocubeController(VisaInstrument):
         
         Args:
             cmd: Command to write to controller.
+
+        Returns:
+            str: response
+                Response of Attocube controller to the query `cmd`.
         """
         self.device_clear()
         response = super().ask_raw(cmd)
@@ -189,6 +193,10 @@ class AttocubeController(VisaInstrument):
         
         Args:
             axis: Either axis label (str, e.g. 'y') or index (int, e.g. 2)
+
+        Returns:
+            Tuple[str, int]: axis, idx
+                Axis label, axis index.
         """
         axes = list(self.axes.keys())
         idxs = list(self.axes.values())
@@ -205,54 +213,72 @@ class AttocubeController(VisaInstrument):
             raise ValueError('axis of type str or int.')
         return axis, idx
     
-    def _mode_parser(self,response):
+    def _mode_parser(self,response: str) -> str:
         """Parse controller response like 'mode = gnd'.
         
         Args:
             response: Response from controller.
+
+        Returns:
+            str: parsed_response
         """
         return response.split('=')[1].strip()
     
-    def _freq_parser(self, response):
+    def _freq_parser(self, response: str) -> float:
         """Parse controller response like 'frequency = 100 Hz'.
         
         Args:
             response: Response from controller.
+
+        Returns:
+            float: parsed_response
         """
         return float(response.split('=')[1].split('H')[0])
     
-    def _voltage_parser(self, response):
+    def _voltage_parser(self, response: str) -> float:
         """Parse controller response like 'voltage = 20 V'.
         
         Args:
             response: Response from controller.
+
+        Returns:
+            float: parsed_response
         """
         return float(response.split('=')[1].split('V')[0])
     
-    def _cap_parser(self, response):
+    def _cap_parser(self, response: str) -> float:
         """Parse capacitance like 'capacitance = 1000 nF'.
         
         Args:
             response: Response from controller.
+
+        Returns:
+            float: parsed_response
         """
         return float(response.split('=')[1].split('nF')[0].strip())
     
-    def _get_freq(self, idx):
+    def _get_freq(self, idx: int) -> str:
         """Query frequency of axis given by idx.
         
         Args:
             idx: axis index (1, 2, or 3)
+
+        Returns:
+            str: response
         """
         self.set_terminator('\n') #: Bug in ANC300! Response is terminated with '\n'
         response = self.ask('getf {}'.format(idx))
         self.set_terminator('\r\n') #: Set terminator back to '\r\n', works for other paramaters
         return response
     
-    def _get_cap(self, idx):
+    def _get_cap(self, idx: int) -> str:
         """Query capacitance of axis given by idx.
         
         Args:
             idx: axis index (1, 2, or 3)
+
+        Returns:
+            str: response
         """
         self.parameters['mode_ax{}'.format(idx)].set('cap')
         self.write('capw {}'.format(idx))

@@ -194,8 +194,9 @@ class Microscope(Station):
         self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, daq_rate, channels, ai_task)
         loop_counter = utils.Counter()
         tdc_plot = TDCPlot(tdc_params, prefactors, self.ureg) 
-        loop = qc.Loop(self.scanner.position_z.sweep(startV, endV, dV), delay=delay
+        loop = qc.Loop(self.scanner.position_z.sweep(startV, endV, dV)
             ).each(
+                qc.Task(time.sleep, delay),
                 self.daq_ai.voltage,
                 qc.Task(self.scanner.check_for_td, tdc_plot, qc.loops.active_data_set, loop_counter),
                 qc.Task(self.scanner.get_td_height, tdc_plot),
@@ -240,8 +241,6 @@ class Microscope(Station):
                 in measurement configuration file.
             attosteps: Number of z atto steps to perform per iteration. Default 100.
         """
-        if attosteps <= 0:
-            raise ValueError('attosteps must be a positive integer.')
         self.snapshot(update=True)
         log.info('Attempting to approach sample.')
         #: Perform an initial touchdown to make sure we're not close to the sample.
@@ -272,7 +271,7 @@ class Microscope(Station):
                 latest values (should this even be an option)?
 
         Returns:
-            Dict[str, Quantity]: prefactors
+            Dict[str, pint.Quantity]: prefactors
                 Dict of {channel_name: prefactor} where prefactor is a pint Quantity.
 
         .. TODO:: Add current imaging channel.
@@ -340,7 +339,7 @@ class SusceptometerMicroscope(Microscope):
                 in measuremnt configuration file.
 
         Returns:
-            Tuple[DataSet, Scanplot]: data, plot
+            Tuple[qcodes.DataSet, plots.ScanPlot]: data, plot
                 qcodes DataSet containing acquired arrays and metdata,
                 and ScanPlot instance populated with acquired data.
         """

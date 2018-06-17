@@ -85,6 +85,10 @@ class Scanner(Instrument):
         
     def get_pos(self) -> np.ndarray:
         """Get current scanner [x, y, z] position.
+
+        Returns:
+            numpy.ndarray: pos
+                Array of current [x, y, z] scanner voltage.
         """
         with nidaqmx.Task('get_pos_ai_task') as ai_task:
             for ax in ['x', 'y', 'z']:
@@ -330,6 +334,11 @@ class Scanner(Instrument):
             tdc_plot.fig.canvas.draw()
             tdc_plot.fig.show()
             log.info('Touchdown occurred at {:.4} V.'.format(self.td_height))
+            if self.td_height < 0:
+                msg = 'Touchdown occurred at a negative voltage. '
+                msg += 'Consider Atto stepping further from the sample '
+                msg += 'to touchdown at a positive voltage.'
+                log.warning(msg)
             log.info('Pre-touchdown slope: {} {}/V.'.format(tdc_plot.pre_td_slope, cap_unit))
             log.info('Post-touchdown slope: {} {}/V.'.format(tdc_plot.post_td_slope, cap_unit))
             self.metadata['position']['plane'].update({'z': self.td_height})
@@ -361,7 +370,7 @@ class Scanner(Instrument):
             speed: Speed at which to go to pos0 to pos1, in DAQ voltage/second.
 
         Returns:
-            np.ndarray: ramp
+            numpy.ndarray: ramp
                 Array of x, y, z values to write to DAQ AOs to move
                 scanner from pos0 to pos1.
         """
