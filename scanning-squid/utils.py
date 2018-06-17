@@ -230,7 +230,7 @@ def moving_avg(x: Union[List, np.ndarray], y: Union[List, np.ndarray],
     return x[xs:xf], ymvg_avg
 
 def fit_line(x: Union[list, np.ndarray], y: Union[list, np.ndarray]) -> Tuple[np.ndarray, float]:
-    """Fits a line to x, y(x) and returns (polynomial_coeffs, sum_of_squared_residuals).
+    """Fits a line to x, y(x) and returns (polynomial_coeffs, rms_residual).
 
     Args:
         x: List or np.ndarry, independent variable.
