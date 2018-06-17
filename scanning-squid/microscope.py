@@ -4,7 +4,10 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+<<<<<<< HEAD
 from IPython.display import clear_output
+=======
+>>>>>>> master
 
 import json
 from typing import Dict, List, Sequence, Any, Union, Tuple

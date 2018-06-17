@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 INFO:2018-06-14_08:58:42:microscope:Logging started.
 INFO:2018-06-14_08:58:42:microscope:Initializing microscope object using file config_microscope.json.
 INFO:2018-06-14_08:58:42:atto:Initializing Attocube controller.
@@ -27,3 +28,34 @@ INFO:2018-06-14_09:02:24:microscope:Setting frequency on CAP_lockin to 18437.0 H
 INFO:2018-06-14_09:05:14:scanner:Moved scanner from [1.5, 1.4990000000000001, 0.20000000000000001] V to [-0.001, -0.001, -0.0] V.
 INFO:2018-06-14_09:05:14:microscope:Scan completed. DataSet saved to data/2018-06-14/#002_scan_09-02-26.
 INFO:2018-06-14_09:05:14:microscope:Removed daq_ai from microscope.
+=======
+INFO:2018-06-14_16:52:05:microscope:Logging started.
+INFO:2018-06-14_16:52:05:microscope:Initializing microscope object using file config_microscope.json.
+INFO:2018-06-14_16:52:05:atto:Initializing Attocube controller.
+INFO:2018-06-14_16:52:12:microscope:Attocube controller successfully added to microscope.
+INFO:2018-06-14_16:52:12:scanner:Moved scanner from [-0.001, -0.0, -0.001] V to [-0.0, -0.0, -0.001] V.
+INFO:2018-06-14_16:52:12:microscope:Scanner successfully added to microscope.
+INFO:2018-06-14_16:52:12:microscope:Susceptometer(SQUID) successfully added to microscope.
+INFO:2018-06-14_16:52:12:microscope:SUSC_lockin successfully added to microscope.
+INFO:2018-06-14_16:52:13:microscope:CAP_lockin successfully added to microscope.
+INFO:2018-06-14_16:52:14:scanner:Moved scanner from [-0.001, -0.0, -0.001] V to [-0.001, -0.0, -2.0] V.
+INFO:2018-06-14_16:52:15:scanner:Moved scanner from [-0.001, -0.0, -2.0] V to [-0.0, -0.0, -0.0] V.
+INFO:2018-06-14_16:52:21:utils:Scan parameters are valid. Starting scan.
+INFO:2018-06-14_16:52:21:scanner:Moved scanner from [-0.001, -0.0, -0.0] V to [-1.5, -1.5009999999999999, -0.40000000000000002] V.
+INFO:2018-06-14_16:52:21:microscope:Setting amplitude on SUSC_lockin to 1 V.
+INFO:2018-06-14_16:52:21:microscope:Setting frequency on SUSC_lockin to 131.79 Hz.
+INFO:2018-06-14_16:52:21:microscope:Setting amplitude on CAP_lockin to 1 V.
+INFO:2018-06-14_16:52:21:microscope:Setting frequency on CAP_lockin to 18437.0 Hz.
+INFO:2018-06-14_16:55:13:scanner:Moved scanner from [1.4990000000000001, 1.4990000000000001, 0.20000000000000001] V to [-0.001, -0.0, -0.001] V.
+INFO:2018-06-14_16:55:13:microscope:Scan completed. DataSet saved to data/2018-06-14/#001_scan_16-52-23.
+INFO:2018-06-14_16:55:13:microscope:Removed daq_ai from microscope.
+INFO:2018-06-14_16:55:14:utils:Scan parameters are valid. Starting scan.
+INFO:2018-06-14_16:55:15:scanner:Moved scanner from [-0.0, -0.0, -0.0] V to [-1.5, -1.5, -0.40000000000000002] V.
+INFO:2018-06-14_16:55:15:microscope:Setting amplitude on SUSC_lockin to 1 V.
+INFO:2018-06-14_16:55:15:microscope:Setting frequency on SUSC_lockin to 131.79 Hz.
+INFO:2018-06-14_16:55:15:microscope:Setting amplitude on CAP_lockin to 1 V.
+INFO:2018-06-14_16:55:15:microscope:Setting frequency on CAP_lockin to 18437.0 Hz.
+INFO:2018-06-14_16:58:03:scanner:Moved scanner from [1.5, 1.5, 0.20000000000000001] V to [-0.0, -0.0, -0.001] V.
+INFO:2018-06-14_16:58:03:microscope:Scan completed. DataSet saved to data/2018-06-14/#002_scan_16-55-17.
+INFO:2018-06-14_16:58:03:microscope:Removed daq_ai from microscope.
+>>>>>>> master
