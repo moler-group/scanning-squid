@@ -48,10 +48,10 @@
             "baud_rate" : 38400,
             "axes": {"x": 1,"y": 2,"z": 3},
             "voltage_limits": {
-                "RT":{"x": "25 V","y": "25 V","z": "25 V"},
+                "RT":{"x": "25 V","y": "25 V","z": "40 V"},
                 "LT":{"x": "60 V","y": "60 V","z": "60 V"}
             },
-            "default_frequency": {"x": "50 Hz", "y": "50 Hz", "z": "50 Hz"},
+            "default_frequency": {"x": "100 Hz", "y": "100 Hz", "z": "100 Hz"},
             "constants":{
                 "x": "-0.66 um",
                 "y": "-0.55 um",
@@ -80,7 +80,9 @@
                 "x": "0 V",
                 "y": "0 V",
                 "z": "0 V",
-                "plane": {"is_up_to_date": false}
+                "plane": {
+                    "is_current": false
+                }
             },
             "cantilever": {
                 "calibration": "326 uV/pF",
