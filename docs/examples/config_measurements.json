@@ -55,11 +55,6 @@
     },
     "td_cap": {
         "fname": "td_cap",
-        "dir": "",
-        "dV": "0.1 V",
-        "range": ["-10 V","10 V"],
-    "tdCAP": {
-        "fname": "tdCAP",
         "dV": "0.04 V",
         "range": ["-1.9 V","1.9 V"],
         "channels": {
@@ -67,22 +62,22 @@
                 "lockin": {
                     "name": "CAP",
                     "amplitude": "1 V",
-                    "frequency": "18.437 kHz"
+                    "frequency": "6.821 kHz"
                 },
                 "label": "Capacitance",
                 "gain": 1,
-                "unit": "pF",
-                "unit_latex": "pF"
+                "unit": "fF",
+                "unit_latex": "fF"
             }
         },
         "constants": {
             "max_slope": "0.02 pF/V",
-            "max_delta_cap": "0.015 pF",
+            "max_delta_cap": "0.03 pF",
             "initial_cap":"0 pF",
-            "nfitminmin":7,
+            "nfitmin":10,
             "nwindow":20,
-            "nest":5,
-            "wait_factor":2},
+            "ntest":5,
+            "wait_factor":3
         }
     },
     "tdSUSC":{}
