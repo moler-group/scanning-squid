@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from typing import Dict, List, Optional, Sequence, Any, Union
+from typing import Dict, List, Optional, Sequence, Any, Union, Tuple
 import qcodes as qc
 from scipy import io
 
@@ -16,11 +16,14 @@ class Counter(object):
 def next_file_name(fpath: str, extension: str) -> str:
     """Appends an integer to fpath to create a unique file name:
         fpath + {next unused integer} + '.' + extension
+
     Args:
         fpath: Path to file you want to create (no extension).
         extension: Extension of file you want to create.
+
     Returns:
-        Unique file name starting with fpath and ending with extension.
+        str: next_file_name
+            Unique file name starting with fpath and ending with extension.
     """
     i = 0
     while os.path.exists('{}{}.{}'.format(fpath, i, extension)):
@@ -29,11 +32,14 @@ def next_file_name(fpath: str, extension: str) -> str:
 
 def make_scan_vectors(scan_params: Dict[str, Any], ureg: Any) -> Dict[str, Sequence[float]]:
     """Creates x and y vectors for given scan parameters.
+
     Args:
         scan_params: Scan parameter dict
         ureg: pint UnitRegistry, manages units.
+
     Returns:
-        Dict of {axis_name: axis_vector} for x, y axes.
+        Dict: scan_vectors
+            {axis_name: axis_vector} for x, y axes.
     """
     Q_ = ureg.Quantity
     center = []
@@ -51,6 +57,7 @@ def make_scan_grids(scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
                     fast_ax: str, fast_ax_pts: int, plane: Dict[str, float],
                     height: float) -> Dict[str, Any]:
     """Makes meshgrids of scanner positions to write to DAQ analog outputs.
+
     Args:
         scan_vectors: Dict of {axis_name: axis_vector} for x, y axes (from make_scan_vectors).
         slow_ax: Name of the scan slow axis ('x' or 'y').
@@ -59,8 +66,10 @@ def make_scan_grids(scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
         plane: Dict of x, y, z values defining the plane to scan (provided by scanner.get_plane).
         height: Height above the sample surface (in DAQ voltage) at which to scan.
             More negative means further from sample; 0 means 'in contact'.
+
     Returns:
-        Dict of {axis_name: axis_scan_grid} for x, y, z, axes.
+        Dict: scan_grids
+            {axis_name: axis_scan_grid} for x, y, z, axes.
     """
     slow_ax_vec = scan_vectors[slow_ax]
     fast_ax_vec = np.linspace(scan_vectors[fast_ax][0],
@@ -76,12 +85,15 @@ def make_scan_grids(scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
 def make_xy_grids(scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
                   fast_ax: str) -> Dict[str, Any]:
     """Makes meshgrids from x, y scan_vectors (used for plotting, etc.).
+
     Args:
         scan_vectors: Dict of {axis_name: axis_vector} for x, y axes (from make_scan_vectors).
         slow_ax: Name of scan slow axis ('x' or 'y').
         fast_ax: Name of scan fast axis ('x' or 'y').
+
     Returns:
-        Dict of {axis_name: axis_grid} for x, y axes.
+        Dict: xy_grids
+            {axis_name: axis_grid} for x, y axes.
     """
     slow_ax_vec = scan_vectors[slow_ax]
     fast_ax_vec = scan_vectors[fast_ax]
@@ -95,6 +107,7 @@ def validate_scan_params(scanner_config: Dict[str, Any], scan_params: Dict[str, 
                          scan_grids: Dict[str, Any], temp: str, ureg: Any,
                          logger: Any) -> None:
     """Checks whether requested scan parameters are consistent with microscope limits.
+
     Args:
         scanner_config: Scanner configuration dict as defined in microscope configuration file.
         scan_params: Scan parameter dict as defined in measurements configuration file.
@@ -118,6 +131,7 @@ def validate_scan_params(scanner_config: Dict[str, Any], scan_params: Dict[str, 
 def to_arrays(scan_data: Any, ureg: Optional[Any]=None, real_units: Optional[bool]=True,
               xy_unit: Optional[str]=None) -> Dict[str, Any]:
     """Extracts scan data from DataSet and converts to requested units.
+
     Args:
         scan_data: qcodes DataSet created by Microscope.scan_plane
         ureg: pint UnitRegistry, manages physical units.
@@ -126,8 +140,10 @@ def to_arrays(scan_data: Any, ureg: Optional[Any]=None, real_units: Optional[boo
         xy_unit: String describing quantity with dimensions of length.
             If xy_unit is not None, scanner x, y DAQ ao voltage will be converted to xy_unit
             according to scanner constants defined in microscope configuration file.
+
     Returns:
-        Dict of x, y vectors and grids, and measured data in requested units.
+        Dict: arrays
+            Dict of x, y vectors and grids, and measured data in requested units.
     """
     if ureg is None:
         from pint import UnitRegistry
@@ -162,6 +178,7 @@ def to_arrays(scan_data: Any, ureg: Optional[Any]=None, real_units: Optional[boo
 def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True,
                      xy_unit: Optional[bool]=None, fname: Optional[str]=None) -> None:
     """Export DataSet created by microscope.scan_plane to .mat file for analysis.
+
     Args:
         scan_data: qcodes DataSet created by Microscope.scan_plane
         real_units: If True, converts z-axis data from DAQ voltage into
@@ -197,3 +214,67 @@ def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True,
         fname = meta['fname']
     fpath = scan_data.location + '/'
     io.savemat(next_file_name(fpath + fname, 'mat'), mdict)
+
+def moving_avg(x: Union[List, np.ndarray], y: Union[List, np.ndarray],
+    window_width: int) -> Tuple[np.ndarray]:
+    """Given 1D arrays x and y, calculates the moving average of y.
+
+    Args:
+        x: x data (1D array).
+        y: y data to be averaged (1D array).
+        window_width: Width of window over which to average.
+        
+    Returns:
+        Tuple[np.ndarray]: x, ymvg_avg
+            x data with ends trimmed according to width_width, moving average of y data
+    """
+    cs_vec = np.cumsum(np.insert(y, 0, 0))
+    ymvg_avg = (cs_vec[window_width:] - cs_vec[:-window_width]) / window_width
+    xs = int(np.ceil(window_width / 2)) - 1
+    xf = -xs if window_width % 2 else -(xs + 1)
+    return x[xs:xf], ymvg_avg
+
+def fit_line(x: Union[list, np.ndarray], y: Union[list, np.ndarray]) -> Tuple[np.ndarray, float]:
+    """Fits a line to x, y(x) and returns (polynomial_coeffs, rms_residual).
+
+    Args:
+        x: List or np.ndarry, independent variable.
+        y: List or np.ndarry, dependent variable.
+
+    Returns:
+        Tuple[np.ndarray, float]: p, rms
+            Array of best-fit polynomial coefficients, rms of residuals.
+    """
+    p, residuals, _, _, _ = np.polyfit(x, y, 1, full=True)
+    rms = np.sqrt(np.mean(np.square(residuals)))
+    return p, rms
+
+def to_real_units(self, data_set: Any, prefactors: Dict[str, Any], ureg: Any=None) -> Any:
+    """Converts DataSet arrays from DAQ voltage to real units using recorded metadata.
+        Preserves shape of DataSet arrays.
+
+    Args:
+        data_set: qcodes DataSet created by Microscope.scan_plane
+        prefactors: Dict of {channel_name: prefactor}.
+        ureg: Pint UnitRegistry. Default None.
+        
+    Returns:
+        np.ndarray: data
+            ndarray like the DataSet array, but in real units as prescribed by
+            factors in DataSet metadata.
+    """
+    if ureg is None:
+        from pint import UnitRegistry
+        ureg = UnitRegistry()
+        #: Tell the UnitRegistry what a Phi0 is, and that ohm = Ohm
+        with open('squid_units.txt', 'w') as f:
+            f.write('Phi0 = 2.067833831e-15 * Wb\n')
+            f.write('Ohm = ohm\n')
+        ureg.load_definitions('./squid_units.txt')
+    meta = data_set.metadata['loop']['metadata']
+    data = np.full_like(data_set.daq_ai_voltage, np.nan, dtype=np.double)
+    for i, ch in enumerate(self.channels.keys()):
+        array = data_set.daq_ai_voltage[:,i,:] * ureg('V')
+        unit = meta['channels'][ch]['unit']
+        data[:,i,:] = (array * ureg.Quantity(meta['prefactors'][ch])).to(unit)
+    return data

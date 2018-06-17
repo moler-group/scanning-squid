@@ -53,10 +53,18 @@
             }
         }
     },
+<<<<<<< HEAD
+    "td_cap": {
+        "fname": "td_cap",
+        "dir": "",
+        "dV": "0.1 V",
+        "range": ["-10 V","10 V"],
+=======
     "tdCAP": {
         "fname": "tdCAP",
         "dV": "0.04 V",
         "range": ["-1.9 V","1.9 V"],
+>>>>>>> master
         "channels": {
             "CAP": {
                 "lockin": {
@@ -81,8 +89,14 @@
             "tol":8,
             "sigma":0,
             "new_sigma_weight":0.2,
+<<<<<<< HEAD
+            "wait_factor":3},
+        "save_data":true,
+        "save_fig":true
+=======
             "wait_factor":3
         }
+>>>>>>> master
     },
     "tdSUSC":{}
 }
