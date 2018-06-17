@@ -74,7 +74,7 @@
             "max_slope": "0.02 pF/V",
             "max_delta_cap": "0.03 pF",
             "initial_cap":"0 pF",
-            "nfitmin":10,
+            "nfitmin":7,
             "nwindow":20,
             "ntest":5,
             "wait_factor":3
