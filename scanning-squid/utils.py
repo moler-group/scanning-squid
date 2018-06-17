@@ -22,7 +22,8 @@ def next_file_name(fpath: str, extension: str) -> str:
         extension: Extension of file you want to create.
 
     Returns:
-        Unique file name starting with fpath and ending with extension.
+        str: next_file_name
+            Unique file name starting with fpath and ending with extension.
     """
     i = 0
     while os.path.exists('{}{}.{}'.format(fpath, i, extension)):
@@ -37,7 +38,8 @@ def make_scan_vectors(scan_params: Dict[str, Any], ureg: Any) -> Dict[str, Seque
         ureg: pint UnitRegistry, manages units.
 
     Returns:
-        Dict of {axis_name: axis_vector} for x, y axes.
+        Dict: scan_vectors
+            {axis_name: axis_vector} for x, y axes.
     """
     Q_ = ureg.Quantity
     center = []
@@ -66,7 +68,8 @@ def make_scan_grids(scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
             More negative means further from sample; 0 means 'in contact'.
 
     Returns:
-        Dict of {axis_name: axis_scan_grid} for x, y, z, axes.
+        Dict: scan_grids
+            {axis_name: axis_scan_grid} for x, y, z, axes.
     """
     slow_ax_vec = scan_vectors[slow_ax]
     fast_ax_vec = np.linspace(scan_vectors[fast_ax][0],
@@ -89,7 +92,8 @@ def make_xy_grids(scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
         fast_ax: Name of scan fast axis ('x' or 'y').
 
     Returns:
-        Dict of {axis_name: axis_grid} for x, y axes.
+        Dict: xy_grids
+            {axis_name: axis_grid} for x, y axes.
     """
     slow_ax_vec = scan_vectors[slow_ax]
     fast_ax_vec = scan_vectors[fast_ax]
@@ -138,7 +142,8 @@ def to_arrays(scan_data: Any, ureg: Optional[Any]=None, real_units: Optional[boo
             according to scanner constants defined in microscope configuration file.
 
     Returns:
-        Dict of x, y vectors and grids, and measured data in requested units.
+        Dict: arrays
+            Dict of x, y vectors and grids, and measured data in requested units.
     """
     if ureg is None:
         from pint import UnitRegistry
@@ -254,7 +259,8 @@ def to_real_units(self, data_set: Any, prefactors: Dict[str, Any], ureg: Any=Non
         ureg: Pint UnitRegistry. Default None.
         
     Returns:
-        numpy ndarray like the DataSet array, but in real units as prescribed by
+        np.ndarray: data
+            ndarray like the DataSet array, but in real units as prescribed by
             factors in DataSet metadata.
     """
     if ureg is None:
