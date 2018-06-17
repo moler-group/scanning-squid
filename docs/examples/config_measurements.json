@@ -53,18 +53,15 @@
             }
         }
     },
-<<<<<<< HEAD
     "td_cap": {
         "fname": "td_cap",
         "dir": "",
         "dV": "0.1 V",
         "range": ["-10 V","10 V"],
-=======
     "tdCAP": {
         "fname": "tdCAP",
         "dV": "0.04 V",
         "range": ["-1.9 V","1.9 V"],
->>>>>>> master
         "channels": {
             "CAP": {
                 "lockin": {
@@ -79,24 +76,14 @@
             }
         },
         "constants": {
-            "max_slope": "0.25 pF/V",
-            "max_delta_cap": "0.15 pF",
+            "max_slope": "0.02 pF/V",
+            "max_delta_cap": "0.015 pF",
             "initial_cap":"0 pF",
-            "N_fit_min":5,
-            "N_fit_max":30,
-            "N_window":5,
-            "N_test":5,
-            "tol":8,
-            "sigma":0,
-            "new_sigma_weight":0.2,
-<<<<<<< HEAD
-            "wait_factor":3},
-        "save_data":true,
-        "save_fig":true
-=======
-            "wait_factor":3
+            "nfitminmin":7,
+            "nwindow":20,
+            "nest":5,
+            "wait_factor":2},
         }
->>>>>>> master
     },
     "tdSUSC":{}
 }

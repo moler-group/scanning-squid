@@ -9,7 +9,8 @@
 .python-version
 
 # ipython extras
-.ipynb_checkpoints/
+*.ipynb_checkpoints/
+
 
 # Distribution / packaging
 .Python
