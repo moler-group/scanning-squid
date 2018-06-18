@@ -10,6 +10,8 @@ The measurements that have so far been implemented for :class:`microscope.Micros
 Touchdowns
 ----------
 
+    .. seealso:: :ref:`/examples/ApproachGetPlaneExample.ipynb`.
+
 .. _capacitivetouchdowns:
 
 Capacitive touchdowns
@@ -24,7 +26,7 @@ In a capacitive touchdown, we sweep the scanner height (:class:`scanner.Scanner.
         {
             "td_cap": {
                 "fname": "td_cap",
-                "dV": "0.04 V",
+                "dV": "0.05 V",
                 "range": ["-1.9 V","1.9 V"],
                 "channels": {
                     "CAP": {
@@ -40,13 +42,13 @@ In a capacitive touchdown, we sweep the scanner height (:class:`scanner.Scanner.
                     }
                 },
                 "constants": {
-                    "max_slope": "0.02 pF/V",
-                    "max_delta_cap": "0.03 pF",
-                    "initial_cap": "0 pF",
-                    "nfitmin": 7,
-                    "nwindow": 20,
-                    "ntest": 5,
-                    "wait_factor": 3
+                    "max_slope": "20 fF/V",
+                    "max_delta_cap": "30 pF",
+                    "initial_cap":"0 pF",
+                    "nfitmin":10,
+                    "nwindow":20,
+                    "ntest":5,
+                    "wait_factor":3
                 }
             }
         }
@@ -79,6 +81,7 @@ The initial approach of the sample is done by iteratively performing capacitive 
 
     - Run :meth:`microscope.microscope.td_cap` to see if the SQUID is alread close to the sample.
     - If no touchdown is detected, while the :meth:`microscope.microscope.td_cap` loop is not broken:
+
         - Perform the requested number of z Attocube steps towards the sample
         - Run :meth:`microscope.microscope.td_cap`
     - If the loop was broken because a touchdown was detected, run :meth:`microscope.microscope.td_cap` to confirm that a touchdown occurred.
@@ -86,8 +89,18 @@ The initial approach of the sample is done by iteratively performing capacitive 
 Acquiring a Plane
 ~~~~~~~~~~~~~~~~~
 
-.. TODO::
-    Implement and document :code:`get_plane()`.
+    .. seealso:: :meth:`utils.make_scan_grids`, :meth:`utils.make_xy_grids`, and :ref:`capacitivetouchdowns`.
+
+In order to scan, we must know in what plane the sample lies. To acquire a plane, we perform capacitive touchdowns on a grid of x, y positions and fit a plane to the measured touchdown heights. The resulting fit coefficients are stored in the dictionary :code:`scanner.Scanner.metadata['plane']`, which has keys :code:`'x'`, :code:`'y'`, and :code:`'z'`. The sample plane for given x and y grids is then given by:
+
+    .. code-block:: python
+
+        coeffs = scanner.Scanner.metadata['plane']
+        plane_grid = x_grid * coeffs['x'] + y_grid * coeffs['y'] + coeffs['z']
+
+This means that :code:`coeffs['z']` is the touchdown height at the origin :code:`[x_position, y_position] == [0, 0]`. To scan, say, :code:`0.5 V` above the sample surface, the z-axis scan grid is simply :code:`plane_grid - 0.5`.
+
+    .. note:: This plane is trusted until the Attocubes are moved by :meth:`atto.AttocubeController.step`, at which point :class:`atto.AttocubeController.plane_is_current` is set to :code:`False`, and you will not be able to scan until you've acquired a new plane.
 
 Susceptibility Touchdowns
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -99,5 +112,7 @@ Susceptibility Touchdowns
 
 Scanning
 --------
+
+    .. seealso:: :class:`plots.ScanPlot`
 
 See :ref:`/examples/ScanPlaneExample.ipynb` for a demonstration of scanning a plane with a :class:`microscope.SusceptometerMicroscope`.

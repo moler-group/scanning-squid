@@ -290,7 +290,7 @@ class Microscope(Station):
         self.scanner.break_loop = False
         self.scanner.td_has_occurred = False
         self.snapshot(update=True)
-        x_grid, y_grid = np.meshgrid(x_vec, y_vec)
+        x_grid, y_grid = np.meshgrid(x_vec, y_vec, indexing='ij')
         td_grid = np.full((len(x_vec), len(y_vec)), np.nan, dtype=np.double)
         log.info('Aqcuiring a plane.')
         v_retract = self.scanner.voltage_retract[self.temp].to('V').magnitude
