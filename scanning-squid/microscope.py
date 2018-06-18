@@ -387,16 +387,10 @@ class SusceptometerMicroscope(Microscope):
         self.remove_component('daq_ai')
         if hasattr(self, 'daq_ai'):
             self.daq_ai.clear_instances()
-        self.daq_ai = DAQAnalogInputs('daq_ai',
-                                      daq_name,
-                                      daq_rate,
-                                      channels,
-                                      ai_task,
-                                      samples_to_read=pts_per_line,
-                                      target_points=pix_per_line,
+        self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, daq_rate, channels, ai_task,
+                                      samples_to_read=pts_per_line, target_points=pix_per_line,
                                       #: Very important to synchronize AOs and AIs
-                                      clock_src='ao/SampleClock'
-                                     )
+                                      clock_src='ao/SampleClock')
         self.add_component(self.daq_ai)
         slow_ax_position = getattr(self.scanner, 'position_{}'.format(slow_ax))
         slow_ax_start = scan_vectors[slow_ax][0]
@@ -404,7 +398,7 @@ class SusceptometerMicroscope(Microscope):
         slow_ax_step = scan_vectors[slow_ax][1] - scan_vectors[slow_ax][0]
         #: There is probably a counter built in to qc.Loop, but I couldn't find it
         loop_counter = utils.Counter()
-        scan_plot = ScanPlot(scan_params, prefactors, self.ureg)
+        scan_plot = ScanPlot(scan_params, self.ureg)
         loop = qc.Loop(slow_ax_position.sweep(start=slow_ax_start,
                                               stop=slow_ax_end,
                                               step=slow_ax_step), delay=0.1

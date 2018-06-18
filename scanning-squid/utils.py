@@ -249,7 +249,7 @@ def fit_line(x: Union[list, np.ndarray], y: Union[list, np.ndarray]) -> Tuple[np
     rms = np.sqrt(np.mean(np.square(residuals)))
     return p, rms
 
-def to_real_units(self, data_set: Any, prefactors: Dict[str, Any], ureg: Any=None) -> Any:
+def to_real_units(data_set: Any, ureg: Any=None) -> Any:
     """Converts DataSet arrays from DAQ voltage to real units using recorded metadata.
         Preserves shape of DataSet arrays.
 
@@ -273,7 +273,7 @@ def to_real_units(self, data_set: Any, prefactors: Dict[str, Any], ureg: Any=Non
         ureg.load_definitions('./squid_units.txt')
     meta = data_set.metadata['loop']['metadata']
     data = np.full_like(data_set.daq_ai_voltage, np.nan, dtype=np.double)
-    for i, ch in enumerate(self.channels.keys()):
+    for i, ch in enumerate(meta['channels'].keys()):
         array = data_set.daq_ai_voltage[:,i,:] * ureg('V')
         unit = meta['channels'][ch]['unit']
         data[:,i,:] = (array * ureg.Quantity(meta['prefactors'][ch])).to(unit)
