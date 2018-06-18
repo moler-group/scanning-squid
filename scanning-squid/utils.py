@@ -4,6 +4,11 @@ from typing import Dict, List, Optional, Sequence, Any, Union, Tuple
 import qcodes as qc
 from scipy import io
 
+#: Tell the UnitRegistry what a Phi0 is, and that ohm and Ohm are the same thing.
+with open('squid_units.txt', 'w') as f:
+    f.write('Phi0 = 2.067833831e-15 * Wb\n')
+    f.write('Ohm = ohm\n')
+
 class Counter(object):
     """Simple counter used to keep track of progress in a Loop.
     """
@@ -191,10 +196,6 @@ def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True,
     """
     from pint import UnitRegistry
     ureg = UnitRegistry()
-    #: Tell the UnitRegistry what a Phi0 is, and that ohm and Ohm are the same thing.
-    with open('squid_units.txt', 'w') as f:
-        f.write('Phi0 = 2.067833831e-15 * Wb\n')
-        f.write('Ohm = ohm\n')
     ureg.load_definitions('./squid_units.txt')
     Q_ = ureg.Quantity
     meta = scan_data.metadata['loop']['metadata']
@@ -266,10 +267,6 @@ def to_real_units(data_set: Any, ureg: Any=None) -> Any:
     if ureg is None:
         from pint import UnitRegistry
         ureg = UnitRegistry()
-        #: Tell the UnitRegistry what a Phi0 is, and that ohm = Ohm
-        with open('squid_units.txt', 'w') as f:
-            f.write('Phi0 = 2.067833831e-15 * Wb\n')
-            f.write('Ohm = ohm\n')
         ureg.load_definitions('./squid_units.txt')
     meta = data_set.metadata['loop']['metadata']
     data = np.full_like(data_set.daq_ai_voltage, np.nan, dtype=np.double)

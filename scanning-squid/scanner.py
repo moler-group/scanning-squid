@@ -31,7 +31,7 @@ class Scanner(Instrument):
         self.ureg = ureg
         self.Q_ = ureg.Quantity
         self.metadata.update(scanner_config)
-        self.metadata['position'].update({'plane_is_current': False})
+        self.metadata['plane'].update({'is_current': False})
         self.metadata.update({'daq': daq_config})
         self._parse_unitful_quantities()
         self._initialize_parameters()
@@ -96,8 +96,6 @@ class Scanner(Instrument):
                 channel = self.metadata['daq']['name'] + '/ai{}'.format(idx)
                 ai_task.ai_channels.add_ai_voltage_chan(channel, ax)
             pos = list(np.round(ai_task.read(), decimals=3))
-        for i, ax in enumerate(['x', 'y', 'z']):
-            self.metadata['position'].update({ax: '{} V'.format(pos[i])})
         return pos
     
     def goto(self, new_pos: List[float], retract_first: Optional[bool]=False,
@@ -148,11 +146,8 @@ class Scanner(Instrument):
             log.debug('Moved scanner from {} V to {} V.'.format(old_pos, current_pos))
         else:
              log.info('Moved scanner from {} V to {} V.'.format(old_pos, current_pos))
-        self.metadata['position'].update({'x': '{} V'.format(current_pos[0]),
-                                          'y': '{} V'.format(current_pos[1]),
-                                          'z': '{} V'.format(current_pos[2])})
             
-    def retract(self, speed: Optional[str]=None) -> None:
+    def retract(self, speed: Optional[str]=None, quiet: Optional[bool]=False) -> None:
         """Retracts z-bender fully based on whether temp is LT or RT.
 
         Args:
@@ -165,7 +160,8 @@ class Scanner(Instrument):
             speed = self.Q_(speed).to('V/s').magnitude
         current_pos = self.position()
         v_retract = self.Q_(self.voltage_retract[self.temp]).to('V').magnitude
-        self.goto([current_pos[0], current_pos[1], v_retract], speed='{} V/s'.format(speed))
+        self.goto([current_pos[0], current_pos[1], v_retract],
+            speed='{} V/s'.format(speed), quiet=quiet)
     
     def scan_line(self, scan_grids: Dict[str, np.ndarray], ao_channels: Dict[str, int],
                   daq_rate: Union[int, float], counter: Any, reverse=False) -> None:
@@ -238,7 +234,7 @@ class Scanner(Instrument):
         max_deltaC = self.Q_(tdc_plot.constants['max_delta_cap']).to(cap_unit).magnitude
         #: Maximum allowed |d(capacitance)/d(voltage)|
         max_slope = self.Q_(tdc_plot.constants['max_slope']).to('{}/V'.format(cap_unit)).magnitude
-        prefactor = tdc_plot.prefactors['CAP']
+        prefactor = self.Q_(tdc_plot.prefactors['CAP'])
         #: Minimum number of points to fit per line
         nfitmin = tdc_plot.constants['nfitmin']
         #: Width of window used to determine if touchdown has occurred
@@ -341,7 +337,7 @@ class Scanner(Instrument):
                 log.warning(msg)
             log.info('Pre-touchdown slope: {} {}/V.'.format(tdc_plot.pre_td_slope, cap_unit))
             log.info('Post-touchdown slope: {} {}/V.'.format(tdc_plot.post_td_slope, cap_unit))
-            self.metadata['position']['plane'].update({'z': self.td_height})
+            self.metadata['plane'].update({'z': self.td_height})
         if not task:
             return self.td_height
     
