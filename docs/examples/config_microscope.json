@@ -76,14 +76,7 @@
                 "value": "2 V/s",
                 "comment":"Rate of movement of the scanner (when not scanning)."
             },
-            "position": {
-                "x": "0 V",
-                "y": "0 V",
-                "z": "0 V",
-                "plane": {
-                    "is_current": false
-                }
-            },
+            "plane": {},
             "cantilever": {
                 "calibration": "326 uV/pF",
                 "comment":"CAP lockin X reading, freq = [] Hz, amp = 1 V"

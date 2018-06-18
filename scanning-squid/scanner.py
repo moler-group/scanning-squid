@@ -335,8 +335,8 @@ class Scanner(Instrument):
                 msg += 'Consider Atto stepping further from the sample '
                 msg += 'to touchdown at a positive voltage.'
                 log.warning(msg)
-            log.info('Pre-touchdown slope: {} {}/V.'.format(tdc_plot.pre_td_slope, cap_unit))
-            log.info('Post-touchdown slope: {} {}/V.'.format(tdc_plot.post_td_slope, cap_unit))
+            log.info('Pre-touchdown slope: {}.'.format(tdc_plot.pre_td_slope))
+            log.info('Post-touchdown slope: {}.'.format(tdc_plot.post_td_slope))
             self.metadata['plane'].update({'z': self.td_height})
         if not task:
             return self.td_height

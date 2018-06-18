@@ -4,7 +4,7 @@
         "fast_ax": "x",
         "range": {"x": "3 V", "y": "3 V"},
         "center": {"x": "0 V", "y": "0 V"},
-        "height": "-0.2 V",
+        "height": "-0.5 V",
         "scan_rate": "100 pixels/s",
         "scan_size": {"x": 50, "y": 50},
         "channels": {
@@ -44,18 +44,18 @@
                 "lockin": {
                     "name": "CAP",
                     "amplitude": "1 V",
-                    "frequency": "18.437 kHz"
+                    "frequency": "6.821 kHz"
                 },
                 "label": "Capacitance",
                 "gain": 1,
-                "unit": "pF",
-                "unit_latex": "pF"
+                "unit": "fF",
+                "unit_latex": "fF"
             }
         }
     },
     "td_cap": {
         "fname": "td_cap",
-        "dV": "0.04 V",
+        "dV": "0.05 V",
         "range": ["-1.9 V","1.9 V"],
         "channels": {
             "CAP": {
@@ -71,10 +71,10 @@
             }
         },
         "constants": {
-            "max_slope": "0.02 pF/V",
-            "max_delta_cap": "0.03 pF",
+            "max_slope": "20 fF/V",
+            "max_delta_cap": "30 pF",
             "initial_cap":"0 pF",
-            "nfitmin":7,
+            "nfitmin":10,
             "nwindow":20,
             "ntest":5,
             "wait_factor":3
