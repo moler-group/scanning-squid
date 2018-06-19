@@ -54,6 +54,7 @@ class Microscope(Station):
                 Default is the name of the microscope configuration file.
             **kwargs: Keyword arguments to be passed to Station constructor.
         """
+        # test change
         super().__init__(**kwargs)
         with open(config_file) as f:
             self.config = json.load(f)
