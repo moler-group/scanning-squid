@@ -1,7 +1,11 @@
+#: Various Python utilities
 import os
 import sys
 import time
+import json
+from typing import Dict, List, Sequence, Any, Union, Tuple
 
+#: Plotting and math modules
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as axes3d
 import matplotlib.colors as colors
@@ -9,16 +13,16 @@ import numpy as np
 from scipy.linalg import lstsq
 from IPython.display import clear_output
 
-import json
-from typing import Dict, List, Sequence, Any, Union, Tuple
-
+#: Qcodes for running measurements and saving data
 import qcodes as qc
 from qcodes.station import Station
 from qcodes.instrument_drivers.stanford_research.SR830 import SR830
 
+#: NI DAQ library
 import nidaqmx
 from nidaqmx.constants import AcquisitionType
 
+#: scanning-squid modules
 import squids
 import atto
 import utils
@@ -26,6 +30,7 @@ from scanner import Scanner
 from daq import DAQAnalogInputs
 from plots import ScanPlot, TDCPlot
 
+#: Pint for manipulating physical units
 from pint import UnitRegistry
 ureg = UnitRegistry()
 #: Tell UnitRegistry instance what a Phi0 is, and that Ohm = ohm
