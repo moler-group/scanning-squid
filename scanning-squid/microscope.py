@@ -3,7 +3,10 @@ import sys
 import time
 
 import matplotlib.pyplot as plt
+import mpl_toolkits.mplot3d.axes3d as axes3d
+import matplotlib.colors as colors
 import numpy as np
+from scipy.linalg import lstsq
 from IPython.display import clear_output
 
 import json
@@ -193,7 +196,7 @@ class Microscope(Station):
             self.daq_ai.clear_instances()
         self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, daq_rate, channels, ai_task)
         loop_counter = utils.Counter()
-        tdc_plot = TDCPlot(tdc_params, prefactors, self.ureg) 
+        tdc_plot = TDCPlot(tdc_params, self.ureg) 
         loop = qc.Loop(self.scanner.position_z.sweep(startV, endV, dV)
             ).each(
                 qc.Task(time.sleep, delay),
@@ -219,6 +222,8 @@ class Microscope(Station):
         try:
             log.info('Starting capacitive touchdown.')
             loop.run()
+            if abs(old_pos[0]) < 0.002 and abs(old_pos[1]) < 0.002 and self.scanner.td_height is not None:
+                self.scanner.metadata['plane'].update({'z': self.scanner.td_height})
         except KeyboardInterrupt:
             log.warning('Scan interrupted by user. Retracting scanner.')
             #: Set break_loop = True so that get_plane() and approach() will be aborted
@@ -253,12 +258,106 @@ class Microscope(Station):
             plt.close(tdc_plot.fig)
             clear_output(wait=True)
         if self.scanner.td_has_occurred:
-            log.info('Touchdown detected. Performing tc_cap() to confirm.')    
+            log.info('Touchdown detected. Performing td_cap() to confirm.')    
             data, tdc_plot = self.td_cap(tdc_params, update_snap=False)
             if not self.scanner.td_has_occurred:
                 log.warning('Could not confirm touchdown.')
             else:
                 log.info('Touchdown confirmed.')
+
+    def get_plane(self, x_vec: np.ndarray, y_vec: np.ndarray,
+        tdc_params: Dict[str, Any]) -> Tuple[Union[np.ndarray, None]]:
+        """Performs touchdowns on a grid and fits a plane to the resulting surface.
+
+        Args:
+            x_vec: 1D array of x positions (must be same length as y_vec).
+            y_vec: 1D array of y positions (must be same length as x_vec).
+            tdc_params: Dict of capacitive touchdown parameters as defined
+                in measurement configuration file.
+
+        Returns:
+            Tuple[Union[np.ndarray, None]]: x_grid, y_grid, td_grid, plane
+                x, y, td grids and plane coefficients such that td_grid is
+                fit by x_grid * plane[0] + ygrid * plane[1] + plane[2].
+
+        """
+        old_pos = self.scanner.position()
+        #: True if touchdown doesn't occur for any point in the grid
+        out_of_range = False
+        first_iteration = True
+        #: True if the loop is exited before finishing
+        premature_exit = False
+        self.scanner.break_loop = False
+        self.scanner.td_has_occurred = False
+        self.snapshot(update=True)
+        x_grid, y_grid = np.meshgrid(x_vec, y_vec, indexing='ij')
+        td_grid = np.full((len(x_vec), len(y_vec)), np.nan, dtype=np.double)
+        log.info('Aqcuiring a plane.')
+        v_retract = self.scanner.voltage_retract[self.temp].to('V').magnitude
+        fig = plt.figure(figsize=(4,3))
+        ax = fig.add_subplot(111, projection='3d')
+        ax.set_xlabel('x position [V]')
+        ax.set_ylabel('y position [V]')
+        ax.set_zlabel('z position [V]')
+        ax.set_title('Sample Plane')  
+        fig.canvas.draw()  
+        fig.show()
+        for i in range(len(x_vec)):
+            for j in range(len(y_vec)):
+                #: If any of the safety limits in td_cap() are exceeded,
+                #: or the loop is interrupted by the user.
+                if self.scanner.break_loop and not self.scanner.td_has_occurred:
+                    log.warning('Aborting get_plane().')
+                    premature_exit = True
+                    break #: goes to outer break statement
+                else:
+                    if not first_iteration:
+                        clear_output(wait=True)
+                        if self.scanner.td_height is None:
+                            out_of_range = True
+                            premature_exit = True
+                            log.warning('Touchdown out of range. Stopping get_plane().')
+                            self.scanner.goto(old_pos)
+                            break #: goes to outer break statement
+                        plt.close(fig)
+                        fig = plt.figure(figsize=(4,3))
+                        ax = fig.add_subplot(111, projection='3d')
+                        ax.scatter(x_grid[np.isfinite(td_grid)], y_grid[np.isfinite(td_grid)],
+                            td_grid[np.isfinite(td_grid)], cmap='viridis')
+                        ax.set_xlabel('x position [V]')
+                        ax.set_ylabel('y position [V]')
+                        ax.set_zlabel('z position [V]')
+                        ax.set_title('Sample Plane')  
+                        fig.canvas.draw()  
+                        fig.show()
+                        plt.close(tdc_plot.fig)
+                    self.scanner.goto([x_grid[i,j], y_grid[i,j], v_retract])
+                    data, tdc_plot = self.td_cap(tdc_params, update_snap=False)
+                    td_grid[i,j] = self.scanner.td_height
+                    first_iteration = False
+                    continue #: skips outer break statement
+                break #: occurs only if out_of_range or loop is broken
+        self.scanner.goto(old_pos)
+        if not out_of_range and not premature_exit:
+            #: Fit a plane to the td_grid
+            x = np.reshape(x_grid, (-1, 1))
+            y = np.reshape(y_grid, (-1, 1))
+            td = np.reshape(td_grid, (-1, 1))
+            z = np.column_stack((x, y, np.ones_like(x)))
+            plane, _, _, _ = lstsq(z, td)
+            log.info('New plane : {}.'.format([plane[i][0] for i in range(3)]))
+            ax.plot_surface(x_grid, y_grid, plane[0] * x_grid + plane[1] * y_grid + plane[2],
+                cmap='viridis', alpha=0.5)
+            ax.set_title(data.location)
+            fig.canvas.draw()
+            fig.show()
+            plt.savefig(data.location + '/plane.png')
+            for i, axis in enumerate(['x', 'y', 'z']):
+                self.scanner.metadata['plane'].update({axis: plane[i][0]})
+            self.atto.plane_is_current = True
+            return x_grid, y_grid, td_grid, plane
+        #: If the loop didn't finish, return (None, None, None, None)
+        return (None,) * 4
 
 
     def get_prefactors(self, measurement: Dict[str, Any], update: bool=True) -> Dict[str, Any]:
@@ -273,8 +372,6 @@ class Microscope(Station):
         Returns:
             Dict[str, pint.Quantity]: prefactors
                 Dict of {channel_name: prefactor} where prefactor is a pint Quantity.
-
-        .. TODO:: Add current imaging channel.
         """
         channels = measurement['channels'].keys()
         mod_width = self.Q_(self.SQUID.metadata['modulation_width'])
@@ -343,7 +440,7 @@ class SusceptometerMicroscope(Microscope):
                 qcodes DataSet containing acquired arrays and metdata,
                 and ScanPlot instance populated with acquired data.
         """
-        if not self.scanner.metadata['position']['plane_is_current']:
+        if not self.atto.plane_is_current:
             raise RuntimeError('Plane is not current. Aborting scan.')
         old_pos = self.scanner.position()
         
@@ -355,7 +452,7 @@ class SusceptometerMicroscope(Microscope):
         for ch in meas_channels.keys():
             channels.update({ch: ai_channels[ch]})
         nchannels = len(channels.keys())
-        
+
         daq_name = daq_config['name']
         #: DAQ AI sampling rate is divided amongst all active AI channels
         daq_rate = self.Q_(daq_config['rate']).to('Hz').magnitude / nchannels
@@ -367,7 +464,7 @@ class SusceptometerMicroscope(Microscope):
         line_duration = pix_per_line * self.ureg('pixels') / self.Q_(scan_params['scan_rate'])
         pts_per_line = int(daq_rate * line_duration.to('s').magnitude)
         
-        plane = self.scanner.metadata['position']['plane']
+        plane = self.scanner.metadata['plane']
         height = self.Q_(scan_params['height']).to('V').magnitude
         
         scan_vectors = utils.make_scan_vectors(scan_params, self.ureg)
