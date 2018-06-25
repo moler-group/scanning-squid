@@ -147,10 +147,10 @@ class Microscope(Station):
                 in measurement configuration file.
         """
         channels = measurement['channels']
-        for ch in channels.keys():
-            if 'lockin' in channels[ch].keys():
+        for ch in channels:
+            if 'lockin' in channels[ch]:
                 lockin = '{}_lockin'.format(channels[ch]['lockin']['name'])
-                for param in channels[ch]['lockin'].keys():
+                for param in channels[ch]['lockin']:
                     if param != 'name':
                         parameters = getattr(self, lockin).parameters
                         unit = parameters[param].unit
@@ -179,7 +179,7 @@ class Microscope(Station):
         ai_channels = daq_config['channels']['analog_inputs']
         meas_channels = tdc_params['channels']
         channels = {} 
-        for ch in meas_channels.keys():
+        for ch in meas_channels:
             channels.update({ch: ai_channels[ch]})
         nchannels = len(channels.keys())
         daq_rate = self.Q_(daq_config['rate']).to('Hz').magnitude / nchannels
@@ -407,7 +407,7 @@ class Microscope(Station):
         Args:
             name: Name of component to remove.
         """
-        if name in self.components.keys():
+        if name in self.components:
             _ = self.components.pop(name)
             log.info('Removed {} from microscope.'.format(name))
         else:
@@ -454,7 +454,7 @@ class SusceptometerMicroscope(Microscope):
         ai_channels = daq_config['channels']['analog_inputs']
         meas_channels = scan_params['channels']
         channels = {}
-        for ch in meas_channels.keys():
+        for ch in meas_channels:
             channels.update({ch: ai_channels[ch]})
         nchannels = len(channels.keys())
 

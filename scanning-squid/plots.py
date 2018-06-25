@@ -51,7 +51,7 @@ class ScanPlot(object):
         self.scan_vectors = make_scan_vectors(self.scan_params, self.ureg)
         self.X, self.Y = np.meshgrid(self.scan_vectors['x'], self.scan_vectors['y'])
         empty = np.full_like(self.X, np.nan, dtype=np.double)
-        for ch in self.channels.keys():
+        for ch in self.channels:
             im = self.plots['images'][ch]['ax'].pcolormesh(self.X, self.Y, empty)
             self.plots['images'][ch].update({'quad': im})
             cbar = plt.colorbar(im, cax=self.plots['colorbars'][ch]['cax'], orientation='horizontal')
@@ -80,7 +80,7 @@ class ScanPlot(object):
         meta = data_set.metadata['loop']['metadata']
         slow_ax = 'x' if meta['fast_ax'] == 'y' else 'y'
         line = loop_counter.count if not offline else meta['scan_size'][slow_ax] - 1
-        for ch in self.channels.keys():
+        for ch in self.channels:
             idx = meta['channels'][ch]['ai']
             data_ch = data[:,idx,:]
             if self.fast_ax.lower() == 'y':
@@ -181,7 +181,7 @@ class TDCPlot(object):
         self.heights = np.linspace(startV, endV, npnts)
         #empty = np.full_like(self.heights, np.nan, dtype=np.double)
         #: There's only one channel, but no harm in iterating
-        for ch in self.channels.keys():
+        for ch in self.channels:
             self.ax.set_xlim(min(self.heights), max(self.heights))
             #self.ax.plot(self.heights, empty, 'bo')
             self.ax.grid()
