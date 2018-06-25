@@ -89,13 +89,22 @@ class Scanner(Instrument):
         Returns:
             numpy.ndarray: pos
                 Array of current [x, y, z] scanner voltage.
-        """
+        """    
         with nidaqmx.Task('get_pos_ai_task') as ai_task:
             for ax in ['x', 'y', 'z']:
                 idx = self.metadata['daq']['channels']['analog_inputs'][ax]
                 channel = self.metadata['daq']['name'] + '/ai{}'.format(idx)
-                ai_task.ai_channels.add_ai_voltage_chan(channel, ax)
-            pos = list(np.round(ai_task.read(), decimals=3))
+                ai_task.ai_channels.add_ai_voltage_chan(channel, ax, min_val=-10, max_val=10)
+            pos_raw = list(np.round(ai_task.read(), decimals=3))
+        pos = []
+        for i, ax in enumerate(['x', 'y', 'z']):
+            ax_lim = sorted([lim.to('V').magnitude for lim in self.voltage_limits[self.temp][ax]])
+            if pos_raw[i] < ax_lim[0]:
+                pos.append(ax_lim[0])
+            elif pos_raw[i] > ax_lim[1]:
+                pos.append(ax_lim[1])
+            else:
+                pos.append(pos_raw[i])
         return pos
     
     def goto(self, new_pos: List[float], retract_first: Optional[bool]=False,

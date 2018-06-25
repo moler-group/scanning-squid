@@ -230,7 +230,7 @@ class Microscope(Station):
             if abs(old_pos[0]) < 0.002 and abs(old_pos[1]) < 0.002 and self.scanner.td_height is not None:
                 self.scanner.metadata['plane'].update({'z': self.scanner.td_height})
         except KeyboardInterrupt:
-            log.warning('Scan interrupted by user. Retracting scanner.')
+            log.warning('Touchdown interrupted by user. Retracting scanner.')
             #: Set break_loop = True so that get_plane() and approach() will be aborted
             self.scanner.break_loop = True
             #: Stop 'td_cap_ai_task' so that we can read our current position
@@ -555,8 +555,8 @@ class SusceptometerMicroscope(Microscope):
             except:
                 pass
             self.scanner.goto([0, 0, 0])
-            self.CAP_lockin.amplitude(0.004)
-            self.SUSC_lockin.amplitude(0.004)
+            #self.CAP_lockin.amplitude(0.004)
+            #self.SUSC_lockin.amplitude(0.004)
             log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
         self.remove_component('daq_ai')
         return data, scan_plot

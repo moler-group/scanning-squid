@@ -79,7 +79,7 @@
             "plane": {},
             "cantilever": {
                 "calibration": "326 uV/pF",
-                "comment":"CAP lockin X reading, freq = [] Hz, amp = 1 V"
+                "comment":"CAP lockin X reading, freq = 6.821 kHz, amp = 1 V"
             }
         }
     },
@@ -87,7 +87,7 @@
         "name": "SQUID",
         "type": "susceptometer",
         "description": "IBM deep-etched 0.3um susceptometer",
-        "modulation_width": "1.0 V/Phi0",
+        "modulation_width": "0.19 V/Phi0",
         "FC_PU_mutual": "0 Phi0/A",
         "feedback": {
             "type": "Red Pitaya + pyrpl"
