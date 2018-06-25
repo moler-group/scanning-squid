@@ -393,7 +393,7 @@ class Scanner(Instrument):
         return np.array(ramp)
     
     def _goto_x(self, xpos: float) -> None:
-        """Go to give x position.
+        """Go to given x position.
 
         Args:
             xpos: x position to go to, in DAQ voltage.
@@ -402,7 +402,7 @@ class Scanner(Instrument):
         self.goto([xpos, current_pos[1], current_pos[2]], quiet=True)
         
     def _goto_y(self, ypos: float) -> None:
-        """Go to give y position.
+        """Go to given y position.
 
         Args:
             ypos: y position to go to, in DAQ voltage.
@@ -411,7 +411,7 @@ class Scanner(Instrument):
         self.goto([current_pos[0], ypos, current_pos[2]], quiet=True)
     
     def _goto_z(self, zpos: float) -> None:
-        """Go to give z position.
+        """Go to given z position.
 
         Args:
             zpos: z position to go to, in DAQ voltage.
