@@ -9,9 +9,6 @@ log = logging.getLogger(__name__)
 
 class AttocubeController(VisaInstrument):
     """Base class for Attocube controller instrument.
-    
-    Parameters of AttocubeController instances are not updated when
-        snapshots are taken. You must get each parameter individually.
     """
     def __init__(self, atto_config: Dict, temp: str, ureg: Any,
                  timestamp_fmt: str, **kwargs) -> None:
