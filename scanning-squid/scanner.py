@@ -89,13 +89,22 @@ class Scanner(Instrument):
         Returns:
             numpy.ndarray: pos
                 Array of current [x, y, z] scanner voltage.
-        """
+        """    
         with nidaqmx.Task('get_pos_ai_task') as ai_task:
             for ax in ['x', 'y', 'z']:
                 idx = self.metadata['daq']['channels']['analog_inputs'][ax]
                 channel = self.metadata['daq']['name'] + '/ai{}'.format(idx)
-                ai_task.ai_channels.add_ai_voltage_chan(channel, ax)
-            pos = list(np.round(ai_task.read(), decimals=3))
+                ai_task.ai_channels.add_ai_voltage_chan(channel, ax, min_val=-10, max_val=10)
+            pos_raw = list(np.round(ai_task.read(), decimals=3))
+        pos = []
+        for i, ax in enumerate(['x', 'y', 'z']):
+            ax_lim = sorted([lim.to('V').magnitude for lim in self.voltage_limits[self.temp][ax]])
+            if pos_raw[i] < ax_lim[0]:
+                pos.append(ax_lim[0])
+            elif pos_raw[i] > ax_lim[1]:
+                pos.append(ax_lim[1])
+            else:
+                pos.append(pos_raw[i])
         return pos
     
     def goto(self, new_pos: List[float], retract_first: Optional[bool]=False,
@@ -384,7 +393,7 @@ class Scanner(Instrument):
         return np.array(ramp)
     
     def _goto_x(self, xpos: float) -> None:
-        """Go to give x position.
+        """Go to given x position.
 
         Args:
             xpos: x position to go to, in DAQ voltage.
@@ -393,7 +402,7 @@ class Scanner(Instrument):
         self.goto([xpos, current_pos[1], current_pos[2]], quiet=True)
         
     def _goto_y(self, ypos: float) -> None:
-        """Go to give y position.
+        """Go to given y position.
 
         Args:
             ypos: y position to go to, in DAQ voltage.
@@ -402,7 +411,7 @@ class Scanner(Instrument):
         self.goto([current_pos[0], ypos, current_pos[2]], quiet=True)
     
     def _goto_z(self, zpos: float) -> None:
-        """Go to give z position.
+        """Go to given z position.
 
         Args:
             zpos: z position to go to, in DAQ voltage.

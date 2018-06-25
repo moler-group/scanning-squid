@@ -1,7 +1,11 @@
+#: Various Python utilities
 import os
 import sys
 import time
+import json
+from typing import Dict, List, Sequence, Any, Union, Tuple
 
+#: Plotting and math modules
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as axes3d
 import matplotlib.colors as colors
@@ -9,16 +13,16 @@ import numpy as np
 from scipy.linalg import lstsq
 from IPython.display import clear_output
 
-import json
-from typing import Dict, List, Sequence, Any, Union, Tuple
-
+#: Qcodes for running measurements and saving data
 import qcodes as qc
 from qcodes.station import Station
 from qcodes.instrument_drivers.stanford_research.SR830 import SR830
 
+#: NI DAQ library
 import nidaqmx
 from nidaqmx.constants import AcquisitionType
 
+#: scanning-squid modules
 import squids
 import atto
 import utils
@@ -26,6 +30,7 @@ from scanner import Scanner
 from daq import DAQAnalogInputs
 from plots import ScanPlot, TDCPlot
 
+#: Pint for manipulating physical units
 from pint import UnitRegistry
 ureg = UnitRegistry()
 #: Tell UnitRegistry instance what a Phi0 is, and that Ohm = ohm
@@ -142,10 +147,10 @@ class Microscope(Station):
                 in measurement configuration file.
         """
         channels = measurement['channels']
-        for ch in channels.keys():
-            if 'lockin' in channels[ch].keys():
+        for ch in channels:
+            if 'lockin' in channels[ch]:
                 lockin = '{}_lockin'.format(channels[ch]['lockin']['name'])
-                for param in channels[ch]['lockin'].keys():
+                for param in channels[ch]['lockin']:
                     if param != 'name':
                         parameters = getattr(self, lockin).parameters
                         unit = parameters[param].unit
@@ -174,7 +179,7 @@ class Microscope(Station):
         ai_channels = daq_config['channels']['analog_inputs']
         meas_channels = tdc_params['channels']
         channels = {} 
-        for ch in meas_channels.keys():
+        for ch in meas_channels:
             channels.update({ch: ai_channels[ch]})
         nchannels = len(channels.keys())
         daq_rate = self.Q_(daq_config['rate']).to('Hz').magnitude / nchannels
@@ -225,7 +230,7 @@ class Microscope(Station):
             if abs(old_pos[0]) < 0.002 and abs(old_pos[1]) < 0.002 and self.scanner.td_height is not None:
                 self.scanner.metadata['plane'].update({'z': self.scanner.td_height})
         except KeyboardInterrupt:
-            log.warning('Scan interrupted by user. Retracting scanner.')
+            log.warning('Touchdown interrupted by user. Retracting scanner.')
             #: Set break_loop = True so that get_plane() and approach() will be aborted
             self.scanner.break_loop = True
             #: Stop 'td_cap_ai_task' so that we can read our current position
@@ -402,7 +407,7 @@ class Microscope(Station):
         Args:
             name: Name of component to remove.
         """
-        if name in self.components.keys():
+        if name in self.components:
             _ = self.components.pop(name)
             log.info('Removed {} from microscope.'.format(name))
         else:
@@ -449,7 +454,7 @@ class SusceptometerMicroscope(Microscope):
         ai_channels = daq_config['channels']['analog_inputs']
         meas_channels = scan_params['channels']
         channels = {}
-        for ch in meas_channels.keys():
+        for ch in meas_channels:
             channels.update({ch: ai_channels[ch]})
         nchannels = len(channels.keys())
 
@@ -550,8 +555,8 @@ class SusceptometerMicroscope(Microscope):
             except:
                 pass
             self.scanner.goto([0, 0, 0])
-            self.CAP_lockin.amplitude(0.004)
-            self.SUSC_lockin.amplitude(0.004)
+            #self.CAP_lockin.amplitude(0.004)
+            #self.SUSC_lockin.amplitude(0.004)
             log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
         self.remove_component('daq_ai')
         return data, scan_plot
