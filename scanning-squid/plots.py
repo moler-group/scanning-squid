@@ -111,7 +111,7 @@ class ScanPlot(object):
                     ydata = data_ch[:,line-num_lines+l+1] if self.fast_ax == 'y' else data_ch[line-num_lines+l+1,:]
                     self.plots['lines'][ch].plot(xdata, ydata, lw=2, color=self.line_colors[num_lines-l-1])
         self.fig.canvas.draw()
-        self.fig.show()
+        #self.fig.show()
         
     def save(self, fname=None):
         """Save plot to png file.
@@ -188,7 +188,8 @@ class TDCPlot(object):
             self.ax.set_xlabel('z position [V]')
             self.ax.set_ylabel(r'{} [{}]'.format(self.channels[ch]['label'], self.channels[ch]['unit_latex']))
             self.ax.set_title(self.channels[ch]['label'])
-        self.fig.show()
+        self.fig.canvas.draw()
+        #self.fig.show()
 
     def update(self, data_set: Any) -> None:
         """Update plot with data from data_set.
@@ -211,7 +212,7 @@ class TDCPlot(object):
                 self.ax.plot(self.hdata[-1], self.cdata[-1], 'r.')
                 self.ax.relim()
         self.fig.canvas.draw()
-        self.fig.show()
+        #self.fig.show()
 
     def save(self, fname=None):
         """Save plot to png file.
