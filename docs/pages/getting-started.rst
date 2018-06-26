@@ -38,12 +38,11 @@ Mac
 
 After cloning the `scanning-squid repository <https://github.com/moler-group/scanning-squid>`_, to run scanning-squid from a Windows (Mac) machine, open the Anaconda Prompt (Terminal) and run :code:`activate scanning-squid` (:code:`source activate scanning-squid`), and launch a :code:`jupyter notebook` or :code:`jupyter lab`.
 
-Next Steps
-~~~~~~~~~~
+Documentation
+~~~~~~~~~~~~~
 
 .. toctree::
    :maxdepth: 4
-   :caption: Documentation:
 
    /pages/microscope
    /pages/config-files
