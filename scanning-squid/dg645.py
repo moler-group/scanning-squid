@@ -4,8 +4,13 @@ import logging
 log = logging.getLogger(__name__)
 
 class DG645(VisaInstrument):
+    """Qcodes driver for SRS DG645 digital delay generator.
+
+    Not all instrument functionality is included here.
+    Logan Bishop-Van Horn (2018)
+    """
     def __init__(self, name, address, **kwargs):
-        super().__init__(name, address, terminator='\r\n', **kwargs)
+        super().__init__(name, address, terminator='\r\n', timeout=10, **kwargs)
         self.name = name
         self.channel_mapping = {
             'T0': 0, 'T1': 1, 'A': 2, 'B': 3, 'C': 4,
@@ -57,6 +62,7 @@ class DG645(VisaInstrument):
         #                    vals=vals.Numbers(min_value=0) 
         #     )
 
+        #: Prescale parameters
         for k, v in self.prescale_mapping.items():
             if v > 0:
                 self.add_parameter('phase_{}'.format(k),
@@ -100,6 +106,8 @@ class DG645(VisaInstrument):
         #                    set_cmd='SSTL {}',
         #                    vals=vals.Numbers(min_value=0)
         #     )
+
+        #: Trigger parameters
         self.add_parameter('trig_level',
                            label='Trigger level',
                            unit='V',
@@ -124,6 +132,8 @@ class DG645(VisaInstrument):
                            set_cmd=self._set_trig_source,
                            vals=vals.Enum(tuple(self.trig_mapping.keys()))
             )
+
+        #: Burst parameters
         self.add_parameter('burst_count',
                            label='Burst count',
                            unit='',
@@ -156,6 +166,8 @@ class DG645(VisaInstrument):
                            set_cmd='BURT {}',
                            vals=vals.Enum(0,1)
             )
+
+        #: Channel parameters
         for ch, idx in self.channel_mapping.items():
             if idx > 1:
                 self.add_parameter('delay_{}'.format(ch),
@@ -174,6 +186,8 @@ class DG645(VisaInstrument):
                                    set_cmd=lambda d, c=ch: self._set_link(d, channel=c),
                                    vals=vals.Enum(tuple(k for k in self.channel_mapping if k != 'T1'))
                     )
+
+        #: Output parameters
         for out, idx in self.output_mapping.items():
             self.add_parameter('amp_out_{}'.format(out),
                                label='Output {} amplitude'.format(out),
@@ -200,27 +214,52 @@ class DG645(VisaInstrument):
                                vals=vals.Enum(0,1)
                 )
 
-    def calibrate(self) -> str:
+    def calibrate(self) -> None:
+        """Run auto-calibration routine.
+        """
         self.write('*CAL?')
         self.wait()
 
-    def self_test(self) -> str:
+    def self_test(self) -> None:
+        """Run self-test routine.
+        """
         self.write('*TST?')
         self.wait()
 
     def reset(self) -> None:
+        """Reset instrument.
+        """
         log.info('Resetting {}.'.format(self.name))
         self.write('*RST')
 
     def save_settings(self, location: int) -> None:
+        """Save instrument settings to given location.
+
+        Args:
+            location: Location to which to save the settings (in [1..9]).
+        """
         log.info('Saving instrument settings to location {}.'.format(location))
         self.write('*SAV {}'.format(location))
 
     def trigger(self) -> None:
+        """Initiates a single trigger if instrument is in single shot mode.
+        """
         self.write('*TRG')
 
     def wait(self) -> None:
+        """Wait for all prior commands to execute before continuing.
+        """
         self.write('*WAI')
+
+    def local(self) -> None:
+        """Go to local.
+        """
+        self.write('LCAL')
+
+    def remote(self) -> None:
+        """Go to remote.
+        """
+        self.write('REMT')
 
     def _get_phase_prescale(self, channel: str) -> str:
         return self.ask('PHASE?{}'.format(self.prescale_mapping[channel]))
