@@ -5,7 +5,7 @@ log = logging.getLogger(__name__)
 
 class DG645(VisaInstrument):
     def __init__(self, name, address, **kwargs):
-        super().__init__(name, address, terminator='\n', **kwargs)
+        super().__init__(name, address, terminator='\r\n', **kwargs)
         self.name = name
         self.channel_mapping = {
             'T0': 0, 'T1': 1, 'A': 2, 'B': 3, 'C': 4,
@@ -39,7 +39,7 @@ class DG645(VisaInstrument):
                 'single': 5,
                 'line': 6
         } 
-        self.polarity_mapping = {'-': 0, '+', 1}
+        self.polarity_mapping = {'-': 0, '+': 1}
 
         self.add_parameter('trig_holdoff',
                            label='Trigger holdoff',
@@ -84,137 +84,129 @@ class DG645(VisaInstrument):
                                set_cmd=lambda val, ch=k: self._set_prescale(val, channel=ch),
                                vals=vals.Ints(min_value=0)
                 )
-            # self.add_parameter('step_size_prescale_{}'.format(v),
-            #                    label='Prescale factor step size {}'.format(v),
-            #                    unit='',
-            #                    get_cmd='SSPS? {}'.format(k),
-            #                    get_parser=float,
-            #                    set_cmd='SSPS {} {{}}'.format(k),
-            #                    vals=vals.Numbers(min_value=0)
-            #     )
-            # self.add_parameter('step_size_trig_level',
-            #                    label='Trigger level step size',
-            #                    unit='V',
-            #                    get_cmd='SSTL?',
-            #                    get_parser=float,
-            #                    set_cmd='SSTL {}',
-            #                    vals=vals.Numbers(min_value=0)
-            #     )
-            self.add_parameter('trig_level',
-                               label='Trigger level',
+        # self.add_parameter('step_size_prescale_{}'.format(v),
+        #                    label='Prescale factor step size {}'.format(v),
+        #                    unit='',
+        #                    get_cmd='SSPS? {}'.format(k),
+        #                    get_parser=float,
+        #                    set_cmd='SSPS {} {{}}'.format(k),
+        #                    vals=vals.Numbers(min_value=0)
+        #     )
+        # self.add_parameter('step_size_trig_level',
+        #                    label='Trigger level step size',
+        #                    unit='V',
+        #                    get_cmd='SSTL?',
+        #                    get_parser=float,
+        #                    set_cmd='SSTL {}',
+        #                    vals=vals.Numbers(min_value=0)
+        #     )
+        self.add_parameter('trig_level',
+                           label='Trigger level',
+                           unit='V',
+                           get_cmd='TLVL?',
+                           get_parser=float,
+                           set_cmd='TLVL {}',
+                           vals=vals.Numbers()
+            )
+        self.add_parameter('trig_rate',
+                           label='Trigger rate',
+                           unit='Hz',
+                           get_cmd='TRAT?',
+                           get_parser=float,
+                           set_cmd='TRAT {}',
+                           vals=vals.Numbers(min_value=0)
+            ) 
+        self.add_parameter('trig_source',
+                           label='Trigger source',
+                           unit='',
+                           get_cmd=self._get_trig_source,
+                           get_parser=str,
+                           set_cmd=self._set_trig_source,
+                           vals=vals.Enum(tuple(self.trig_mapping.keys()))
+            )
+        self.add_parameter('burst_count',
+                           label='Burst count',
+                           unit='',
+                           get_cmd='BURC?',
+                           get_parser=int,
+                           set_cmd='BURC {}',
+                           vals=vals.Ints(min_value=0)
+            )
+        self.add_parameter('burst_delay',
+                           label='Burst delay',
+                           unit='s',
+                           get_cmd='BURD?',
+                           get_parser=float,
+                           set_cmd='BURD {}',
+                           vals=vals.Numbers(min_value=0)
+            )
+        self.add_parameter('burst_period',
+                           label='Burst period',
+                           unit='s',
+                           get_cmd='BURP?',
+                           get_parser=float,
+                           set_cmd='BURC {}',
+                           vals=vals.Numbers(min_value=100e-9, max_value=2000-10e-9)
+            )
+        self.add_parameter('burst_T0_config',
+                           label='Burst T0 configuration',
+                           unit='',
+                           get_cmd='BURT?',
+                           get_parser=int,
+                           set_cmd='BURT {}',
+                           vals=vals.Enum(0,1)
+            )
+        for ch, idx in self.channel_mapping.items():
+            if idx > 1:
+                self.add_parameter('delay_{}'.format(ch),
+                                   label='{} delay'.format(ch),
+                                   unit='s',
+                                   get_cmd=lambda c=ch: self._get_delay(channel=c),
+                                   get_parser=str,
+                                   set_cmd=lambda src_delay, c=ch: self._set_delay(src_delay, channel=c),
+                                   vals=vals.Strings()
+                    )
+                self.add_parameter('channel_link_{}'.format(ch),
+                                   label='Channel linked to {}'.format(ch),
+                                   unit='',
+                                   get_cmd=lambda c=ch: self._get_link(channel=c),
+                                   get_parser=int,
+                                   set_cmd=lambda d, c=ch: self._set_link(d, channel=c),
+                                   vals=vals.Enum(tuple(k for k in self.channel_mapping if k != 'T1'))
+                    )
+        for out, idx in self.output_mapping.items():
+            self.add_parameter('amp_out_{}'.format(out),
+                               label='Output {} amplitude'.format(out),
                                unit='V',
-                               get_cmd='TLVL?',
+                               get_cmd=lambda o=out: self._get_amp(output=o),
                                get_parser=float,
-                               set_cmd='TLVL {}',
+                               set_cmd=lambda l, o=out: self._set_amp(lvl, output=o),
                                vals=vals.Numbers()
                 )
-            self.add_parameter('trig_rate',
-                               label='Trigger rate',
-                               unit='Hz',
-                               get_cmd='TRAT?',
+            self.add_parameter('offset_out_{}'.format(out),
+                               label='Output {} offset'.format(out),
+                               unit='V',
+                               get_cmd=lambda o=out: self._get_offset(output=o),
                                get_parser=float,
-                               set_cmd='TRAT {}',
-                               vals=vals.Numbers(min_value=0)
-                ) 
-            self.add_parameter('trig_source',
-                               label='Trigger source',
-                               unit='',
-                               get_cmd=self._get_trig_source,
-                               get_parser=str,
-                               set_cmd=self._set_trig_source,
-                               vals=vals.Enum(tuple(self.trig_mapping.keys()))
+                               set_cmd=lambda l, o=out: self._set_offset(lvl, output=o),
+                               vals=vals.Numbers()
                 )
-            self.add_parameter('burst_count',
-                               label='Burst count',
+            self.add_parameter('polarity_out_{}'.format(out),
+                               label='Output {} polarity'.format(out),
                                unit='',
-                               get_cmd='BURC?',
+                               get_cmd=lambda o=out: self._get_polarity(output=o),
                                get_parser=int,
-                               set_cmd='BURC {}',
-                               vals=vals.Ints(min_value=0)
-                )
-            self.add_parameter('burst_delay',
-                               label='Burst delay',
-                               unit='s',
-                               get_cmd='BURD?',
-                               get_parser=float,
-                               set_cmd='BURD {}',
-                               vals=vals.Numbers(min_value=0)
-                )
-            self.add_parameter('burst_period',
-                               label='Burst period',
-                               unit='s',
-                               get_cmd='BURP?',
-                               get_parser=float,
-                               set_cmd='BURC {}',
-                               vals=vals.Numbers(min_value=100e-9, max_value=2000-10e-9)
-                )
-            self.add_parameter('burst_T0_config',
-                               label='Burst T0 configuration',
-                               unit='',
-                               get_cmd='BURT?',
-                               get_parser=int,
-                               set_cmd='BURT {}',
+                               set_cmd=lambda l, o=out: self._set_offset(lvl, output=o),
                                vals=vals.Enum(0,1)
                 )
-            for ch, idx in self.channel_mapping.items():
-                if idx > 1:
-                    self.add_parameter('delay_{}'.format(ch),
-                                       label='{} delay'.format(ch),
-                                       unit='s',
-                                       get_cmd=lambda c=ch: self._get_delay(channel=c),
-                                       get_parser=str,
-                                       set_cmd=lambda src_delay, c=ch: self._set_delay(src_delay, channel=c),
-                                       vals=vals.Strings()
-                        )
-                    self.add_parameter('channel_link_{}'.format(ch),
-                                       label='Channel linked to {}'.format(ch),
-                                       unit='',
-                                       get_cmd=lambda c=ch: self._get_link(channel=c),
-                                       get_parser=int,
-                                       set_cmd=lambda d, c=ch: self._set_link(d, channel=c),
-                                       vals=vals.Enum(tuple(k for k in self.channel_mapping if k != 'T1'))
-                        )
-            for out, idx in self.output_mapping.items():
-                self.add_parameter('amp_out_{}'.format(out),
-                                   label='Output {} amplitude'.format(out),
-                                   unit='V',
-                                   get_cmd=lambda o=out: self._get_amp(output=o),
-                                   get_parser=float,
-                                   set_cmd=lambda l, o=out: self._set_amp(lvl, output=o),
-                                   vals=vals.Numbers()
-                    )
-                self.add_parameter('offset_out_{}'.format(out),
-                                   label='Output {} offset'.format(out),
-                                   unit='V',
-                                   get_cmd=lambda o=out: self._get_offset(output=o),
-                                   get_parser=float,
-                                   set_cmd=lambda l, o=out: self._set_offset(lvl, output=o),
-                                   vals=vals.Numbers()
-                    )
-                self.add_parameter('polarity_out_{}'.format(out),
-                                   label='Output {} polarity'.format(out),
-                                   unit='',
-                                   get_cmd=lambda o=out: self._get_polarity(output=o),
-                                   get_parser=int,
-                                   set_cmd=lambda l, o=out: self._set_offset(lvl, output=o),
-                                   vals=vals.Enum(0,1)
-                    )
 
     def calibrate(self) -> str:
-        response = self.ask('*CAL?')
-        if int(response) == 0:
-            log.info('Auto calibration successful.')
-        elif int(response) == 17:
-            log.info('Auto calibration failed.')
-        return response
+        self.write('*CAL?')
+        self.wait()
 
     def self_test(self) -> str:
-        response = self.ask('*TST?')
-        if int(response) == 0:
-            log.info('Self test successful.')
-        elif int(response) == 16:
-            log.info('Self test failed.')
-        return response
+        self.write('*TST?')
+        self.wait()
 
     def reset(self) -> None:
         log.info('Resetting {}.'.format(self.name))
@@ -245,7 +237,7 @@ class DG645(VisaInstrument):
     def _set_trig_source(self, src: str) -> None:  
         self.write('TSRC {}'.format(self.trig_mapping[src]))
 
-    def _get_trig_source(self): -> str
+    def _get_trig_source(self) -> str:
         response = self.ask('TSRC?')
         keys = self.trig_mapping.keys()
         values = self.trig_mapping.values()
