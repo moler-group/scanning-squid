@@ -12,23 +12,23 @@ class DG645(VisaInstrument):
             'D': 5, 'E': 6, 'F': 7, 'G': 8, 'H': 9
         }
         self.output_mapping = {'T0': 0, 'AB': 1, 'CD': 2, 'EF': 3, 'GH': 4}
-        self.display_mapping = {
-            'trig_rate': 0,
-            'trig_thresh': 1,
-            'trig_single_shot': 2,
-            'trig_line': 3,
-            'advanced_trig_enable': 4,
-            'trig_holdoff': 5,
-            'prescale_config': 6,
-            'burst_mode': 7,
-            'burst_delay': 8,
-            'burst_count': 9,
-            'burst_period': 10,
-            'channel_delay': 11,
-            'channel_output_levels': 12,
-            'channel_output_polarity': 13,
-            'burst_T0_config': 14
-        }
+        # self.display_mapping = {
+        #     'trig_rate': 0,
+        #     'trig_thresh': 1,
+        #     'trig_single_shot': 2,
+        #     'trig_line': 3,
+        #     'advanced_trig_enable': 4,
+        #     'trig_holdoff': 5,
+        #     'prescale_config': 6,
+        #     'burst_mode': 7,
+        #     'burst_delay': 8,
+        #     'burst_count': 9,
+        #     'burst_period': 10,
+        #     'channel_delay': 11,
+        #     'channel_output_levels': 12,
+        #     'channel_output_polarity': 13,
+        #     'burst_T0_config': 14
+        # }
         self.prescale_mapping = {'trig': 0, 'AB': 1, 'CD': 2, 'EF': 3, 'GH': 4}
         self.trig_mapping = {
                 'internal': 0,
