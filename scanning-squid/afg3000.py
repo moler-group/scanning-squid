@@ -551,8 +551,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:VOLTage:UNIT?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:VOLTage:UNIT {{}}'.format(src),
-                   vals=vals.Enum('VPP', 'VRMS', 'DBM'),
-                   snapshot_get=False
+                   vals=vals.Enum('VPP', 'VRMS', 'DBM')
             )
 
         #: Noise parameters
