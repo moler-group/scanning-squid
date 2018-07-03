@@ -214,7 +214,7 @@ class DG645(VisaInstrument):
                                vals=vals.Enum(0,1)
                 )
 
-            self.connect_message()
+        self.connect_message()
 
     def calibrate(self) -> None:
         """Run auto-calibration routine.
@@ -264,10 +264,10 @@ class DG645(VisaInstrument):
         self.write('REMT')
 
     def _get_phase_prescale(self, channel: str) -> str:
-        return self.ask('PHASE?{}'.format(self.prescale_mapping[channel]))
+        return self.ask('PHAS?{}'.format(self.prescale_mapping[channel]))
 
     def _set_phase_prescale(self, value: int, channel: str=None) -> None:
-        self.write('PHASE {},{}'.format(self.prescale_mapping[channel], value))
+        self.write('PHAS {},{}'.format(self.prescale_mapping[channel], value))
 
     def _get_prescale(self, channel: str) -> str:
         return self.ask('PRES?{}'.format(self.prescale_mapping[channel]))
@@ -282,7 +282,7 @@ class DG645(VisaInstrument):
         response = self.ask('TSRC?')
         keys = self.trig_mapping.keys()
         values = self.trig_mapping.values()
-        return list(leys)[list(values).index(int(response))]
+        return list(keys)[list(values).index(int(response))]
 
     def _get_delay(self, channel: str=None) -> str:
         return self.ask('DLAY?{}'.format(self.channel_mapping[channel]))

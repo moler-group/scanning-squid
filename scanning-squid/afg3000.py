@@ -11,7 +11,7 @@ class AFG3000(VisaInstrument):
     Logan Bishop-Van Horn (2018)
     """
     def __init__(self, name, address, **kwargs):
-        super().__init__(name, address, terminator='\r\n', timeout=20, **kwargs)
+        super().__init__(name, address, terminator='\n', timeout=20, **kwargs)
         self.name = name
 
         self.add_parameter('trigger_mode',
@@ -59,8 +59,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:AM:DEPTh?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:AM:DEPTh {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
 
             #: Frequency modulation
@@ -70,8 +69,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:FM:DEViation?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:FM:DEViation {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
 
             #: Phase modulation
@@ -81,8 +79,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:PM:DEViation?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:PM:DEViation {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
 
             #: Pulse-width modulation
@@ -92,8 +89,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:PWM:DEViation:DCYCle?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:PWM:DEViation:DCYCle {{}}'.format(src),
-                   vals=vals.Numbers(min_value=0, max_value=100),
-                   snapshot_get=False
+                   vals=vals.Numbers(min_value=0, max_value=100)
             )
 
             #: Amplitude, frequency, phase, and pulse-width modulation
@@ -104,8 +100,7 @@ class AFG3000(VisaInstrument):
                        get_cmd='SOURce{}:{}:INTernal:FREQuency?'.format(src, mod_type),
                        get_parser=str,
                        set_cmd='SOURce{}:{}:INTernal:FREQuency {{}}'.format(src, mod_type),
-                       vals=vals.Strings(),
-                       snapshot_get=False
+                       vals=vals.Strings()
                 )              
                 self.add_parameter('{}_internal_function{}'.format(mod_type.lower(), src),
                        label='Source {} {} interal function'.format(src, mod_type),
@@ -122,8 +117,7 @@ class AFG3000(VisaInstrument):
                         'PRNoise', 'PRN',
                         'USER', 'USER1', 'USER2', 'USER3', 'USER4',
                         'EMEMory', 'EMEM',
-                        'EFILe', 'EFIL'),
-                       snapshot_get=False
+                        'EFILe', 'EFIL')
                 ) 
                 self.add_parameter('{}_internal_efile{}'.format(mod_type.lower(), src),
                        label='Source {} {} interal EFile'.format(src, mod_type),
@@ -131,8 +125,7 @@ class AFG3000(VisaInstrument):
                        get_cmd='SOURce{}:{}:INTernal:FUNCtion:EFILe?'.format(src, mod_type),
                        get_parser=str,
                        set_cmd='SOURce{}:{}:INTernal:FUNCtion:EFILe {{}}'.format(src, mod_type),
-                       vals=vals.Strings(),
-                       snapshot_get=False
+                       vals=vals.Strings()
                 )
                 self.add_parameter('{}_internal_source{}'.format(mod_type.lower(), src),
                        label='Source {} {} source'.format(src, mod_type),
@@ -140,8 +133,7 @@ class AFG3000(VisaInstrument):
                        get_cmd='SOURce{}:{}:SOURce?'.format(src, mod_type),
                        get_parser=str,
                        set_cmd='SOURce{}:{}:SOURce? {{}}'.format(src, mod_type),
-                       vals=vals.Enum('INTernal', 'INT', 'EXTernal', 'EXT'),
-                       snapshot_get=False
+                       vals=vals.Enum('INTernal', 'INT', 'EXTernal', 'EXT')
                 )
                 self.add_parameter('{}_state{}'.format(mod_type.lower(), src),
                        label='Source {} {} interal state'.format(src, mod_type),
@@ -159,8 +151,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:BURSt:MODE?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:BURSt:MODE {{}}'.format(src),
-                   vals=vals.Enum('TRIGgered', 'TRIG', 'GATed', 'GAT'),
-                   snapshot_get=False
+                   vals=vals.Enum('TRIGgered', 'TRIG', 'GATed', 'GAT')
             )
             self.add_parameter('burst_ncycles{}'.format(src),
                    label='Source {} burst N cycles'.format(src),
@@ -170,8 +161,7 @@ class AFG3000(VisaInstrument):
                    set_cmd='SOURce{}:BURSt:NCYCles {{}}'.format(src),
                    vals=vals.MultiType(
                         vals.Ints(min_value=1, max_value=1000000),
-                        vals.Enum('INFinity', 'INF', 'MAXimum', 'MAX', 'MINimum', 'MIN')),
-                   snapshot_get=False
+                        vals.Enum('INFinity', 'INF', 'MAXimum', 'MAX', 'MINimum', 'MIN'))
             )
             self.add_parameter('burst_state{}'.format(src),
                    label='Source {} burst state'.format(src),
@@ -187,8 +177,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:BURSt:TDELay?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:BURSt:TDELay {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
 
             if src == 1:
@@ -198,7 +187,7 @@ class AFG3000(VisaInstrument):
             self.add_parameter('combine{}'.format(src),
                    label='Source {} combine signals'.format(src),
                    unit='',
-                   get_cmd='SOURce{}:COMBine:FEED ?'.format(src),
+                   get_cmd='SOURce{}:COMBine:FEED?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:COMBine:FEED {{}}'.format(src),
                    vals=vals.Enum(combine_enum)
@@ -211,15 +200,14 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:FREQuency:CENTer?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:FREQuency:CENTer {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
             self.add_parameter('freq_concurrent{}'.format(src),
                    label='Source {} concurrent frequency'.format(src),
                    unit='',
-                   get_cmd='SOURce{}:FM:CONCurrent?'.format(src),
+                   get_cmd='SOURce{}:FREQuency:CONCurrent?'.format(src),
                    get_parser=lambda x: bool(int(x)),
-                   set_cmd='SOURce{}:FM:CONCurrent {{}}'.format(src),
+                   set_cmd='SOURce{}:FREQuency:CONCurrent {{}}'.format(src),
                    vals=vals.Enum('OFF', 0, 'ON', 1)
             ) 
             self.add_parameter('freq_cw{}'.format(src),
@@ -228,8 +216,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:FREQuency:CW?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:FREQuency:CW {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
             self.add_parameter('freq_fixed{}'.format(src),
                    label='Source {} fixed frequency'.format(src),
@@ -237,8 +224,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:FREQuency:FIXed?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:FREQuency:FIXed {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
             self.add_parameter('freq_mode{}'.format(src),
                    label='Source {} frequency mode'.format(src),
@@ -246,8 +232,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:FREQuency:MODE?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:FREQuency:MODE {{}}'.format(src),
-                   vals=vals.Enum('CW', 'FIXed', 'FIX', 'SWEep', 'SWE'),
-                   snapshot_get=False
+                   vals=vals.Enum('CW', 'FIXed', 'FIX', 'SWEep', 'SWE')
             )
             self.add_parameter('freq_span{}'.format(src),
                    label='Source {} frequency span'.format(src),
@@ -255,8 +240,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:FREQuency:SPAN?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:FREQuency:SPAN {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
             self.add_parameter('freq_start{}'.format(src),
                    label='Source {} frequency start'.format(src),
@@ -264,8 +248,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:FREQuency:STARt?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:FREQuency:STARt {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
             self.add_parameter('freq_stop{}'.format(src),
                    label='Source {} frequency stop'.format(src),
@@ -273,8 +256,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:FREQuency:STOP?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:FREQuency:STOP {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
 
             #: FSK modulation
@@ -284,8 +266,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:FSKey:FREQuency?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:FSKey:FREQuency {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )            
             self.add_parameter('fsk_internal_rate{}'.format(src),
                    label='Source {} FSK internal rate'.format(src),
@@ -293,8 +274,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:FSKey:INTernal:RATE?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:FSKey:INTernal:RATE {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
             self.add_parameter('fsk_source{}'.format(src),
                    label='Source {} FSK source'.format(src),
@@ -302,8 +282,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:FSKey:SOURce?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:FSKey:SOURce {{}}'.format(src),
-                   vals=vals.Enum('INTernal', 'INT', 'EXTernal', 'EXT'),
-                   snapshot_get=False
+                   vals=vals.Enum('INTernal', 'INT', 'EXTernal', 'EXT')
             )
             self.add_parameter('fsk_state{}'.format(src),
                    label='Source {} FSK state'.format(src),
@@ -321,8 +300,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:FUNCtion:EFILe?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:FUNCtion:EFILe {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
             self.add_parameter('function_ramp_symmetry{}'.format(src),
                    label='Source {} function ramp symmetry'.format(src),
@@ -330,8 +308,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:FUNCtion:RAMP:SYMMetry?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:FUNCtion:RAMP:SYMMetry {{}}'.format(src),
-                   vals=vals.Numbers(min_value=0, max_value=100),
-                   snapshot_get=False
+                   vals=vals.Numbers(min_value=0, max_value=100)
             )
             self.add_parameter('function_shape{}'.format(src),
                    label='Source {} function shape'.format(src),
@@ -352,8 +329,7 @@ class AFG3000(VisaInstrument):
                     'USER', 'USER1', 
                     'USER2', 'USER3', 'USER4',
                     'EMEMory', 'EMEM',
-                    'EFILe', 'EFIL'),
-                   snapshot_get=False
+                    'EFILe', 'EFIL')
             )
 
             #: Phase parameters
@@ -373,8 +349,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:PULSe:DCYCle?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:PULSe:DCYCle {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )            
             self.add_parameter('pulse_delay{}'.format(src),
                    label='Source {} pulse delay'.format(src),
@@ -382,8 +357,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:PULSe:DELay?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:PULSe:DELay {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
             self.add_parameter('pulse_hold{}'.format(src),
                    label='Source {} pulse hold'.format(src),
@@ -391,8 +365,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:PULSe:HOLD?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:PULSe:HOLD {{}}'.format(src),
-                   vals=vals.Enum('WIDTh', 'WIDT', 'DUTY'),
-                   snapshot_get=False
+                   vals=vals.Enum('WIDTh', 'WIDT', 'DUTY')
             )
             self.add_parameter('pulse_period{}'.format(src),
                    label='Source {} pulse period'.format(src),
@@ -400,8 +373,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:PULSe:PERiod?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:PULSe:PERiod {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
             self.add_parameter('pulse_trans_lead{}'.format(src),
                    label='Source {} pulse leading edge time'.format(src),
@@ -409,8 +381,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:PULSe:TRANsition:LEADing?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:PULSe:TRANsition:LEADing {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
             self.add_parameter('pulse_trans_trail{}'.format(src),
                    label='Source {} pulse trailing edge time'.format(src),
@@ -418,73 +389,58 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:PULSe:TRANsition:TRAiling?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:PULSe:TRANsition:TRAiling {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
             self.add_parameter('pulse_width{}'.format(src),
                    label='Source {} pulse width'.format(src),
                    unit='',
-                   get_cmd='SOURce{}:PULSe:TRANsition:WIDTh?'.format(src),
+                   get_cmd='SOURce{}:PULSe:WIDTh?'.format(src),
                    get_parser=str,
-                   set_cmd='SOURce{}:PULSe:TRANsition:WIDTh {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   set_cmd='SOURce{}:PULSe:WIDTh {{}}'.format(src),
+                   vals=vals.Strings()
             )
 
             #: Sweep parameters
             self.add_parameter('sweep_hold_time{}'.format(src),
                    label='Source {} sweep hold time'.format(src),
                    unit='',
-                   get_cmd='SOURce{}:SWEep:HTIMe'.format(src),
+                   get_cmd='SOURce{}:SWEep:HTIMe?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:SWEep:HTIMe {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )            
             self.add_parameter('sweep_mode{}'.format(src),
                    label='Source {} sweep mode'.format(src),
                    unit='',
-                   get_cmd='SOURce{}:SWEep:MODE'.format(src),
+                   get_cmd='SOURce{}:SWEep:MODE?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:SWEep:MODE {{}}'.format(src),
-                   vals=vals.Enum('AUTO', 'MANual', 'MAN'),
-                   snapshot_get=False
+                   vals=vals.Enum('AUTO', 'MANual', 'MAN')
             )
             self.add_parameter('sweep_return_time{}'.format(src),
                    label='Source {} sweep return time'.format(src),
                    unit='',
-                   get_cmd='SOURce{}:SWEep:RTIMe'.format(src),
+                   get_cmd='SOURce{}:SWEep:RTIMe?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:SWEep:RTIMe {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )                  
             self.add_parameter('sweep_spacing{}'.format(src),
                    label='Source {} sweep spacing'.format(src),
                    unit='',
-                   get_cmd='SOURce{}:SWEep:SPACing'.format(src),
+                   get_cmd='SOURce{}:SWEep:SPACing?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:SWEep:SPACing {{}}'.format(src),
-                   vals=vals.Enum('LINear', 'LIN', 'LOGarithmic', 'LOG'),
-                   snapshot_get=False
+                   vals=vals.Enum('LINear', 'LIN', 'LOGarithmic', 'LOG')
             )
             self.add_parameter('sweep_time{}'.format(src),
                    label='Source {} sweep time'.format(src),
                    unit='',
-                   get_cmd='SOURce{}:SWEep:TIME'.format(src),
+                   get_cmd='SOURce{}:SWEep:TIME?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:SWEep:TIME {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
-            ) 
-            self.add_parameter('ref_osc_source',
-                   label='Reference clock source'.format(src),
-                   unit='',
-                   get_cmd='SOURce:ROSCillator:SOURce',
-                   get_parser=str,
-                   set_cmd='SOURce:ROSCillator:SOURce {}',
-                   vals=vals.Enum('INTernal', 'INT', 'EXTernal', 'EXT')
-            ) 
+                   vals=vals.Strings()
+            )
 
             #: Voltage parameters       
             self.add_parameter('voltage_concurrent{}'.format(src),
@@ -533,8 +489,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:VOLTage:LIMit:HIGH?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:VOLTage:LIMit:HIGH {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
             self.add_parameter('voltage_limit_low{}'.format(src),
                    label='Source {} voltage limit low'.format(src),
@@ -542,8 +497,7 @@ class AFG3000(VisaInstrument):
                    get_cmd='SOURce{}:VOLTage:LIMit:LOW?'.format(src),
                    get_parser=str,
                    set_cmd='SOURce{}:VOLTage:LIMit:LOW {{}}'.format(src),
-                   vals=vals.Strings(),
-                   snapshot_get=False
+                   vals=vals.Strings()
             )
             self.add_parameter('voltage_unit{}'.format(src),
                    label='Source {} voltage unit'.format(src),
@@ -564,6 +518,15 @@ class AFG3000(VisaInstrument):
                    set_cmd='SOURce{}:POWer:LEVel:IMMediate:AMPLitude {{}}'.format(src),
                    vals=vals.Strings()
             )
+
+        self.add_parameter('ref_osc_source',
+               label='Reference clock source'.format(src),
+               unit='',
+               get_cmd='SOURce:ROSCillator:SOURce?',
+               get_parser=str,
+               set_cmd='SOURce:ROSCillator:SOURce {}',
+               vals=vals.Enum('INTernal', 'INT', 'EXTernal', 'EXT')
+        )
 
         #: Trigger parameters
         self.add_parameter('trigger_slope',
@@ -590,6 +553,8 @@ class AFG3000(VisaInstrument):
                set_cmd='TRIGger:SEQuence:TIMer {}',
                vals=vals.Strings()
         )
+
+        self.connect_message()
 
     def calibrate(self):
         self.write('CALibration:ALL')
