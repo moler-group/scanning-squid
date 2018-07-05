@@ -182,6 +182,7 @@ class DG645(VisaInstrument):
                    vals=vals.Enum(0,1)
             )
 
+        self.snapshot(update=True)
         self.connect_message()
 
     def calibrate(self) -> None:

@@ -29,9 +29,9 @@ class AFG3000(VisaInstrument):
             #: Outputs
             self.add_parameter('impedance_output{}'.format(src),
                    label='Output {} impedance'.format(src),
-                   unit='',
+                   unit='Ohm',
                    get_cmd='OUTPut{}:IMPedance?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='OUTPut{}:IMPedance {{}}'.format(src),
                    vals=vals.Strings()
             )
@@ -55,9 +55,9 @@ class AFG3000(VisaInstrument):
             #: Amplitude modulation
             self.add_parameter('am_depth{}'.format(src),
                    label='Source {} AM depth'.format(src),
-                   unit='',
+                   unit='%',
                    get_cmd='SOURce{}:AM:DEPTh?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:AM:DEPTh {{}}'.format(src),
                    vals=vals.Strings()
             )
@@ -65,9 +65,9 @@ class AFG3000(VisaInstrument):
             #: Frequency modulation
             self.add_parameter('fm_deviation{}'.format(src),
                    label='Source {} FM deviation'.format(src),
-                   unit='',
+                   unit='Hz',
                    get_cmd='SOURce{}:FM:DEViation?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:FM:DEViation {{}}'.format(src),
                    vals=vals.Strings()
             )
@@ -75,9 +75,9 @@ class AFG3000(VisaInstrument):
             #: Phase modulation
             self.add_parameter('pm_deviation{}'.format(src),
                    label='Source {} PM deviation'.format(src),
-                   unit='',
+                   unit='Radians',
                    get_cmd='SOURce{}:PM:DEViation?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:PM:DEViation {{}}'.format(src),
                    vals=vals.Strings()
             )
@@ -85,9 +85,9 @@ class AFG3000(VisaInstrument):
             #: Pulse-width modulation
             self.add_parameter('pwm_duty_deviation{}'.format(src),
                    label='Source {} PWM duty cycle deviation'.format(src),
-                   unit='',
+                   unit='%',
                    get_cmd='SOURce{}:PWM:DEViation:DCYCle?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:PWM:DEViation:DCYCle {{}}'.format(src),
                    vals=vals.Numbers(min_value=0, max_value=100)
             )
@@ -96,9 +96,9 @@ class AFG3000(VisaInstrument):
             for mod_type in ['AM', 'FM', 'PM', 'PWM']:
                 self.add_parameter('{}_internal_freq{}'.format(mod_type.lower(), src),
                        label='Source {} {} interal frequency'.format(src, mod_type),
-                       unit='',
+                       unit='Hz',
                        get_cmd='SOURce{}:{}:INTernal:FREQuency?'.format(src, mod_type),
-                       get_parser=str,
+                       get_parser=float,
                        set_cmd='SOURce{}:{}:INTernal:FREQuency {{}}'.format(src, mod_type),
                        vals=vals.Strings()
                 )              
@@ -173,9 +173,9 @@ class AFG3000(VisaInstrument):
             )
             self.add_parameter('burst_tdelay{}'.format(src),
                    label='Source {} burst time delay'.format(src),
-                   unit='',
+                   unit='s',
                    get_cmd='SOURce{}:BURSt:TDELay?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:BURSt:TDELay {{}}'.format(src),
                    vals=vals.Strings()
             )
@@ -196,9 +196,9 @@ class AFG3000(VisaInstrument):
             #: Frequency controls                 
             self.add_parameter('center_freq{}'.format(src),
                    label='Source {} center frequency'.format(src),
-                   unit='',
+                   unit='Hz',
                    get_cmd='SOURce{}:FREQuency:CENTer?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:FREQuency:CENTer {{}}'.format(src),
                    vals=vals.Strings()
             )
@@ -212,17 +212,17 @@ class AFG3000(VisaInstrument):
             ) 
             self.add_parameter('freq_cw{}'.format(src),
                    label='Source {} continuous frequency'.format(src),
-                   unit='',
+                   unit='Hz',
                    get_cmd='SOURce{}:FREQuency:CW?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:FREQuency:CW {{}}'.format(src),
                    vals=vals.Strings()
             )
             self.add_parameter('freq_fixed{}'.format(src),
                    label='Source {} fixed frequency'.format(src),
-                   unit='',
+                   unit='Hz',
                    get_cmd='SOURce{}:FREQuency:FIXed?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:FREQuency:FIXed {{}}'.format(src),
                    vals=vals.Strings()
             )
@@ -236,25 +236,25 @@ class AFG3000(VisaInstrument):
             )
             self.add_parameter('freq_span{}'.format(src),
                    label='Source {} frequency span'.format(src),
-                   unit='',
+                   unit='Hz',
                    get_cmd='SOURce{}:FREQuency:SPAN?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:FREQuency:SPAN {{}}'.format(src),
                    vals=vals.Strings()
             )
             self.add_parameter('freq_start{}'.format(src),
                    label='Source {} frequency start'.format(src),
-                   unit='',
+                   unit='Hz',
                    get_cmd='SOURce{}:FREQuency:STARt?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:FREQuency:STARt {{}}'.format(src),
                    vals=vals.Strings()
             )
             self.add_parameter('freq_stop{}'.format(src),
                    label='Source {} frequency stop'.format(src),
-                   unit='',
+                   unit='Hz',
                    get_cmd='SOURce{}:FREQuency:STOP?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:FREQuency:STOP {{}}'.format(src),
                    vals=vals.Strings()
             )
@@ -262,17 +262,17 @@ class AFG3000(VisaInstrument):
             #: FSK modulation
             self.add_parameter('fsk_freq{}'.format(src),
                    label='Source {} FSK frequency'.format(src),
-                   unit='',
+                   unit='Hz',
                    get_cmd='SOURce{}:FSKey:FREQuency?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:FSKey:FREQuency {{}}'.format(src),
                    vals=vals.Strings()
             )            
             self.add_parameter('fsk_internal_rate{}'.format(src),
                    label='Source {} FSK internal rate'.format(src),
-                   unit='',
+                   unit='Hz',
                    get_cmd='SOURce{}:FSKey:INTernal:RATE?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:FSKey:INTernal:RATE {{}}'.format(src),
                    vals=vals.Strings()
             )
@@ -304,9 +304,9 @@ class AFG3000(VisaInstrument):
             )
             self.add_parameter('function_ramp_symmetry{}'.format(src),
                    label='Source {} function ramp symmetry'.format(src),
-                   unit='',
+                   unit='%',
                    get_cmd='SOURce{}:FUNCtion:RAMP:SYMMetry?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:FUNCtion:RAMP:SYMMetry {{}}'.format(src),
                    vals=vals.Numbers(min_value=0, max_value=100)
             )
@@ -335,9 +335,9 @@ class AFG3000(VisaInstrument):
             #: Phase parameters
             self.add_parameter('phase{}'.format(src),
                    label='Source {} phase'.format(src),
-                   unit='',
+                   unit='Radians',
                    get_cmd='SOURce{}:PHASe:ADJust?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:PHASe:ADJust {{}}'.format(src),
                    vals=vals.Strings()
             )
@@ -345,17 +345,17 @@ class AFG3000(VisaInstrument):
             #: Pulse parameters
             self.add_parameter('pulse_duty_cycle{}'.format(src),
                    label='Source {} pulse duty cycle'.format(src),
-                   unit='',
+                   unit='%',
                    get_cmd='SOURce{}:PULSe:DCYCle?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:PULSe:DCYCle {{}}'.format(src),
                    vals=vals.Strings()
             )            
             self.add_parameter('pulse_delay{}'.format(src),
                    label='Source {} pulse delay'.format(src),
-                   unit='',
+                   unit='s',
                    get_cmd='SOURce{}:PULSe:DELay?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:PULSe:DELay {{}}'.format(src),
                    vals=vals.Strings()
             )
@@ -369,33 +369,33 @@ class AFG3000(VisaInstrument):
             )
             self.add_parameter('pulse_period{}'.format(src),
                    label='Source {} pulse period'.format(src),
-                   unit='',
+                   unit='s',
                    get_cmd='SOURce{}:PULSe:PERiod?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:PULSe:PERiod {{}}'.format(src),
                    vals=vals.Strings()
             )
             self.add_parameter('pulse_trans_lead{}'.format(src),
                    label='Source {} pulse leading edge time'.format(src),
-                   unit='',
+                   unit='s',
                    get_cmd='SOURce{}:PULSe:TRANsition:LEADing?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:PULSe:TRANsition:LEADing {{}}'.format(src),
                    vals=vals.Strings()
             )
             self.add_parameter('pulse_trans_trail{}'.format(src),
                    label='Source {} pulse trailing edge time'.format(src),
-                   unit='',
+                   unit='s',
                    get_cmd='SOURce{}:PULSe:TRANsition:TRAiling?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:PULSe:TRANsition:TRAiling {{}}'.format(src),
                    vals=vals.Strings()
             )
             self.add_parameter('pulse_width{}'.format(src),
                    label='Source {} pulse width'.format(src),
-                   unit='',
+                   unit='s',
                    get_cmd='SOURce{}:PULSe:WIDTh?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:PULSe:WIDTh {{}}'.format(src),
                    vals=vals.Strings()
             )
@@ -403,9 +403,9 @@ class AFG3000(VisaInstrument):
             #: Sweep parameters
             self.add_parameter('sweep_hold_time{}'.format(src),
                    label='Source {} sweep hold time'.format(src),
-                   unit='',
+                   unit='s',
                    get_cmd='SOURce{}:SWEep:HTIMe?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:SWEep:HTIMe {{}}'.format(src),
                    vals=vals.Strings()
             )            
@@ -419,9 +419,9 @@ class AFG3000(VisaInstrument):
             )
             self.add_parameter('sweep_return_time{}'.format(src),
                    label='Source {} sweep return time'.format(src),
-                   unit='',
+                   unit='s',
                    get_cmd='SOURce{}:SWEep:RTIMe?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:SWEep:RTIMe {{}}'.format(src),
                    vals=vals.Strings()
             )                  
@@ -435,9 +435,9 @@ class AFG3000(VisaInstrument):
             )
             self.add_parameter('sweep_time{}'.format(src),
                    label='Source {} sweep time'.format(src),
-                   unit='',
+                   unit='s',
                    get_cmd='SOURce{}:SWEep:TIME?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:SWEep:TIME {{}}'.format(src),
                    vals=vals.Strings()
             )
@@ -453,50 +453,26 @@ class AFG3000(VisaInstrument):
             ) 
             self.add_parameter('voltage_high{}'.format(src),
                    label='Source {} high voltage level'.format(src),
-                   unit='',
+                   unit='V',
                    get_cmd='SOURce{}:VOLTage:LEVel:IMMediate:HIGH?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:VOLTage:LEVel:IMMediate:HIGH {{}}'.format(src),
                    vals=vals.Strings()
             ) 
             self.add_parameter('voltage_low{}'.format(src),
                    label='Source {} low voltage level'.format(src),
-                   unit='',
+                   unit='V',
                    get_cmd='SOURce{}:VOLTage:LEVel:IMMediate:LOW?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:VOLTage:LEVel:IMMediate:LOW {{}}'.format(src),
                    vals=vals.Strings()
             )
             self.add_parameter('voltage_offset{}'.format(src),
                    label='Source {} voltage offset'.format(src),
-                   unit='',
+                   unit='V',
                    get_cmd='SOURce{}:VOLTage:LEVel:IMMediate:OFFSet?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:VOLTage:LEVel:IMMediate:OFFSet {{}}'.format(src),
-                   vals=vals.Strings()
-            )
-            self.add_parameter('voltage_amplitude{}'.format(src),
-                   label='Source {} voltage amplitude'.format(src),
-                   unit='',
-                   get_cmd='SOURce{}:VOLTage:LEVel:IMMediate:AMPLitude?'.format(src),
-                   get_parser=str,
-                   set_cmd='SOURce{}:VOLTage:LEVel:IMMediate:AMPLitude {{}}'.format(src),
-                   vals=vals.Strings()
-            )
-            self.add_parameter('voltage_limit_high{}'.format(src),
-                   label='Source {} voltage limit high'.format(src),
-                   unit='',
-                   get_cmd='SOURce{}:VOLTage:LIMit:HIGH?'.format(src),
-                   get_parser=str,
-                   set_cmd='SOURce{}:VOLTage:LIMit:HIGH {{}}'.format(src),
-                   vals=vals.Strings()
-            )
-            self.add_parameter('voltage_limit_low{}'.format(src),
-                   label='Source {} voltage limit low'.format(src),
-                   unit='',
-                   get_cmd='SOURce{}:VOLTage:LIMit:LOW?'.format(src),
-                   get_parser=str,
-                   set_cmd='SOURce{}:VOLTage:LIMit:LOW {{}}'.format(src),
                    vals=vals.Strings()
             )
             self.add_parameter('voltage_unit{}'.format(src),
@@ -507,14 +483,38 @@ class AFG3000(VisaInstrument):
                    set_cmd='SOURce{}:VOLTage:UNIT {{}}'.format(src),
                    vals=vals.Enum('VPP', 'VRMS', 'DBM')
             )
+            self.add_parameter('voltage_amplitude{}'.format(src),
+                   label='Source {} voltage amplitude'.format(src),
+                   unit=getattr(self, 'voltage_unit{}'.format(src))(),
+                   get_cmd='SOURce{}:VOLTage:LEVel:IMMediate:AMPLitude?'.format(src),
+                   get_parser=float,
+                   set_cmd='SOURce{}:VOLTage:LEVel:IMMediate:AMPLitude {{}}'.format(src),
+                   vals=vals.Strings()
+            )
+            self.add_parameter('voltage_limit_high{}'.format(src),
+                   label='Source {} voltage limit high'.format(src),
+                   unit='V',
+                   get_cmd='SOURce{}:VOLTage:LIMit:HIGH?'.format(src),
+                   get_parser=float,
+                   set_cmd='SOURce{}:VOLTage:LIMit:HIGH {{}}'.format(src),
+                   vals=vals.Strings()
+            )
+            self.add_parameter('voltage_limit_low{}'.format(src),
+                   label='Source {} voltage limit low'.format(src),
+                   unit='V',
+                   get_cmd='SOURce{}:VOLTage:LIMit:LOW?'.format(src),
+                   get_parser=float,
+                   set_cmd='SOURce{}:VOLTage:LIMit:LOW {{}}'.format(src),
+                   vals=vals.Strings()
+            )
 
         #: Noise parameters
         for src in [3, 4]:
             self.add_parameter('noise_level{}'.format(src),
                    label='Source {} noise level'.format(src),
-                   unit='',
+                   unit='%',
                    get_cmd='SOURce{}:POWer:LEVel:IMMediate:AMPLitude?'.format(src),
-                   get_parser=str,
+                   get_parser=float,
                    set_cmd='SOURce{}:POWer:LEVel:IMMediate:AMPLitude {{}}'.format(src),
                    vals=vals.Strings()
             )
@@ -547,13 +547,14 @@ class AFG3000(VisaInstrument):
         )
         self.add_parameter('trigger_timer',
                label='Trigger timer period',
-               unit='',
+               unit='s',
                get_cmd='TRIGger:SEQuence:TIMer?',
-               get_parser=str,
+               get_parser=float,
                set_cmd='TRIGger:SEQuence:TIMer {}',
                vals=vals.Strings()
         )
 
+        self.snapshot(update=True)
         self.connect_message()
 
     def calibrate(self):
