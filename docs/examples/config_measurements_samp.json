@@ -1,0 +1,49 @@
+{
+    "td_cap": {
+        "fname": "td_cap",
+        "dV": "0.1 V",
+        "range": ["-9.5 V","9.5 V"],
+        "channels": {
+            "CAP": {
+                "lockin": {
+                    "name": "CAP",
+                    "amplitude": "1 V",
+                    "frequency": "6.271 kHz"
+                },
+                "label": "Capacitance",
+                "gain": 1,
+                "unit": "fF",
+                "unit_latex": "fF"
+            }
+        },
+        "constants": {
+            "max_slope": "3 fF/V",
+            "max_delta_cap": "20 pF",
+            "initial_cap":"0 pF",
+            "nfitmin":10,
+            "nwindow":30,
+            "ntest":8,
+            "wait_factor":3
+        }
+    },
+    "iv_mod": {
+        "fname": "iv_mod",
+        "navg": 1,
+        "daq_rate": "1 MHz",
+        "afg1": {},
+        "afg2": {},
+        "dg": {},
+        "channels": {
+            "MAG": {
+                "lockin": {
+                    "name": "MAG"
+                },
+                "label": "Magnetometry",
+                "gain": 50,
+                "filters": {},
+                "unit": "mPhi0",
+                "unit_latex": "m$\\Phi_0$"
+            }
+        }
+    }
+}
