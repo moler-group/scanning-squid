@@ -1,5 +1,6 @@
 from qcodes.instrument.base import Instrument
-from qcodes.instrument.parameter import ArrayParameter
+from qcodes.instrument.parameter import Parameter, ArrayParameter
+import nidaqmx
 from nidaqmx.constants import AcquisitionType, TaskMode
 from typing import Dict, Optional, Sequence, Any, Union
 import numpy as np
@@ -98,80 +99,62 @@ class DAQAnalogInputs(Instrument):
         for instance in self.instances():
             self.remove_instance(instance)
 
-class DAQAnalogOutputVoltages(ArrayParameter):
+class DAQAnalogOutputVoltage(Parameter):
     """Writes data to one or several DAQ analog outputs.
     """
-    def __init__(self, name: str, task: Any, shape: Sequence[int], **kwargs) -> None:
+    def __init__(self, name: str, dev_name: str, idx: int, **kwargs) -> None:
         """
         Args:
             name: Name of parameter (usually 'voltage').
-            task: nidaqmx.Task with appropriate analog output channels.
-            shape: Shape of array to write, i.e. (nchannels, samples_to_write).
+            dev_name: DAQ device name (e.g. 'Dev1').
+            idx: AO channel inde.
             **kwargs: Keyword arguments to be passed to ArrayParameter constructor.
         """
-        super().__init__(name, shape, **kwargs)
-        self.task = task
-        self.nchannels, self.samples_to_write = shape
+        super().__init__(name, **kwargs)
+        self.dev_name = dev_name
+        self.idx = idx
+        self.voltage = '?'
      
-    def set_raw(self, volt_array: np.ndarray) -> None:
-        if volt_array.shape[0] != self.nchannels:
-            raise ValueError(
-                'Shape of volt_array {} does not match AO channel configuration.'.format(volt_array.shape))
-        nsamples = self.task.write(volt_array, auto_start=True)
-        self.data = volt_array
+    def set_raw(self, voltage: Union[int, float]) -> None:
+        with nidaqmx.Task() as ao_task:
+            channel = '{}/ao{}'.format(self.dev_name, self.idx)
+            ao_task.ao_channels.add_ao_voltage_chan(channel, self.name)
+            ao_task.write(voltage, auto_start=True)
+        self.voltage = voltage
 
     def get_raw(self):
         """Returns last voltage array written to outputs.
         """
-        return self.data
+        return self.voltage
 
 class DAQAnalogOutputs(Instrument):
     """Instrument to write DAQ analog output data in a qcodes Loop or measurement.
     """
-    def __init__(self, name: str, dev_name: str, channels: Dict[str, int],
-                 task: Any, rate: Optional[Union[int, float]]=None,
-                 samples_to_write: Optional[int]=1, **kwargs) -> None:
+    def __init__(self, name: str, dev_name: str, channels: Dict[str, int], **kwargs) -> None:
         """
         Args:
             name: Name of instrument (usually 'daq_ao').
             dev_name: NI DAQ device name (e.g. 'Dev1').
             channels: Dict of analog output channel configuration.
-            task: fresh nidaqmx.Task to be populated with ao_channels.
-            rate: Desired DAQ sampling rate in Hz. Default: None (on-demand timing).
-            samples_to_write: Number of samples to write to the DAQ
-                per channel per measurement/loop iteration. Default: 1.
             **kwargs: Keyword arguments to be passed to Instrument constructor.
         """
         super().__init__(name, **kwargs)
-        if rate is not None:
-            #: Use default sample clock timing: ao/SampleClock
-            self.task.timing.cfg_samp_clk_timing(
-                rate,
-                sample_mode=AcquisitionType.FINITE,
-                samps_per_chan=samples_to_write)
-            self.rate = rate
-        nchannels = len(channels)
-        self.samples_to_write = samples_to_write
-        self.task = task
         self.metadata.update({
             'dev_name': dev_name,
-            'rate': '{} Hz'.format(rate),
             'channels': channels})
+        #: We need parameters in order to write voltages in a qcodes Loop or Measurement
         for ch, idx in channels.items():
-            channel = '{}/ao{}'.format(dev_name, idx)
-            self.task.ao_channels.add_ao_voltage_chan(channel, ch)
-        #: We need a parameter in order to write voltages in a qcodes Loop or Measurement
-        self.add_parameter(
-            name='voltage',
-            parameter_class=DAQAnalogOutputVoltages,
-            task=self.task,
-            shape=(nchannels, samples_to_write),
-            label='Voltage',
-            unit='V'
-        ) 
+            self.add_parameter(
+                name='voltage_{}'.format(ch.lower()),
+                dev_name=dev_name,
+                idx=idx,
+                parameter_class=DAQAnalogOutputVoltage,
+                label='Voltage',
+                unit='V'
+            ) 
         
     def clear_instances(self):
-        """Clear instances of DAQAnalogInputs Instruments.
+        """Clear instances of DAQAnalogOutputs Instruments.
         """
         for instance in self.instances():
             self.remove_instance(instance)
