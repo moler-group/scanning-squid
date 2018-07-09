@@ -12,7 +12,6 @@ class AFG3000(VisaInstrument):
     """
     def __init__(self, name, address, **kwargs):
         super().__init__(name, address, terminator='\n', timeout=20, **kwargs)
-        self.name = name
 
         self.add_parameter('trigger_mode',
                 label='Trigger mode',
@@ -592,3 +591,15 @@ class AFG3000(VisaInstrument):
     def synchronize_phase(self, src: int) -> None:
         log.info('Synchronizing CH1 and CH2 phase.')
         self.write('SOURce{}:PHASe:INITiate'.format(src))
+
+    def clear_instances(self):
+        """Clear instances of AFG3000 Instruments.
+        """
+        for instance in self.instances():
+            self.remove_instance(instance)
+
+class AFG3252(AFG3000):
+    """Alias for AFG3000.
+    """
+    def __init__(self, name, address, **kwargs):
+        super().__init__(name, address, **kwargs)

@@ -11,7 +11,6 @@ class DG645(VisaInstrument):
     """
     def __init__(self, name, address, **kwargs):
         super().__init__(name, address, terminator='\r\n', timeout=10, **kwargs)
-        self.name = name
         self.channel_mapping = {
             'T0': 0, 'T1': 1, 'A': 2, 'B': 3, 'C': 4,
             'D': 5, 'E': 6, 'F': 7, 'G': 8, 'H': 9
@@ -284,3 +283,9 @@ class DG645(VisaInstrument):
 
     def _set_polarity(self, pol: int, output: str=None) -> None:
         self.write('LPOL {},{}'.format(pol, self.output_mapping[output]))
+
+    def clear_instances(self):
+        """Clear instances of DG645 Instruments.
+        """
+        for instance in self.instances():
+            self.remove_instance(instance)
