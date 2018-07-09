@@ -271,7 +271,9 @@ class SamplerMicroscope(Microscope):
         delay0, delay1 = [self.Q_(val).to('s').magnitude for val in ivm_params['dg']['range']]
         delay_vec = np.linspace(delay0, delay1, ivm_params['dg']['nsteps'])
         vmod_vec = np.full_like(delay_vec, np.nan, dtype=np.double)
-
+        #
+        #: TODO: set lockin time constant?
+        #
         for ch in [1, 2]:
             #: Set AFG pulse parameters
             p = ivm_params['afg']['ch{}'.format(ch)]
@@ -343,7 +345,8 @@ class SamplerMicroscope(Microscope):
                         vcomp = ai_data[0]
                         err = vcomp - vmod_set
                         vmod += P * err
-                        vmod = np.mod(vmod, vmod_high)
+                        #vmod = np.mod(vmod, vmod_high)
+                        vmod = max(vmod, vmod_low) if vmod < 0 else min(vmod, vmod_high)
                         ao_task.write(vmod)
                         elapsed_time = time.time() - t0
                         nsamples += 1
