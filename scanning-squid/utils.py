@@ -279,4 +279,4 @@ def to_real_units(data_set: Any, ureg: Any=None) -> Any:
 
 def clear_artists(ax):
     for artist in ax.lines + ax.collections:
-        artist.clear()
+        artist.remove()
