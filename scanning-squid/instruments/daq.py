@@ -116,7 +116,7 @@ class DAQAnalogOutputVoltage(Parameter):
         self.voltage = '?'
      
     def set_raw(self, voltage: Union[int, float]) -> None:
-        with nidaqmx.Task() as ao_task:
+        with nidaqmx.Task('daq_ao_task') as ao_task:
             channel = '{}/ao{}'.format(self.dev_name, self.idx)
             ao_task.ao_channels.add_ao_voltage_chan(channel, self.name)
             ao_task.write(voltage, auto_start=True)

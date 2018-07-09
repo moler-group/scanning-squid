@@ -9,7 +9,7 @@ import nidaqmx
 from nidaqmx.constants import AcquisitionType
 
 #: scanning-squid modules
-from daq import DAQAnalogInputs
+from instruments.daq import DAQAnalogInputs
 from plots import ScanPlot, TDCPlot
 from .micropscope import Microscope
 
@@ -42,6 +42,41 @@ class SusceptometerMicroscope(Microscope):
             **kwargs: Keyword arguments to be passed to Station constructor.
         """
         super().__init__(config_file, temp, ureg, log_level, log_name, **kwargs)
+
+    def get_prefactors(self, measurement: Dict[str, Any], update: bool=True) -> Dict[str, Any]:
+        """For each channel, calculate prefactors to convert DAQ voltage into real units.
+
+        Args:
+            measurement: Dict of measurement parameters as defined
+                in measurement configuration file.
+            update: Whether to query instrument parameters or simply trust the
+                latest values (should this even be an option)?
+
+        Returns:
+            Dict[str, pint.Quantity]: prefactors
+                Dict of {channel_name: prefactor} where prefactor is a pint Quantity.
+        """
+        mod_width = self.Q_(self.SQUID.metadata['modulation_width'])
+        prefactors = {}
+        for ch in measurement['channels']:
+            prefactor = 1
+            if ch == 'MAG':
+                prefactor /= mod_width
+            elif ch in ['SUSCX', 'SUSCY']:
+                r_lead = self.Q_(measurement['channels'][ch]['r_lead'])
+                snap = getattr(self, 'SUSC_lockin').snapshot(update=update)['parameters']
+                susc_sensitivity = snap['sensitivity']['value']
+                amp = snap['amplitude']['value'] * self.ureg(snap['amplitude']['unit'])
+                #: The factor of 10 here is because SR830 output gain is 10/sensitivity
+                prefactor *=  (r_lead / amp) / (mod_width * 10 / susc_sensitivity)
+            elif if ch == 'CAP':
+                snap = getattr(self, 'CAP_lockin').snapshot(update=update)['parameters']
+                cap_sensitivity = snap['sensitivity']['value']
+                #: The factor of 10 here is because SR830 output gain is 10/sensitivity
+                prefactor /= (self.Q_(self.scanner.metadata['cantilever']['calibration']) * 10 / cap_sensitivity)
+            prefactor /= measurement['channels'][ch]['gain']
+            prefactors.update({ch: prefactor})
+        return prefactors
 
     def scan_plane(self, scan_params: Dict[str, Any]) -> Any:
         """

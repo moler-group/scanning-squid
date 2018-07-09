@@ -5,14 +5,13 @@
             "name": "Dev1",
             "channels": {
                 "analog_inputs": {
-                    "MAG": 0,
-                    "SUSCX": 1,
-                    "SUSCY": 2,
+                    "ivmX": 0,
+                    "ivmY": 1,
                     "CAP": 3,
                     "x": 4,
                     "y": 5,
                     "z": 6},
-                "analog_outputs": {"x": 0,"y": 1,"z": 2, "mod": 3}
+                "analog_outputs": {"x": 0,"y": 1,"z": 2}
             },
             "rate": "1 MHz",
             "max_rate": {
@@ -28,6 +27,14 @@
                     "comment": "Max ao rates are per channel."
                 }
             }
+        },
+        "delay_generator": {
+            "model": "DG645",
+            "address": "GPIB::15::7:INSTR"
+        },
+        "function_generator": {
+            "model": "AFG3252",
+            "address": "GPIB::11::7:INSTR"
         },
         "lockins": {
             "MAG": {

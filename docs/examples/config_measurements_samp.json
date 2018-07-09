@@ -28,21 +28,61 @@
     },
     "iv_mod": {
         "fname": "iv_mod",
-        "navg": 1,
+        "save": true,
         "daq_rate": "1 MHz",
-        "afg1": {},
-        "afg2": {},
-        "dg": {},
+        "ntek1": 50,
+        "ntek2": 50,
+        "navg": 1,
+        "delay_factor": 5,
+        "mod_range": ["-1 V", "1 V"],
+        "bias_range": ["-100 mV", "100 mV"],
+        "afg": {
+            "ch1": {
+                "low": "0 V",
+                "width": "5 us",
+                "offset": "0 V",
+                "period": "10 us",
+                "delay": "2 us",
+                "lead": "1 us",
+                "trail": "1 us"
+            },
+            "ch2": {
+                "high": "50 mV",
+                "low": "0 V",
+                "offset": "0 V",
+                "width": "8 us",
+                "period": "15 us",
+                "delay": "1 us",
+                "lead": "1 us",
+                "trail": "1 us"                
+            }
+        },
+        "dg": {
+            "width": "4 us",
+            "delay": "5 us",
+            "voltage": "0.5 V",
+            "offset": "0 V"
+        },
         "channels": {
-            "MAG": {
+            "ivmX": {
                 "lockin": {
                     "name": "MAG"
                 },
-                "label": "Magnetometry",
+                "label": "Lockin X",
                 "gain": 50,
                 "filters": {},
-                "unit": "mPhi0",
-                "unit_latex": "m$\\Phi_0$"
+                "unit": "V",
+                "unit_latex": "V"
+            },
+            "ivmY": {
+                "lockin": {
+                    "name": "MAG"
+                },
+                "label": "Lockin Y",
+                "gain": 50,
+                "filters": {},
+                "unit": "V",
+                "unit_latex": "V"
             }
         }
     }
