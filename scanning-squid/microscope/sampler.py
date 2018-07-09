@@ -190,7 +190,7 @@ class SamplerMicroscope(Microscope):
             fig.show()
 
         except KeyboardInterrupt:
-            log.warning('Measurement interrupted by user.')
+            log.warning('Measurement aborted by user.')
 
         figX = plt.figure(figsize=(4,3))    
         plt.pcolormesh(mod_grid, bias_grid, ivmX)
@@ -271,9 +271,7 @@ class SamplerMicroscope(Microscope):
         delay0, delay1 = [self.Q_(val).to('s').magnitude for val in ivm_params['dg']['range']]
         delay_vec = np.linspace(delay0, delay1, ivm_params['dg']['nsteps'])
         vmod_vec = np.full_like(delay_vec, np.nan, dtype=np.double)
-        #
-        #: TODO: set lockin time constant?
-        #
+
         for ch in [1, 2]:
             #: Set AFG pulse parameters
             p = ivm_params['afg']['ch{}'.format(ch)]
@@ -295,6 +293,8 @@ class SamplerMicroscope(Microscope):
         self.dg.offset_out_AB(self.Q_(p['ch1']['offset']).to('V').magnitude)
         self.dg.amp_out_CD(self.Q_(p['ch2']['voltage']).to('V').magnitude)
         self.dg.offset_out_CD(self.Q_(p['ch2']['offset']).to('V').magnitude)
+
+        self.MAG_lockin.time_constant(self.Q_(ivm_params['time_constant']).to('s').magnitude)
 
         #: Get instrument metadata and prefactors
         lockin_snap = self.MAG_lockin.snapshot(update=True)
@@ -345,8 +345,8 @@ class SamplerMicroscope(Microscope):
                         vcomp = ai_data[0]
                         err = vcomp - vmod_set
                         vmod += P * err
-                        #vmod = np.mod(vmod, vmod_high)
-                        vmod = max(vmod, vmod_low) if vmod < 0 else min(vmod, vmod_high)
+                        vmod = np.mod(vmod, vmod_high)
+                        #vmod = max(vmod, vmod_low) if vmod < 0 else min(vmod, vmod_high)
                         ao_task.write(vmod)
                         elapsed_time = time.time() - t0
                         nsamples += 1
@@ -366,7 +366,7 @@ class SamplerMicroscope(Microscope):
 
                     time.sleep(0.05)
             except KeyboardInterrupt:
-                log.warning('Measurement interrupted by user.')
+                log.warning('Measurement aborted by user.')
 
         data_dict.update({
             'delay_vec': {'array': delay_vec, 'unit': 's'},
