@@ -142,7 +142,7 @@ class DG645(VisaInstrument):
                        unit='s',
                        get_cmd=lambda c=ch: self._get_delay(channel=c),
                        get_parser=str,
-                       set_cmd=lambda src_delay, c=ch: self._set_delay(src_delay, channel=c),
+                       set_cmd=lambda src_delay, c=ch: self._set_delay(src_delay, target=c),
                        vals=vals.Strings()
                 )
                 self.add_parameter('channel_link_{}'.format(ch),
@@ -161,7 +161,7 @@ class DG645(VisaInstrument):
                    unit='V',
                    get_cmd=lambda o=out: self._get_amp(output=o),
                    get_parser=float,
-                   set_cmd=lambda l, o=out: self._set_amp(lvl, output=o),
+                   set_cmd=lambda lvl, o=out: self._set_amp(lvl, output=o),
                    vals=vals.Numbers()
             )
             self.add_parameter('offset_out_{}'.format(out),
@@ -169,7 +169,7 @@ class DG645(VisaInstrument):
                    unit='V',
                    get_cmd=lambda o=out: self._get_offset(output=o),
                    get_parser=float,
-                   set_cmd=lambda l, o=out: self._set_offset(lvl, output=o),
+                   set_cmd=lambda lvl, o=out: self._set_offset(lvl, output=o),
                    vals=vals.Numbers()
             )
             self.add_parameter('polarity_out_{}'.format(out),
@@ -177,7 +177,7 @@ class DG645(VisaInstrument):
                    unit='',
                    get_cmd=lambda o=out: self._get_polarity(output=o),
                    get_parser=int,
-                   set_cmd=lambda l, o=out: self._set_offset(lvl, output=o),
+                   set_cmd=lambda lvl, o=out: self._set_offset(lvl, output=o),
                    vals=vals.Enum(0,1)
             )
 
@@ -256,7 +256,7 @@ class DG645(VisaInstrument):
         return self.ask('DLAY?{}'.format(self.channel_mapping[channel]))
 
     def _set_delay(self, src_delay: str, target: str=None) -> None:
-        source, delay = src_delay.split(',').strip()
+        source, delay = [s.strip() for s in src_delay.split(',')]
         self.write('DLAY {},{},{}'.format(self.channel_mapping[target],
                                           self.channel_mapping[source],
                                           delay))

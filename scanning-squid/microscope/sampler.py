@@ -161,12 +161,12 @@ class SamplerMicroscope(Microscope):
         prefactor /= ivm_params['channels']['lockinX']['gain']
         delay = ivm_params['delay_factor'] * lockin_snap['parameters']['time_constant']['value']
 
-        fig, ax = plt.subplots(1)
+        fig, ax = plt.subplots(1, figsize=(4,3))
         ax.set_xlim(min(bias_range), max(bias_range))
         ax.set_xlabel('Bias [V]')
         ax.set_ylabel('Voltage [V]')
         ax.set_title(ivm_params['channels']['lockinX']['label'])
-        log.info('Starting iv_mod.')
+        log.info('Starting iv_mod_tek.')
         try:
             for j in range(len(mod_vec)):
                 dataX, dataY, dataX_avg, dataY_avg = (np.zeros(len(mod_vec)), ) * 4
@@ -192,19 +192,21 @@ class SamplerMicroscope(Microscope):
         except KeyboardInterrupt:
             log.warning('Measurement interrupted by user.')
 
-        figX = plt.figure()    
+        figX = plt.figure(figsize=(4,3))    
         plt.pcolormesh(mod_grid, bias_grid, ivmX)
         plt.xlabel('Modulation [V]')
         plt.ylabel('Bias [V]')
         plt.title(ivm_params['channels']['lockinX']['label'])
+        figX.tight_layout(rect=[0, 0.03, 1, 0.95])
         cbarX = plt.colorbar()
         cbarX.set_label('Voltage [V]')
 
-        figY = plt.figure()    
+        figY = plt.figure(figsize=(4,3))    
         plt.pcolormesh(mod_grid, bias_grid, ivmY)
         plt.xlabel('Modulation [V]')
         plt.ylabel('Bias [V]')
         plt.title(ivm_params['channels']['lockinY']['label'])
+        figY.tight_layout(rect=[0, 0.03, 1, 0.95])
         cbarY = plt.colorbar()
         cbarY.set_label('Voltage [V]')
 
@@ -256,13 +258,13 @@ class SamplerMicroscope(Microscope):
             channels.update({ch: ai_channels[ch]})
 
         delay_range = [self.Q_(value).to('s').magnitude for value in ivm_params['dg']['range']]
-        vset = self.Q_(ivm_params['vset']).to('V').magnitude
         vmod = self.Q_(ivm_params['vmod_initial']).to('V').magnitude
+        vmod_set = self.Q_(ivm_params['vmod_set']).to('V').magnitude
         vmod_low = self.Q_(ivm_params['vmod_low']).to('V').magnitude
         vmod_high = self.Q_(ivm_params['vmod_high']).to('V').magnitude
         P = ivm_params['P']
-        tsettle = self.Q_(ivm_params['tsettle'])
-        tavg = self.Q_(ivm_params['tavg'])
+        tsettle = self.Q_(ivm_params['tsettle']).to('s').magnitude
+        tavg = self.Q_(ivm_params['tavg']).to('s').magnitude
         time_constant = self.Q_(ivm_params['time_constant'])
         
         period = self.Q_(ivm_params['afg']['ch1']['period'])
@@ -303,27 +305,28 @@ class SamplerMicroscope(Microscope):
                              'dg': self.dg.snapshot(update=True),
                              'ivm_params': ivm_params}
                         })
-        prefactor = 1 / (10 / lockin_snap['parameters']['sensitivity']['value'])
-        prefactor /= ivm_params['channels']['lockinX']['gain']
+        #prefactor = 1 / (10 / lockin_snap['parameters']['sensitivity']['value'])
+        #prefactor /= ivm_params['channels']['lockinX']['gain']
 
-        with nidaqmx.Task('ai_task'), nidaqmx.Task('ao_task') as ai_task, ao_task:
-            ao_channel = '{}/ao{}'.format(daq_config['dev_name'], daq_config['analog_outputs']['mod'])
-            ao_task.ao_channels.add_ao_voltage_chan(ao_channel, 'mod')
+        with nidaqmx.Task('ai_task') as ai_task, nidaqmx.Task('ao_task') as ao_task:
+            ao = '{}/ao{}'.format(daq_config['name'], daq_config['channels']['analog_outputs']['mod'])
+            ao_task.ao_channels.add_ao_voltage_chan(ao, 'mod')
             for ch, idx in channels.items():
-                channel = '{}/ai{}'.format(daq_config['dev_name'], idx)
+                channel = '{}/ai{}'.format(daq_config['name'], idx)
                 ai_task.ai_channels.add_ai_voltage_chan(channel, ch)
 
-            figM = plt.figure()
+            figM = plt.figure(figsize=(4,3))
             axM  = plt.gca()
             plt.xlim(min(delay_vec), max(delay_vec))
             plt.xlabel(r'Delay time [$\mu$s]')
             plt.ylabel('Modulation Voltage [V]')
 
-            figT = plt.figure()
+            figT = plt.figure(figsize=(4,3))
             axT = plt.gca()
             plt.xlabel('Iteration number')
             plt.ylabel('Modulation Voltage [V]')
 
+            log.info('Starting iv_tek_mod_daq.')
             try:
                 #: Sweep delay time
                 for j in range(len(delay_vec)):
@@ -338,22 +341,24 @@ class SamplerMicroscope(Microscope):
                     while elapsed_time < tsettle + tavg:
                         ai_data = ai_task.read()
                         vcomp = ai_data[0]
-                        err = vcomp - vset
+                        err = vcomp - vmod_set
                         vmod += P * err
                         vmod = np.mod(vmod, vmod_high)
                         ao_task.write(vmod)
                         elapsed_time = time.time() - t0
                         nsamples += 1
-                        vmod_time = np.append(vmod)
-                    avg_start_pt = nsamples * tavg // (tsettle + tavg)
+                        vmod_time = np.append(vmod_time, vmod)
+                    avg_start_pt = int(nsamples * tavg // (tsettle + tavg))
                     vmod_vec[j] = np.mean(vmod_time[avg_start_pt:])
 
                     clear_artists(axM)
                     axM.plot(delay_vec, vmod_vec, 'bo-')
+                    plt.tight_layout()
                     figM.canvas.draw()
 
                     clear_artists(axT)
                     axT.plot(vmod_time, 'bo')
+                    plt.tight_layout()
                     figT.canvas.draw()
 
                     time.sleep(0.05)
@@ -362,7 +367,7 @@ class SamplerMicroscope(Microscope):
 
         data_dict.update({
             'delay_vec': {'array': delay_vec, 'unit': 's'},
-            'mod_vec': {'array': mod_vec, 'unit': 'V'}
+            'vmod_vec': {'array': vmod_vec, 'unit': 'V'}
             })
         if ivm_params['save']:
             #: Get/create data location
@@ -379,8 +384,10 @@ class SamplerMicroscope(Microscope):
                     pass
             #: Save figures to png
             figM.suptitle(loc)
+            figM.tight_layout(rect=[0, 0.03, 1, 0.95])
             figM.savefig('{}/{}mod_d.png'.format(loc, ivm_params['fname']))
             figT.suptitle(loc)
+            figT.tight_layout(rect=[0, 0.03, 1, 0.95])
             figT.savefig('{}/{}mod_t.png'.format(loc, ivm_params['fname']))
             log.info('Data saved to {}.'.format(loc))
 

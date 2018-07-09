@@ -112,7 +112,7 @@ class AttocubeController(VisaInstrument):
         self.serialnum_ax1()
         self.serialnum_ax2()
         self.serialnum_ax3()
-        print(self.version())
+        print('Connected to: {}.'.format(self.version()))
     
     def ask_raw(self, cmd: str) -> str:
         """Query instrument with cmd and return response.
