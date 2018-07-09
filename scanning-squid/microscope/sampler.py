@@ -103,16 +103,15 @@ class SamplerMicroscope(Microscope):
     #         prefactors.update({ch: prefactor})
     #     return prefactors
 
-    def iv_mod(self, ivm_params: Dict[str, Any]) -> Dict[str, Any]:
+    def iv_mod_tek(self, ivm_params: Dict[str, Any]) -> Tuple[Dict[str, Any]]:
         """Measures IV characteristic at different mod coil voltages.
 
         Args:
             ivm_params: Dict of measurement parameters as definted in config_measurements json file.
 
         Returns:
-
-            Dict: out_dict
-                Dictionary containing data arrays and instrument metadata.
+            Tuple[Dict]: data_dict, metadict
+                Dictionaries containing data arrays and instrument metadata.
         """
 
         data_dict = {}
@@ -125,8 +124,8 @@ class SamplerMicroscope(Microscope):
         data_dict.update({
             'mod_vec': {'array': mod_vec, 'unit': 'V'},
             'bias_vec': {'array': bias_vec, 'unit': 'V'},
-            'MOD': {'array': mod_grid, 'unit': 'V'},
-            'BIAS': {'array': bias_grid, 'unit': 'V'}
+            'mod_grid': {'array': mod_grid, 'unit': 'V'},
+            'bias_grid': {'array': bias_grid, 'unit': 'V'}
             })
         ivmX = np.full_like(mod_grid, np.nan, dtype=np.double)
         ivmY = np.full_like(mod_grid, np.nan, dtype=np.double)
@@ -139,6 +138,7 @@ class SamplerMicroscope(Microscope):
         self.afg.voltage_high2('{}V'.format(mod_range[0]))
         self.afg.voltage_offset2('0V')
 
+        #: Set pulse parameters
         for ch in [1, 2]:
             p = ivm_params['afg']['ch{}'.format(ch)]
             getattr(self.afg, 'pulse_period{}'.format(ch))('{}us'.format(self.Q_(p['period']).to('us').magnitude))
@@ -147,6 +147,7 @@ class SamplerMicroscope(Microscope):
             getattr(self.afg, 'pulse_trans_trail{}'.format(ch))('{}us'.format(self.Q_(p['trail']).to('us').magnitude))
             getattr(self.afg, 'pulse_delay{}'.format(ch))('{}us'.format(self.Q_(p['delay']).to('us').magnitude))
 
+        #: Get instrument metadata and prefactors
         lockin_snap = self.MAG_lockin.snapshot(update=True)
         lockin_meta = {}
         for param in ['time_constant', 'sensitivity', 'phase', 'reserve', 'filter_slope']:
@@ -157,14 +158,14 @@ class SamplerMicroscope(Microscope):
                              'ivm_params': ivm_params}
                         })
         prefactor = 1 / (10 / lockin_snap['parameters']['sensitivity']['value'])
-        prefactor /= ivm_params['channels']['ivmX']['gain']
+        prefactor /= ivm_params['channels']['lockinX']['gain']
         delay = ivm_params['delay_factor'] * lockin_snap['parameters']['time_constant']['value']
 
         fig, ax = plt.subplots(1)
         ax.set_xlim(min(bias_range), max(bias_range))
         ax.set_xlabel('Bias [V]')
         ax.set_ylabel('Voltage [V]')
-        ax.set_title(ivm_params['channels']['ivmX']['label'])
+        ax.set_title(ivm_params['channels']['lockinX']['label'])
         log.info('Starting iv_mod.')
         try:
             for j in range(len(mod_vec)):
@@ -183,7 +184,7 @@ class SamplerMicroscope(Microscope):
                 ivmX[:,j] = prefactor * dataX_avg
                 ivmY[:,j] = prefactor * dataY_avg
                 clear_artists(ax)
-                ax.plot(bias_vec, prefactor * dataX_avg, 'bo-', label='X')
+                ax.plot(bias_vec, prefactor * dataX_avg, 'bo-')
                 plt.tight_layout()
                 fig.canvas.draw()
             fig.show()
@@ -195,7 +196,7 @@ class SamplerMicroscope(Microscope):
         plt.pcolormesh(mod_grid, bias_grid, ivmX)
         plt.xlabel('Modulation [V]')
         plt.ylabel('Bias [V]')
-        plt.title(ivm_params['channels']['ivmX']['label'])
+        plt.title(ivm_params['channels']['lockinX']['label'])
         cbarX = plt.colorbar()
         cbarX.set_label('Voltage [V]')
 
@@ -203,25 +204,29 @@ class SamplerMicroscope(Microscope):
         plt.pcolormesh(mod_grid, bias_grid, ivmY)
         plt.xlabel('Modulation [V]')
         plt.ylabel('Bias [V]')
-        plt.title(ivm_params['channels']['ivmY']['label'])
+        plt.title(ivm_params['channels']['lockinY']['label'])
         cbarY = plt.colorbar()
         cbarY.set_label('Voltage [V]')
 
-        data_dict.update(
-            {'ivmX': {'array': ivmX, 'unit': 'V'},
-             'ivmY': {'array': ivmY, 'unit': 'V'}}
-        )
+        data_dict.update({
+            'lockinX': {'array': ivmX, 'unit': 'V'},
+             'lockinY': {'array': ivmY, 'unit': 'V'}
+            })
 
         if ivm_params['save']:
+            #: Get/create data location
             loc_provider = qc.FormatLocation(fmt='{date}/#{counter}_{name}_{time}')
             loc = loc_provider(DiskIO('.'), record={'name': ivm_params['fname']})
             pathlib.Path(loc).mkdir(parents=True, exist_ok=True)
+            #: Save arrays to mat
             io.savemat('{}/{}'.format(loc, ivm_params['fname']), data_dict)
+            #: Save metadata to json
             with open(loc + '/metadata.json', 'w') as f:
                 try:
                     json.dump(meta_dict, f, sort_keys=True, indent=4, skipkeys=True)
                 except TypeError:
                     pass
+            #: Save figures to png
             figX.suptitle(loc)
             figX.savefig('{}/{}X.png'.format(loc, ivm_params['fname']))
             figY.suptitle(loc)
@@ -230,4 +235,153 @@ class SamplerMicroscope(Microscope):
 
         return data_dict, meta_dict
 
+    def iv_tek_mod_daq(self, ivm_params: Dict[str, Any]) -> None:
+        """Performs digital feedback on mod coil to measure flux vs. delay.
 
+        Args:
+            ivm_params: Dict of measurement parameters as definted in config_measurements json file.
+
+        Returns:
+            Tuple[Dict]: data_dict, metadict
+                Dictionaries containing data arrays and instrument metadata.
+        """
+
+        data_dict = {}
+        meta_dict = {}
+        daq_config = self.config['instruments']['daq']
+        ai_channels = daq_config['channels']['analog_inputs']
+        meas_channels = ivm_params['channels']
+        channels = {}
+        for ch in meas_channels:
+            channels.update({ch: ai_channels[ch]})
+
+        delay_range = [self.Q_(value).to('s').magnitude for value in ivm_params['dg']['range']]
+        vset = self.Q_(ivm_params['vset']).to('V').magnitude
+        vmod = self.Q_(ivm_params['vmod_initial']).to('V').magnitude
+        vmod_low = self.Q_(ivm_params['vmod_low']).to('V').magnitude
+        vmod_high = self.Q_(ivm_params['vmod_high']).to('V').magnitude
+        P = ivm_params['P']
+        tsettle = self.Q_(ivm_params['tsettle'])
+        tavg = self.Q_(ivm_params['tavg'])
+        time_constant = self.Q_(ivm_params['time_constant'])
+        
+        period = self.Q_(ivm_params['afg']['ch1']['period'])
+        delay0, delay1 = [self.Q_(val).to('s').magnitude for val in ivm_params['dg']['range']]
+        delay_vec = np.linspace(delay0, delay1, ivm_params['dg']['nsteps'])
+        vmod_vec = np.full_like(delay_vec, np.nan, dtype=np.double)
+
+        for ch in [1, 2]:
+            #: Set AFG pulse parameters
+            p = ivm_params['afg']['ch{}'.format(ch)]
+            getattr(self.afg, 'voltage_high{}'.format(ch))('{}V'.format(self.Q_(p['high']).to('V').magnitude))
+            getattr(self.afg, 'voltage_low{}'.format(ch))('{}V'.format(self.Q_(p['low']).to('V').magnitude))
+            getattr(self.afg, 'pulse_period{}'.format(ch))('{}us'.format(self.Q_(p['period']).to('us').magnitude))
+            getattr(self.afg, 'pulse_width{}'.format(ch))('{}us'.format(self.Q_(p['width']).to('us').magnitude))
+            getattr(self.afg, 'pulse_trans_lead{}'.format(ch))('{}us'.format(self.Q_(p['lead']).to('us').magnitude))
+            getattr(self.afg, 'pulse_trans_trail{}'.format(ch))('{}us'.format(self.Q_(p['trail']).to('us').magnitude))
+            getattr(self.afg, 'pulse_delay{}'.format(ch))('{}us'.format(self.Q_(p['delay']).to('us').magnitude))
+
+        #: Set delay generator parameters
+        p = ivm_params['dg']
+        self.dg.delay_B('A, {:e}'.format(delay0))
+        self.dg.delay_C('T0, {:e}'.format(self.Q_(p['ch2']['delay']).to('s').magnitude))
+        self.dg.delay_D('C, {:e}'.format(self.Q_(p['ch2']['width']).to('s').magnitude))
+
+        self.dg.amp_out_AB(self.Q_(p['ch1']['voltage']).to('V').magnitude)
+        self.dg.offset_out_AB(self.Q_(p['ch1']['offset']).to('V').magnitude)
+        self.dg.amp_out_CD(self.Q_(p['ch2']['voltage']).to('V').magnitude)
+        self.dg.offset_out_CD(self.Q_(p['ch2']['offset']).to('V').magnitude)
+
+        #: Get instrument metadata and prefactors
+        lockin_snap = self.MAG_lockin.snapshot(update=True)
+        lockin_meta = {}
+        for param in ['time_constant', 'sensitivity', 'phase', 'reserve', 'filter_slope']:
+            lockin_meta.update({param: lockin_snap['parameters'][param]})
+        meta_dict.update({'metadata':
+                            {'lockin': lockin_meta,
+                             'afg': self.afg.snapshot(update=True),
+                             'dg': self.dg.snapshot(update=True),
+                             'ivm_params': ivm_params}
+                        })
+        prefactor = 1 / (10 / lockin_snap['parameters']['sensitivity']['value'])
+        prefactor /= ivm_params['channels']['lockinX']['gain']
+
+        with nidaqmx.Task('ai_task'), nidaqmx.Task('ao_task') as ai_task, ao_task:
+            ao_channel = '{}/ao{}'.format(daq_config['dev_name'], daq_config['analog_outputs']['mod'])
+            ao_task.ao_channels.add_ao_voltage_chan(ao_channel, 'mod')
+            for ch, idx in channels.items():
+                channel = '{}/ai{}'.format(daq_config['dev_name'], idx)
+                ai_task.ai_channels.add_ai_voltage_chan(channel, ch)
+
+            figM = plt.figure()
+            axM  = plt.gca()
+            plt.xlim(min(delay_vec), max(delay_vec))
+            plt.xlabel(r'Delay time [$\mu$s]')
+            plt.ylabel('Modulation Voltage [V]')
+
+            figT = plt.figure()
+            axT = plt.gca()
+            plt.xlabel('Iteration number')
+            plt.ylabel('Modulation Voltage [V]')
+
+            try:
+                #: Sweep delay time
+                for j in range(len(delay_vec)):
+                    self.dg.delay_A('T0, {:e}'.format(delay_vec[j]))
+                    self.dg.delay_B('A, {:e}'.format(period.to('s').magnitude - delay_vec[j]))
+                    elapsed_time = 0
+                    nsamples = 0
+                    vmod_time = np.array([])
+                    t0 = time.time()
+                    time.sleep(0.01)
+                    #: Do digital PID control
+                    while elapsed_time < tsettle + tavg:
+                        ai_data = ai_task.read()
+                        vcomp = ai_data[0]
+                        err = vcomp - vset
+                        vmod += P * err
+                        vmod = np.mod(vmod, vmod_high)
+                        ao_task.write(vmod)
+                        elapsed_time = time.time() - t0
+                        nsamples += 1
+                        vmod_time = np.append(vmod)
+                    avg_start_pt = nsamples * tavg // (tsettle + tavg)
+                    vmod_vec[j] = np.mean(vmod_time[avg_start_pt:])
+
+                    clear_artists(axM)
+                    axM.plot(delay_vec, vmod_vec, 'bo-')
+                    figM.canvas.draw()
+
+                    clear_artists(axT)
+                    axT.plot(vmod_time, 'bo')
+                    figT.canvas.draw()
+
+                    time.sleep(0.05)
+            except KeyboardInterrupt:
+                log.warning('Measurement interrupted by user.')
+
+        data_dict.update({
+            'delay_vec': {'array': delay_vec, 'unit': 's'},
+            'mod_vec': {'array': mod_vec, 'unit': 'V'}
+            })
+        if ivm_params['save']:
+            #: Get/create data location
+            loc_provider = qc.FormatLocation(fmt='{date}/#{counter}_{name}_{time}')
+            loc = loc_provider(DiskIO('.'), record={'name': ivm_params['fname']})
+            pathlib.Path(loc).mkdir(parents=True, exist_ok=True)
+            #: Save arrays to mat
+            io.savemat('{}/{}'.format(loc, ivm_params['fname']), data_dict)
+            #: Save metadata to json
+            with open(loc + '/metadata.json', 'w') as f:
+                try:
+                    json.dump(meta_dict, f, sort_keys=True, indent=4, skipkeys=True)
+                except TypeError:
+                    pass
+            #: Save figures to png
+            figM.suptitle(loc)
+            figM.savefig('{}/{}mod_d.png'.format(loc, ivm_params['fname']))
+            figT.suptitle(loc)
+            figT.savefig('{}/{}mod_t.png'.format(loc, ivm_params['fname']))
+            log.info('Data saved to {}.'.format(loc))
+
+        return data_dict, meta_dict

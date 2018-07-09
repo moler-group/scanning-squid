@@ -256,8 +256,10 @@ class DG645(VisaInstrument):
         return self.ask('DLAY?{}'.format(self.channel_mapping[channel]))
 
     def _set_delay(self, src_delay: str, target: str=None) -> None:
-        source, delay = src_delay.split(' ')
-        self.write('DLAY {},{},{}'.format(self.channel_mapping[target], source, delay))
+        source, delay = src_delay.split(',').strip()
+        self.write('DLAY {},{},{}'.format(self.channel_mapping[target],
+                                          self.channel_mapping[source],
+                                          delay))
 
     def _get_amp(self, output: str=None) -> str:
         return self.ask('LAMP?{}'.format(self.output_mapping[output]))
