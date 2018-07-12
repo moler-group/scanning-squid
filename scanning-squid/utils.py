@@ -2,6 +2,7 @@ import os
 import numpy as np
 from typing import Dict, List, Optional, Sequence, Any, Union, Tuple
 import qcodes as qc
+from qcodes.instrument.parameter import ArrayParameter
 from scipy import io
 
 #: Tell the UnitRegistry what a Phi0 is, and that ohm and Ohm are the same thing.
@@ -275,3 +276,7 @@ def to_real_units(data_set: Any, ureg: Any=None) -> Any:
         unit = meta['channels'][ch]['unit']
         data[:,i,:] = (array * ureg.Quantity(meta['prefactors'][ch])).to(unit)
     return data
+
+def clear_artists(ax):
+    for artist in ax.lines + ax.collections:
+        artist.remove()

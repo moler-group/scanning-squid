@@ -9,9 +9,6 @@ log = logging.getLogger(__name__)
 
 class AttocubeController(VisaInstrument):
     """Base class for Attocube controller instrument.
-    
-    Parameters of AttocubeController instances are not updated when
-        snapshots are taken. You must get each parameter individually.
     """
     def __init__(self, atto_config: Dict, temp: str, ureg: Any,
                  timestamp_fmt: str, **kwargs) -> None:
@@ -115,7 +112,7 @@ class AttocubeController(VisaInstrument):
         self.serialnum_ax1()
         self.serialnum_ax2()
         self.serialnum_ax3()
-        print(self.version())
+        print('Connected to: {}.'.format(self.version()))
     
     def ask_raw(self, cmd: str) -> str:
         """Query instrument with cmd and return response.

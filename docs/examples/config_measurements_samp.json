@@ -1,0 +1,166 @@
+{
+    "td_cap": {
+        "fname": "td_cap",
+        "dV": "0.1 V",
+        "range": ["-9.5 V","9.5 V"],
+        "channels": {
+            "CAP": {
+                "lockin": {
+                    "name": "CAP",
+                    "amplitude": "1 V",
+                    "frequency": "6.271 kHz"
+                },
+                "label": "Capacitance",
+                "gain": 1,
+                "unit": "fF",
+                "unit_latex": "fF"
+            }
+        },
+        "constants": {
+            "max_slope": "3 fF/V",
+            "max_delta_cap": "20 pF",
+            "initial_cap":"0 pF",
+            "nfitmin":10,
+            "nwindow":30,
+            "ntest":8,
+            "wait_factor":3
+        }
+    },
+    "iv_mod_tek": {
+        "fname": "iv_mod",
+        "save": true,
+        "ntek1": 50,
+        "ntek2": 50,
+        "navg": 1,
+        "delay_factor": 5,
+        "mod_range": ["-1 V", "1 V"],
+        "bias_range": ["-100 mV", "100 mV"],
+        "afg": {
+            "ch1": {
+                "low": "0 V",
+                "width": "5 us",
+                "offset": "0 V",
+                "period": "10 us",
+                "delay": "2 us",
+                "lead": "1 us",
+                "trail": "1 us"
+            },
+            "ch2": {
+                "high": "50 mV",
+                "low": "0 V",
+                "offset": "0 V",
+                "width": "8 us",
+                "period": "15 us",
+                "delay": "1 us",
+                "lead": "1 us",
+                "trail": "1 us"                
+            }
+        },
+        "dg": {
+            "width": "4 us",
+            "delay": "5 us",
+            "voltage": "0.5 V",
+            "offset": "0 V"
+        },
+        "channels": {
+            "lockinX": {
+                "lockin": {
+                    "name": "MAG"
+                },
+                "label": "Lockin X",
+                "gain": 50,
+                "filters": {},
+                "unit": "V",
+                "unit_latex": "V"
+            },
+            "lockinY": {
+                "lockin": {
+                    "name": "MAG"
+                },
+                "label": "Lockin Y",
+                "gain": 50,
+                "filters": {},
+                "unit": "V",
+                "unit_latex": "V"
+            }
+        }
+    },
+    "iv_tek_mod_daq": {
+        "fname": "iv_tek_mod_daq",
+        "save": true,
+        "daq_rate": "1 MHz",
+        "vmod_initial": "1 V",
+        "vmod_low": "-5 V",
+        "vmod_high": "5 V",
+        "P": -0.05,
+        "tsettle": "0.5 s",
+        "tavg": "1.5 s",
+        "time_constant": "10 ms",
+        "ntek1": 50,
+        "ntek2": 50,
+        "navg": 1,
+        "delay_factor": 5,
+        "mod_range": ["-1 V", "1 V"],
+        "bias_range": ["-100 mV", "100 mV"],
+        "afg": {
+            "ch1": {
+                "high": "0.5 V",
+                "low": "-0.5 V",
+                "width": "6 us",
+                "offset": "0 V",
+                "period": "10 us",
+                "delay": "1 us",
+                "lead": "1 us",
+                "trail": "1 us"
+            },
+            "ch2": {
+                "high": "0.9 V",
+                "low": "0 V",
+                "offset": "0 V",
+                "width": "8 us",
+                "period": "10 us",
+                "delay": "0 us",
+                "lead": "1 us",
+                "trail": "1 us"                
+            }
+        },
+        "dg": {
+            "range": ["0 us", "1 s"],
+            "nsteps": 101,
+            "ch1": {
+                "width": "5 us",
+                "delay": "5 us",
+                "voltage": "1 V",
+                "offset": "-0.5 V"
+            },
+            "ch2": {
+                "width": "100 ns",
+                "delay": "5 us",
+                "voltage": "0.5 V",
+                "offset": "0 V"
+            }
+        },
+        "channels": {
+            "ivmX": {
+                "lockin": {
+                    "name": "MAG"
+                },
+                "label": "Lockin X",
+                "gain": 1,
+                "filters": {},
+                "unit": "V",
+                "unit_latex": "V"
+            },
+            "ivmY": {
+                "lockin": {
+                    "name": "MAG"
+                },
+                "label": "Lockin Y",
+                "gain": 1,
+                "filters": {},
+                "unit": "V",
+                "unit_latex": "V"
+            }
+        }
+    }
+}
