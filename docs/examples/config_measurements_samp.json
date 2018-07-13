@@ -88,20 +88,14 @@
     "iv_tek_mod_daq": {
         "fname": "iv_tek_mod_daq",
         "save": true,
-        "daq_rate": "1 MHz",
         "vmod_initial": "1 V",
         "vmod_low": "-5 V",
         "vmod_high": "5 V",
+        "vcomp_set": "2 V",
         "P": -0.05,
         "tsettle": "0.5 s",
         "tavg": "1.5 s",
         "time_constant": "10 ms",
-        "ntek1": 50,
-        "ntek2": 50,
-        "navg": 1,
-        "delay_factor": 5,
-        "mod_range": ["-1 V", "1 V"],
-        "bias_range": ["-100 mV", "100 mV"],
         "afg": {
             "ch1": {
                 "high": "0.5 V",

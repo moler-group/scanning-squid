@@ -240,6 +240,10 @@ class SamplerMicroscope(Microscope):
     def iv_tek_mod_daq(self, ivm_params: Dict[str, Any]) -> None:
         """Performs digital feedback on mod coil to measure flux vs. delay.
 
+        AFG ch1 is used for pulse generator bias.
+        AFG ch2 is used for comparator bias.
+        DG ch1 is used for pulse generator trigger.
+
         Args:
             ivm_params: Dict of measurement parameters as definted in config_measurements json file.
 
@@ -257,12 +261,11 @@ class SamplerMicroscope(Microscope):
         for ch in meas_channels:
             channels.update({ch: ai_channels[ch]})
 
-        delay_range = [self.Q_(value).to('s').magnitude for value in ivm_params['dg']['range']]
         vmod = self.Q_(ivm_params['vmod_initial']).to('V').magnitude
-        vmod_set = self.Q_(ivm_params['vmod_set']).to('V').magnitude
+        vcomp_set = self.Q_(ivm_params['vcomp_set']).to('V').magnitude
         vmod_low = self.Q_(ivm_params['vmod_low']).to('V').magnitude
         vmod_high = self.Q_(ivm_params['vmod_high']).to('V').magnitude
-        P = ivm_params['P']
+
         tsettle = self.Q_(ivm_params['tsettle']).to('s').magnitude
         tavg = self.Q_(ivm_params['tavg']).to('s').magnitude
         time_constant = self.Q_(ivm_params['time_constant'])
@@ -272,8 +275,8 @@ class SamplerMicroscope(Microscope):
         delay_vec = np.linspace(delay0, delay1, ivm_params['dg']['nsteps'])
         vmod_vec = np.full_like(delay_vec, np.nan, dtype=np.double)
 
+        #: Set AFG pulse parameters
         for ch in [1, 2]:
-            #: Set AFG pulse parameters
             p = ivm_params['afg']['ch{}'.format(ch)]
             getattr(self.afg, 'voltage_high{}'.format(ch))('{}V'.format(self.Q_(p['high']).to('V').magnitude))
             getattr(self.afg, 'voltage_low{}'.format(ch))('{}V'.format(self.Q_(p['low']).to('V').magnitude))
@@ -343,7 +346,7 @@ class SamplerMicroscope(Microscope):
                     while elapsed_time < tsettle + tavg:
                         ai_data = ai_task.read()
                         vcomp = ai_data[0]
-                        err = vcomp - vmod_set
+                        err = vcomp - vcomp_set
                         vmod += P * err
                         vmod = np.mod(vmod, vmod_high)
                         #vmod = max(vmod, vmod_low) if vmod < 0 else min(vmod, vmod_high)
