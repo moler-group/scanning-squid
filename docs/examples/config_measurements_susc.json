@@ -50,6 +50,16 @@
                 "gain": 1,
                 "unit": "fF",
                 "unit_latex": "fF"
+            },
+            "x_cap": {
+                "label": "X position",
+                "unit": "mm",
+                "unit_latex": "mm"
+            },
+            "y_cap": {
+                "label": "Y position",
+                "unit": "mm",
+                "unit_latex": "mm"
             }
         }
     },
