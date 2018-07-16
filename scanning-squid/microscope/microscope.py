@@ -16,7 +16,7 @@ from IPython.display import clear_output
 #: Qcodes for running measurements and saving data
 import qcodes as qc
 from qcodes.station import Station
-from qcodes.instrument_drivers.stanford_research.SR830 import SR830
+from ..instruments.hf2li import HF2LI
 
 #: NI DAQ library
 import nidaqmx
@@ -129,12 +129,14 @@ class Microscope(Station):
         """Add lockins to microscope.
         """
         for lockin, lockin_info in self.config['instruments']['lockins'].items():
-            name = '{}_lockin'.format(lockin)
-            address = lockin_info['address']
+            name = '{}_lockin'.format(demod)
             if hasattr(self, name):
                 getattr(self, name, 'clear_instances')()
             self.remove_component(name)
-            instr = SR830(name, address, metadata={lockin: lockin_info})
+            dev = lockin_info['device']
+            demod = lockin_info['demod']
+            auxouts = lockin_info['auxouts']
+            instr = HF2LI(name, dev, demod, auxouts, metadata={lockin: lockin_info})
             setattr(self, name, instr)
             self.add_component(getattr(self, '{}_lockin'.format(lockin)))
             log.info('{} successfully added to microscope.'.format(name))
@@ -183,7 +185,7 @@ class Microscope(Station):
             channels.update({ch: ai_channels[ch]})
         nchannels = len(channels.keys())
         daq_rate = self.Q_(daq_config['rate']).to('Hz').magnitude / nchannels
-        self.set_lockins(tdc_params)
+        #self.set_lockins(tdc_params)
         self.snapshot(update=update_snap)
         #: z position voltage step
         dV = self.Q_(tdc_params['dV']).to('V').magnitude

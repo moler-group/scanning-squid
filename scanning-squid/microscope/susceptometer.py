@@ -62,18 +62,18 @@ class SusceptometerMicroscope(Microscope):
             prefactor = 1
             if ch == 'MAG':
                 prefactor /= mod_width
-            elif ch in ['SUSCX', 'SUSCY']:
-                r_lead = self.Q_(measurement['channels'][ch]['r_lead'])
-                snap = getattr(self, 'SUSC_lockin').snapshot(update=update)['parameters']
-                susc_sensitivity = snap['sensitivity']['value']
-                amp = snap['amplitude']['value'] * self.ureg(snap['amplitude']['unit'])
-                #: The factor of 10 here is because SR830 output gain is 10/sensitivity
-                prefactor *=  (r_lead / amp) / (mod_width * 10 / susc_sensitivity)
+            snap_susc = getattr(self, 'SUSC_lockin').snapshot(update=update)['parameters']
+            r_lead = self.Q_(measurement['channels'][ch]['r_lead'])
+            amp = snap_susc['sigout_amplitude'] * snap_susc['sigout_range'] * self.ureg('V')
+            if ch == 'SUSCX':
+                suscx_gain = snap['gain_X']
+                prefactor *=  (r_lead / amp) / (mod_width * suscx_gain)
+            elif ch == 'SUSCY':
+                suscy_gain = snap['gain_Y']
+                prefactor *=  (r_lead / amp) / (mod_width * suscy_gain)
             elif if ch == 'CAP':
-                snap = getattr(self, 'CAP_lockin').snapshot(update=update)['parameters']
-                cap_sensitivity = snap['sensitivity']['value']
-                #: The factor of 10 here is because SR830 output gain is 10/sensitivity
-                prefactor /= (self.Q_(self.scanner.metadata['cantilever']['calibration']) * 10 / cap_sensitivity)
+                snap_cap = getattr(self, 'CAP_lockin').snapshot(update=update)['parameters']
+                prefactor /= (self.Q_(self.scanner.metadata['cantilever']['calibration']) * snap_cap['gain_X'])
             prefactor /= measurement['channels'][ch]['gain']
             prefactors.update({ch: prefactor})
         return prefactors
@@ -125,7 +125,7 @@ class SusceptometerMicroscope(Microscope):
         utils.validate_scan_params(self.scanner.metadata, scan_params,
                                    scan_grids, self.temp, self.ureg, log)
         self.scanner.goto([scan_grids[axis][0][0] for axis in ['x', 'y', 'z']])
-        self.set_lockins(scan_params)
+        #self.set_lockins(scan_params)
         #: get channel prefactors in pint Quantity form
         prefactors = self.get_prefactors(scan_params)
         #: get channel prefactors in string form so they can be saved in metadata
@@ -175,9 +175,7 @@ class SusceptometerMicroscope(Microscope):
             qc.Task(ai_task.stop),
             qc.Task(ai_task.close),
             qc.Task(self.daq_ai.clear_instances),
-            qc.Task(self.scanner.goto, old_pos),
-            qc.Task(self.CAP_lockin.amplitude, 0.004),
-            qc.Task(self.SUSC_lockin.amplitude, 0.004)
+            qc.Task(self.scanner.goto, old_pos)
         )
         #: loop.metadata will be saved in DataSet
         loop.metadata.update(scan_params)
