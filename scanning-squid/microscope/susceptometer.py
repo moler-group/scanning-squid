@@ -65,13 +65,13 @@ class SusceptometerMicroscope(Microscope):
             snap_susc = getattr(self, 'SUSC_lockin').snapshot(update=update)['parameters']
             r_lead = self.Q_(measurement['channels'][ch]['r_lead'])
             amp = snap_susc['sigout_amplitude'] * snap_susc['sigout_range'] * self.ureg('V')
-            if ch == 'SUSCX':
+            elif ch == 'SUSCX':
                 suscx_gain = snap['gain_X']
                 prefactor *=  (r_lead / amp) / (mod_width * suscx_gain)
             elif ch == 'SUSCY':
                 suscy_gain = snap['gain_Y']
                 prefactor *=  (r_lead / amp) / (mod_width * suscy_gain)
-            elif if ch == 'CAP':
+            elif ch == 'CAP':
                 snap_cap = getattr(self, 'CAP_lockin').snapshot(update=update)['parameters']
                 prefactor /= (self.Q_(self.scanner.metadata['cantilever']['calibration']) * snap_cap['gain_X'])
             prefactor /= measurement['channels'][ch]['gain']
@@ -112,14 +112,13 @@ class SusceptometerMicroscope(Microscope):
         fast_ax = scan_params['fast_ax'].lower()
         slow_ax = 'x' if fast_ax == 'y' else 'y'
         
-        pix_per_line = scan_params['scan_size'][fast_ax]
-        line_duration = pix_per_line * self.ureg('pixels') / self.Q_(scan_params['scan_rate'])
+        line_duration = self.Q_(scan_params['scan_rate']) * self.Q_(scan_params['range'][fast_ax])
         pts_per_line = int(daq_rate * line_duration.to('s').magnitude)
         
         plane = self.scanner.metadata['plane']
         height = self.Q_(scan_params['height']).to('V').magnitude
-        
-        scan_vectors = utils.make_scan_vectors(scan_params, self.ureg)
+        scanner_constants = self.config['instruments']['scanner']['constants']
+        scan_vectors = utils.make_scan_vectors(scan_params, scanner_constants, self.temp, self.ureg)
         scan_grids = utils.make_scan_grids(scan_vectors, slow_ax, fast_ax,
                                            pts_per_line, plane, height)
         utils.validate_scan_params(self.scanner.metadata, scan_params,

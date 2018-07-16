@@ -36,7 +36,8 @@ def next_file_name(fpath: str, extension: str) -> str:
         i += 1
     return '{}{}.{}'.format(fpath, i, extension)
 
-def make_scan_vectors(scan_params: Dict[str, Any], ureg: Any) -> Dict[str, Sequence[float]]:
+def make_scan_vectors(scan_params: Dict[str, Any],
+    scanner_constants: Dict[str, Any], temp: str, ureg: Any) -> Dict[str, Sequence[float]]:
     """Creates x and y vectors for given scan parameters.
 
     Args:
@@ -52,9 +53,11 @@ def make_scan_vectors(scan_params: Dict[str, Any], ureg: Any) -> Dict[str, Seque
     size = []
     rng = []
     for ax in ['x', 'y']:
-        center.append(Q_(scan_params['center'][ax]).to('V').magnitude)
+        c = Q_(scan_params['center'][ax]) * Q_(scanner_constants[temp][ax])
+        center.append(c.to('V').magnitude)
         size.append(scan_params['scan_size'][ax])
-        rng.append(Q_(scan_params['range'][ax]).to('V').magnitude)
+        r = Q_(scan_params['range'][ax]) * Q_(scanner_constants[temp][ax])
+        rng.append(r.to('V').magnitude)
     x = np.linspace(center[0] - 0.5 * rng[0], center[0] + 0.5 * rng[0], size[0])
     y = np.linspace(center[1] - 0.5 * rng[1], center[1] + 0.5 * rng[1], size[1])
     return {'x': x, 'y': y}

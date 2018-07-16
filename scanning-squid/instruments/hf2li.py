@@ -137,30 +137,30 @@ class HF2LI(Instrument):
         self.daq.setDouble(path, tc)
 
     def _get_sigout_range(self):
-        path = '/{}/sigouts/{}/range/'.format(self.dev_id, self.sigout)
+        path = '/{}/sigouts/{}/range/'.format(self.dev_id, self.sigout[0])
         range = self.daq.getDouble(path)
         return range
 
     def _set_sigout_range(self, rng):
-        path = '/{}/sigouts/{}/range/'.format(self.dev_id, self.sigout)
+        path = '/{}/sigouts/{}/range/'.format(self.dev_id, self.sigout[0])
         self.daq.setDouble(path, rng)
 
     def _get_sigout_offset(self):
-        path = '/{}/sigouts/{}/offset/'.format(self.dev_id, self.sigout)
+        path = '/{}/sigouts/{}/offset/'.format(self.dev_id, self.sigout[0])
         range = self.daq.getDouble(path)
         return range
 
     def _set_sigout_offset(self, offset):
-        path = '/{}/sigouts/{}/offset/'.format(self.dev_id, self.sigout)
+        path = '/{}/sigouts/{}/offset/'.format(self.dev_id, self.sigout[0])
         self.daq.setDouble(path, offset)
 
     def _get_sigout_amplitude(self):
-        path = '/{}/sigouts/{}/amplitudes/'.format(self.dev_id, self.sigout)
+        path = '/{}/sigouts/{}/amplitudes/{}/'.format(self.dev_id, self.sigout[0], self.sigout[1])
         range = self.daq.getDouble(path)
         return range
 
     def _set_sigout_amplitude(self, amp):
-        path = '/{}/sigouts/{}/amplitudes/'.format(self.dev_id, self.sigout)
+        path = '/{}/sigouts/{}/amplitudes/{}/'.format(self.dev_id, self.sigout[0], self.sigout[1])
         self.daq.setDouble(path, offset)
 
     def _get_frequency(self):
