@@ -4,6 +4,7 @@ import sys
 import time
 import json
 from typing import Dict, List, Sequence, Any, Union, Tuple
+from collections import OrderedDict
 
 #: Plotting and math modules
 import matplotlib.pyplot as plt
@@ -60,8 +61,7 @@ class Microscope(Station):
             **kwargs: Keyword arguments to be passed to Station constructor.
         """
         super().__init__(**kwargs)
-        with open(config_file) as f:
-            self.config = json.load(f)
+        self.config = utils.load_json_ordered(config_file)
         if not os.path.exists('logs'):
             os.mkdir('logs')
         if log_name is None:
@@ -85,6 +85,8 @@ class Microscope(Station):
         self.temp = temp
 
         self._add_atto()
+        #self._add_temp_controller()
+        #self._add_keithley()
         self._add_scanner()
         self._add_SQUID()
         self._add_lockins()
@@ -213,7 +215,8 @@ class Microscope(Station):
             ).then(
                 qc.Task(ai_task.stop),
                 qc.Task(ai_task.close),
-                qc.Task(self.CAP_lockin.amplitude, 0.004),
+                #qc.Task(self.CAP_lockin.amplitude, 0.004),
+                #qc.Task(self.SUSC_lockin.amplitude, 0.004),
                 qc.Task(self.scanner.retract),
                 qc.Task(tdc_plot.fig.show),
                 qc.Task(tdc_plot.save)
@@ -237,7 +240,7 @@ class Microscope(Station):
             ai_task.stop()
             ai_task.close()
             self.scanner.retract()
-            self.CAP_lockin.amplitude(0.004)
+            #self.CAP_lockin.amplitude(0.004)
             tdc_plot.fig.show()
             tdc_plot.save()
             log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))

@@ -68,6 +68,28 @@
                 "gain": 1,
                 "unit": "fF",
                 "unit_latex": "fF"
+            },
+            "SUSCX": {
+                "lockin": {
+                    "name": "SUSC",
+                    "amplitude": "1 V",
+                    "frequency": "131.79 Hz"
+                },
+                "label": "Susceptibility",
+                "gain": 1,
+                "r_lead": "1 kOhm",
+                "unit": "Phi0/A",
+                "unit_latex": "$\\Phi_0$/A"
+            },
+            "SUSCY": {
+                "lockin": {
+                    "name": "SUSC"
+                },
+                "label": "Susceptibility (out of phase)",
+                "gain": 1,
+                "r_lead": "1 kOhm",
+                "unit": "Phi0/A",
+                "unit_latex": "$\\Phi_0$/A"
             }
         },
         "constants": {

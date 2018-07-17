@@ -176,8 +176,8 @@ class SusceptometerMicroscope(Microscope):
             qc.Task(ai_task.close),
             qc.Task(self.daq_ai.clear_instances),
             qc.Task(self.scanner.goto, old_pos),
-            qc.Task(self.CAP_lockin.amplitude, 0.004),
-            qc.Task(self.SUSC_lockin.amplitude, 0.004)
+            #qc.Task(self.CAP_lockin.amplitude, 0.004),
+            #qc.Task(self.SUSC_lockin.amplitude, 0.004)
         )
         #: loop.metadata will be saved in DataSet
         loop.metadata.update(scan_params)

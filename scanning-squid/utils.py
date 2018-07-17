@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Sequence, Any, Union, Tuple
 import qcodes as qc
 from qcodes.instrument.parameter import ArrayParameter
 from scipy import io
+from collections import OrderedDict
 
 #: Tell the UnitRegistry what a Phi0 is, and that ohm and Ohm are the same thing.
 with open('squid_units.txt', 'w') as f:
@@ -18,6 +19,18 @@ class Counter(object):
         
     def advance(self):
         self.count += 1
+
+def load_json_ordered(filename: str) -> OrderedDict:
+    """Loads json file as an ordered dict.
+    Args:
+        filname: Path to json file to be loaded.
+    Returns:
+        OrderedDict: odict
+            OrderedDict containing data from json file.
+    """
+    with open(filename) as f:
+        odict = json.load(f, object_pairs_hook=OrderedDict)
+    return odict
         
 def next_file_name(fpath: str, extension: str) -> str:
     """Appends an integer to fpath to create a unique file name:
