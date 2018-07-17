@@ -44,17 +44,17 @@ class Scanner(Instrument):
         self.voltage_retract = {'RT': self.Q_(self.metadata['voltage_retract']['RT']),
                                 'LT': self.Q_(self.metadata['voltage_retract']['LT'])}
         self.speed = self.Q_(self.metadata['speed']['value'])
-        self.constants = {'comment': self.metadata['constants']['comment']}
+        self.constants = {'RT': {}, 'LT': {}, 'comment': self.metadata['constants']['comment']}
         self.voltage_limits = {'RT': {},
                                'LT': {},
                                'unit': self.metadata['voltage_limits']['unit'],
                                'comment': self.metadata['voltage_limits']['comment']}
         unit = self.voltage_limits['unit']
         for axis in ['x', 'y', 'z']:
-            self.constants.update({axis: self.Q_(self.metadata['constants'][axis])})
             for temp in ['RT', 'LT']:
                 lims = [lim *self.ureg(unit) for lim in sorted(self.metadata['voltage_limits'][temp][axis])]
                 self.voltage_limits[temp].update({axis: lims})
+                self.constants[temp].update({axis: self.Q_(self.metadata['constants'][temp][axis])})
                 
     def _initialize_parameters(self):
         """Add parameters to instrument upon initialization.

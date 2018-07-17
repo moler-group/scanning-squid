@@ -73,7 +73,8 @@ class HF2LI(Instrument):
                            get_cmd=self._get_sigout_range,
                            get_parser=float,
                            set_cmd=self._set_sigout_range,
-                           vals=vals.Enum(0.01, 0.1, 1, 10)
+                           vals=vals.Enum(0.01, 0.1, 1, 10),
+                           snapshot_get=False
                            )
         self.add_parameter(name='sigout_offset',
                            label='Signal output offset',
@@ -81,7 +82,8 @@ class HF2LI(Instrument):
                            get_cmd=self._get_sigout_offset,
                            get_parser=float,
                            set_cmd=self._set_sigout_offset,
-                           vals=vals.Numbers(-1, 1)
+                           vals=vals.Numbers(-1, 1),
+                           snapshot_get=False
                            )
         self.add_parameter(name='sigout_amplitude',
                            label='Signal output amplitude',
@@ -89,7 +91,8 @@ class HF2LI(Instrument):
                            get_cmd=self._get_sigout_amplitude,
                            get_parser=float,
                            set_cmd=self._set_sigout_amplitude,
-                           vals=vals.Numbers(-1, 1)
+                           vals=vals.Numbers(-1, 1),
+                           snapshot_get=False
                            )
                                      
     def _get_gain(self, channel=None):

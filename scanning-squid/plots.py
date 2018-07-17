@@ -8,7 +8,8 @@ from typing import Dict, List, Optional, Sequence, Any, Union, Tuple
 class ScanPlot(object):
     """Plot displaying acquired images in all measurement channels, updated live during a scan.
     """
-    def __init__(self,  scan_params: Dict[str, Any], ureg: Any, **kwargs) -> None:
+    def __init__(self,  scan_params: Dict[str, Any], scanner_constants: Dict[str, Any],
+        temp: str, ureg: Any, **kwargs) -> None:
         """
         Args:
             scan_params: Scan parameters as defined in measurement configuration file.
@@ -17,9 +18,13 @@ class ScanPlot(object):
             ureg: pint UnitRegistry, manages units.
         """
         self.scan_params = scan_params
+        self.scanner_constants = scanner_constants
+        self.temp = temp
         self.ureg = ureg
         self.Q_ = ureg.Quantity
-        self.channels = scan_params['channels']
+        self.channels = {}
+        for ch in ['MAG', 'SUSCX', 'SUSCY', 'CAP']:
+            self.channels.update({ch: scan_params['channels'][ch]})
         self.fast_ax = scan_params['fast_ax']
         self.slow_ax = 'y' if self.fast_ax == 'x' else 'x'
         self.line_colors = ['#d80202' ,'#545454' ,'#777777' ,'#a8a8a8', '#d1d1d1']
@@ -48,7 +53,7 @@ class ScanPlot(object):
     def init_empty(self):
         """Initialize the plot with all images empty. They will be filled during the scan.
         """
-        self.scan_vectors = make_scan_vectors(self.scan_params, self.ureg)
+        self.scan_vectors = make_scan_vectors(self.scan_params, self.scanner_constants, self.temp, self.ureg)
         self.X, self.Y = np.meshgrid(self.scan_vectors['x'], self.scan_vectors['y'])
         empty = np.full_like(self.X, np.nan, dtype=np.double)
         for ch in self.channels:
@@ -80,8 +85,8 @@ class ScanPlot(object):
         meta = data_set.metadata['loop']['metadata']
         slow_ax = 'x' if meta['fast_ax'] == 'y' else 'y'
         line = loop_counter.count if not offline else meta['scan_size'][slow_ax] - 1
-        for ch in self.channels:
-            idx = meta['channels'][ch]['ai']
+        for idx, ch in enumerate(self.channels):
+            #idx = meta['channels'][ch]['ai']
             data_ch = data[:,idx,:]
             if self.fast_ax.lower() == 'y':
                 data_ch = data_ch.T

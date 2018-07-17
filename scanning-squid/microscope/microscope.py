@@ -16,7 +16,7 @@ from IPython.display import clear_output
 #: Qcodes for running measurements and saving data
 import qcodes as qc
 from qcodes.station import Station
-from ..instruments.hf2li import HF2LI
+from instruments.hf2li import HF2LI
 
 #: NI DAQ library
 import nidaqmx
@@ -84,7 +84,7 @@ class Microscope(Station):
         self.Q_ = ureg.Quantity
         self.temp = temp
 
-        self._add_atto()
+        #self._add_atto()
         self._add_scanner()
         self._add_SQUID()
         self._add_lockins()
@@ -129,14 +129,15 @@ class Microscope(Station):
         """Add lockins to microscope.
         """
         for lockin, lockin_info in self.config['instruments']['lockins'].items():
-            name = '{}_lockin'.format(demod)
+            name = '{}_lockin'.format(lockin)
             if hasattr(self, name):
                 getattr(self, name, 'clear_instances')()
             self.remove_component(name)
             dev = lockin_info['device']
             demod = lockin_info['demod']
+            sigout = lockin_info['sigout']
             auxouts = lockin_info['auxouts']
-            instr = HF2LI(name, dev, demod, auxouts, metadata={lockin: lockin_info})
+            instr = HF2LI(name, dev, demod, sigout, auxouts, metadata={lockin: lockin_info})
             setattr(self, name, instr)
             self.add_component(getattr(self, '{}_lockin'.format(lockin)))
             log.info('{} successfully added to microscope.'.format(name))
@@ -215,7 +216,7 @@ class Microscope(Station):
             ).then(
                 qc.Task(ai_task.stop),
                 qc.Task(ai_task.close),
-                qc.Task(self.CAP_lockin.amplitude, 0.004),
+                #qc.Task(self.CAP_lockin.amplitude, 0.004),
                 qc.Task(self.scanner.retract),
                 qc.Task(tdc_plot.fig.show),
                 qc.Task(tdc_plot.save)
@@ -239,7 +240,7 @@ class Microscope(Station):
             ai_task.stop()
             ai_task.close()
             self.scanner.retract()
-            self.CAP_lockin.amplitude(0.004)
+            #self.CAP_lockin.amplitude(0.004)
             tdc_plot.fig.show()
             tdc_plot.save()
             log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
@@ -361,7 +362,7 @@ class Microscope(Station):
             plt.savefig(data.location + '/plane.png')
             for i, axis in enumerate(['x', 'y', 'z']):
                 self.scanner.metadata['plane'].update({axis: plane[i][0]})
-            self.atto.plane_is_current = True
+            #self.atto.plane_is_current = True
             return x_grid, y_grid, td_grid, plane
         #: If the loop didn't finish, return (None, None, None, None)
         return (None,) * 4

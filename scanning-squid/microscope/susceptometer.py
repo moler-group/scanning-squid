@@ -1,5 +1,6 @@
 #: Various Python utilities
 from typing import Dict, List, Sequence, Any, Union, Tuple
+import numpy as np
 
 #: Qcodes for running measurements and saving data
 import qcodes as qc
@@ -11,7 +12,8 @@ from nidaqmx.constants import AcquisitionType
 #: scanning-squid modules
 from instruments.daq import DAQAnalogInputs
 from plots import ScanPlot, TDCPlot
-from .micropscope import Microscope
+from microscope.microscope import Microscope
+import utils
 
 #: Pint for manipulating physical units
 from pint import UnitRegistry
@@ -62,18 +64,22 @@ class SusceptometerMicroscope(Microscope):
             prefactor = 1
             if ch == 'MAG':
                 prefactor /= mod_width
-            snap_susc = getattr(self, 'SUSC_lockin').snapshot(update=update)['parameters']
-            r_lead = self.Q_(measurement['channels'][ch]['r_lead'])
-            amp = snap_susc['sigout_amplitude'] * snap_susc['sigout_range'] * self.ureg('V')
             elif ch == 'SUSCX':
-                suscx_gain = snap['gain_X']
-                prefactor *=  (r_lead / amp) / (mod_width * suscx_gain)
+                r_lead = self.Q_(measurement['channels'][ch]['r_lead'])
+                amp = (self.SUSC_lockin.sigout_amplitude() *
+                    self.SUSC_lockin.sigout_range() * self.ureg('V'))
+                prefactor *=  np.sqrt(2) * (r_lead / amp) / (mod_width * self.SUSC_lockin.gain_X())
             elif ch == 'SUSCY':
-                suscy_gain = snap['gain_Y']
-                prefactor *=  (r_lead / amp) / (mod_width * suscy_gain)
+                snap_susc = getattr(self, 'SUSC_lockin').snapshot(update=update)['parameters']
+                r_lead = self.Q_(measurement['channels'][ch]['r_lead'])
+                amp = (self.SUSC_lockin.sigout_amplitude() *
+                    self.SUSC_lockin.sigout_range() * self.ureg('V'))
+                prefactor *=  np.sqrt(2) * (r_lead / amp) / (mod_width * self.SUSC_lockin.gain_Y())
             elif ch == 'CAP':
-                snap_cap = getattr(self, 'CAP_lockin').snapshot(update=update)['parameters']
-                prefactor /= (self.Q_(self.scanner.metadata['cantilever']['calibration']) * snap_cap['gain_X'])
+                gain_cap = self.CAP_lockin.gain_X()
+                prefactor *= np.sqrt(2) / (self.Q_(self.scanner.metadata['cantilever']['calibration']) * gain_cap)
+            elif ch in ['x_cap', 'y_cap']:
+                prefactor *= self.Q_(measurement['channels'][ch]['conversion'])
             prefactor /= measurement['channels'][ch]['gain']
             prefactors.update({ch: prefactor})
         return prefactors
@@ -92,12 +98,15 @@ class SusceptometerMicroscope(Microscope):
                 qcodes DataSet containing acquired arrays and metdata,
                 and ScanPlot instance populated with acquired data.
         """
-        if not self.atto.plane_is_current:
-            raise RuntimeError('Plane is not current. Aborting scan.')
+        #if not self.atto.plane_is_current:
+        #    raise RuntimeError('Plane is not current. Aborting scan.')
         old_pos = self.scanner.position()
         
         daq_config = self.config['instruments']['daq']
-        ao_channels = daq_config['channels']['analog_outputs']
+        #ao_channels = daq_config['channels']['analog_outputs']
+        ao_channels = {}
+        for ax in ['x', 'y', 'z']:
+            ao_channels.update({ax: daq_config['channels']['analog_outputs'][ax]})
         ai_channels = daq_config['channels']['analog_inputs']
         meas_channels = scan_params['channels']
         channels = {}
@@ -112,8 +121,9 @@ class SusceptometerMicroscope(Microscope):
         fast_ax = scan_params['fast_ax'].lower()
         slow_ax = 'x' if fast_ax == 'y' else 'y'
         
-        line_duration = self.Q_(scan_params['scan_rate']) * self.Q_(scan_params['range'][fast_ax])
+        line_duration = self.Q_(scan_params['range'][fast_ax]) / self.Q_(scan_params['scan_rate'])
         pts_per_line = int(daq_rate * line_duration.to('s').magnitude)
+        pix_per_line = scan_params['scan_size'][fast_ax]
         
         plane = self.scanner.metadata['plane']
         height = self.Q_(scan_params['height']).to('V').magnitude
@@ -146,7 +156,7 @@ class SusceptometerMicroscope(Microscope):
         slow_ax_step = scan_vectors[slow_ax][1] - scan_vectors[slow_ax][0]
         #: There is probably a counter built in to qc.Loop, but I couldn't find it
         loop_counter = utils.Counter()
-        scan_plot = ScanPlot(scan_params, self.ureg)
+        scan_plot = ScanPlot(scan_params, scanner_constants, self.temp, self.ureg)
         loop = qc.Loop(slow_ax_position.sweep(start=slow_ax_start,
                                               stop=slow_ax_end,
                                               step=slow_ax_step), delay=0.1

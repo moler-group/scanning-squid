@@ -53,10 +53,10 @@ def make_scan_vectors(scan_params: Dict[str, Any],
     size = []
     rng = []
     for ax in ['x', 'y']:
-        c = Q_(scan_params['center'][ax]) * Q_(scanner_constants[temp][ax])
+        c = Q_(scan_params['center'][ax]) / Q_(scanner_constants[temp][ax])
         center.append(c.to('V').magnitude)
         size.append(scan_params['scan_size'][ax])
-        r = Q_(scan_params['range'][ax]) * Q_(scanner_constants[temp][ax])
+        r = Q_(scan_params['range'][ax]) / Q_(scanner_constants[temp][ax])
         rng.append(r.to('V').magnitude)
     x = np.linspace(center[0] - 0.5 * rng[0], center[0] + 0.5 * rng[0], size[0])
     y = np.linspace(center[1] - 0.5 * rng[1], center[1] + 0.5 * rng[1], size[1])
@@ -137,7 +137,7 @@ def validate_scan_params(scanner_config: Dict[str, Any], scan_params: Dict[str, 
     y_pixels = scan_params['scan_size']['y']
     logger.info('Scan parameters are valid. Starting scan.')
     
-def to_arrays(scan_data: Any, ureg: Optional[Any]=None, real_units: Optional[bool]=True,
+def to_arrays(scan_data: Any, temp='LT', ureg: Optional[Any]=None, real_units: Optional[bool]=True,
               xy_unit: Optional[str]=None) -> Dict[str, Any]:
     """Extracts scan data from DataSet and converts to requested units.
 
@@ -163,17 +163,19 @@ def to_arrays(scan_data: Any, ureg: Optional[Any]=None, real_units: Optional[boo
             f.write('Ohm = ohm\n')
         ureg.load_definitions('./squid_units.txt')
     Q_ = ureg.Quantity
-    meta = scan_data.metadata['loop']['metadata']
-    scan_vectors = make_scan_vectors(meta, ureg)
-    slow_ax = 'x' if meta['fast_ax'] == 'y' else 'y'
-    grids = make_xy_grids(scan_vectors, slow_ax, meta['fast_ax'])
+    loop_meta = scan_data.metadata['loop']['metadata']
+    scanner_meta = scan_data.metadata['station']['instruments']['ANZ150']['metadata']
+    scan_vectors = make_scan_vectors(loop_meta, scanner_meta['constants'], temp, ureg)
+    slow_ax = 'x' if loop_meta['fast_ax'] == 'y' else 'y'
+    grids = make_xy_grids(scan_vectors, slow_ax, loop_meta['fast_ax'])
     arrays = {'X': grids['x'] * ureg('V'), 'Y': grids['y']* ureg('V')}
     arrays.update({'x': scan_vectors['x'] * ureg('V'), 'y': scan_vectors['y'] * ureg('V')})
-    for ch, info in meta['channels'].items():
-        array = scan_data.daq_ai_voltage[:,info['ai'],:] * ureg('V')
+    for idx, ch in enumerate(['MAG', 'SUSCX', 'SUSCY', 'CAP', 'x_cap', 'y_cap']):
+    #for ch, info in loop_meta['channels'].items():
+        array = scan_data.daq_ai_voltage[:,idx,:] * ureg('V')
         if real_units:
-            pre = meta['prefactors'][ch]
-            arrays.update({ch: (Q_(pre) * array).to(info['unit'])})
+            pre = loop_meta['prefactors'][ch]
+            arrays.update({ch: (Q_(pre) * array).to(loop_meta['channels'][ch]['unit'])})
         else:
             arrays.update({ch: array})
     if real_units and xy_unit is not None:
@@ -274,7 +276,7 @@ def to_real_units(data_set: Any, ureg: Any=None) -> Any:
         ureg.load_definitions('./squid_units.txt')
     meta = data_set.metadata['loop']['metadata']
     data = np.full_like(data_set.daq_ai_voltage, np.nan, dtype=np.double)
-    for i, ch in enumerate(meta['channels'].keys()):
+    for i, ch in enumerate(['MAG', 'SUSCX', 'SUSCY', 'CAP']):
         array = data_set.daq_ai_voltage[:,i,:] * ureg('V')
         unit = meta['channels'][ch]['unit']
         data[:,i,:] = (array * ureg.Quantity(meta['prefactors'][ch])).to(unit)
