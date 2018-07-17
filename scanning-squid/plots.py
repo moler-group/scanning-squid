@@ -34,7 +34,7 @@ class ScanPlot(object):
         plot_rows = int(np.ceil(N / cols))
         rows = 3 * plot_rows
         self.fig, self.ax = plt.subplots(rows, cols, figsize=(10,4.5 * plot_rows), tight_layout=True,
-                                         gridspec_kw={"height_ratios":[0.075, 1, 0.5]})
+                                         gridspec_kw={"height_ratios":[(0.075, 1, 0.5)*plot_rows]})
         self.fig.patch.set_alpha(1)
         self.plots = {'colorbars': {}, 'images': {}, 'lines': {}}
         for i, ch in enumerate(self.channels.keys()):
@@ -80,7 +80,6 @@ class ScanPlot(object):
         """
         self.location = data_set.location
         self.fig.suptitle(self.location, x=0.5, y=1) 
-        #data = self._to_real_units(data_set)
         data = to_real_units(data_set)
         meta = data_set.metadata['loop']['metadata']
         slow_ax = 'x' if meta['fast_ax'] == 'y' else 'y'
@@ -173,7 +172,7 @@ class TDCPlot(object):
         self.channels = tdc_params['channels']
         self.ureg = ureg
         self.Q_ = ureg.Quantity
-        self.fig, self.ax = plt.subplots(figsize=(4,3), tight_layout=True)
+        self.fig, self.ax = plt.subplots(1,len(self.channels), figsize=(8,2), tight_layout=True)
         self.fig.patch.set_alpha(1)
         self.init_empty()
 
@@ -184,15 +183,12 @@ class TDCPlot(object):
         startV, endV = sorted([self.Q_(lim).to('V').magnitude for lim in self.tdc_params['range']])
         npnts = int((endV - startV) / dV)
         self.heights = np.linspace(startV, endV, npnts)
-        #empty = np.full_like(self.heights, np.nan, dtype=np.double)
-        #: There's only one channel, but no harm in iterating
-        for ch in self.channels:
-            self.ax.set_xlim(min(self.heights), max(self.heights))
-            #self.ax.plot(self.heights, empty, 'bo')
-            self.ax.grid()
-            self.ax.set_xlabel('z position [V]')
-            self.ax.set_ylabel(r'{} [{}]'.format(self.channels[ch]['label'], self.channels[ch]['unit_latex']))
-            self.ax.set_title(self.channels[ch]['label'])
+        for i, ch in enumerate(self.channels):
+            self.ax[i].set_xlim(min(self.heights), max(self.heights))
+            self.ax[i].grid()
+            self.ax[i].set_xlabel('z position [V]')
+            self.ax[i].set_ylabel(r'{} [{}]'.format(self.channels[ch]['label'], self.channels[ch]['unit_latex']))
+            self.ax[i].set_title(self.channels[ch]['label'])
         self.fig.canvas.draw()
         #self.fig.show()
 
@@ -205,17 +201,23 @@ class TDCPlot(object):
         self.location = data_set.location
         self.prefactors = data_set.metadata['loop']['metadata']['prefactors']
         #data = self._to_real_units(data_set)
-        data = to_real_units(data_set)
+        all_data = to_real_units(data_set)
         #self.meta = data_set.metadata['loop']['metadata']
-        #: There's only one channel, but no harm in iterating
-        for i, ch in enumerate(self.channels.keys()):
-            self.cdata = data[:,i,0][np.isfinite(data[:,i,0])]
-            self.hdata = self.heights[:len(self.cdata)]
-            if len(self.hdata) == len(self.cdata):
-                self._clear_artists()
-                self.ax.plot(self.hdata, self.cdata, 'b.')
-                self.ax.plot(self.hdata[-1], self.cdata[-1], 'r.')
-                self.ax.relim()
+        npnts = len(all_data[:,0,0][np.isfinite(all_data[:,0,0])])
+        self.hdata = self.heights[:npnts]
+        for i, ch in enumerate(self.channels)
+            data = all_data[:,i,0][np.isfinite(all_data[:,i,0])]
+            if len(self.hdata) == len(data):
+                self._clear_artists(ax[i])
+                self.ax[i].plot(self.hdata, data, 'b.')
+                self.ax[i].plot(self.hdata[-1], data[-1], 'r.')
+                self.ax[i].relim()
+            if ch == 'CAP':
+                self.cdata = data
+            elif ch == 'SUSCX':
+                self.sxdata = data
+            elif ch == 'SUSCY':
+                self.sydata = data
         self.fig.canvas.draw()
         #self.fig.show()
 
@@ -230,11 +232,11 @@ class TDCPlot(object):
             fname = self.location + '/' + self.tdc_params['fname'] +'.png'
         plt.savefig(fname)
 
-    def _clear_artists(self):
+    def _clear_artists(self, ax):
         """Clears lines and collections of lines from given matplotlib axis.
 
         Args:
             ax: axis to clear.
         """
-        for artist in self.ax.lines + self.ax.collections:
+        for artist in ax.lines + ax.collections:
             artist.remove()

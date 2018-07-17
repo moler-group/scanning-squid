@@ -4,6 +4,7 @@ import sys
 import time
 import json
 from typing import Dict, List, Sequence, Any, Union, Tuple
+from collections import OrderedDict
 
 #: Plotting and math modules
 import matplotlib.pyplot as plt
@@ -60,8 +61,9 @@ class Microscope(Station):
             **kwargs: Keyword arguments to be passed to Station constructor.
         """
         super().__init__(**kwargs)
-        with open(config_file) as f:
-            self.config = json.load(f)
+        #with open(config_file) as f:
+        #    self.config = json.load(f, object_pairs_hook=OrderedDict)
+        self.config = utils.load_json_ordered(config_file)
         if not os.path.exists('logs'):
             os.mkdir('logs')
         if log_name is None:

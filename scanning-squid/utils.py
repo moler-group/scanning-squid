@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Sequence, Any, Union, Tuple
 import qcodes as qc
 from qcodes.instrument.parameter import ArrayParameter
 from scipy import io
+from collections import OrderedDict
 
 #: Tell the UnitRegistry what a Phi0 is, and that ohm and Ohm are the same thing.
 with open('squid_units.txt', 'w') as f:
@@ -18,7 +19,21 @@ class Counter(object):
         
     def advance(self):
         self.count += 1
-        
+
+def load_json_ordered(filename: str) -> OrderedDict:
+    """Loads json file as an ordered dict.
+
+    Args:
+        filname: Path to json file to be loaded.
+
+    Returns:
+        OrderedDict: odict
+            OrderedDict containing data from json file.
+    """
+    with open(filname) as f:
+        odict = json.load(f, object_pairs_hook=OrderedDict)
+    return odict
+
 def next_file_name(fpath: str, extension: str) -> str:
     """Appends an integer to fpath to create a unique file name:
         fpath + {next unused integer} + '.' + extension
@@ -36,8 +51,8 @@ def next_file_name(fpath: str, extension: str) -> str:
         i += 1
     return '{}{}.{}'.format(fpath, i, extension)
 
-def make_scan_vectors(scan_params: Dict[str, Any],
-    scanner_constants: Dict[str, Any], temp: str, ureg: Any) -> Dict[str, Sequence[float]]:
+def make_scan_vectors(scan_params: Dict[str, Any], scanner_constants: Dict[str, Any],
+                      temp: str, ureg: Any) -> Dict[str, Sequence[float]]:
     """Creates x and y vectors for given scan parameters.
 
     Args:
@@ -179,10 +194,10 @@ def to_arrays(scan_data: Any, temp='LT', ureg: Optional[Any]=None, real_units: O
         else:
             arrays.update({ch: array})
     if real_units and xy_unit is not None:
-        bendc = scan_data.metadata['station']['instruments']['benders']['metadata']['constants']
+        scannerc = scan_data.metadata['station']['instruments']['ANZ150']['metadata']['constants']
         for ax in ['x', 'y']:
-            grid = (grids[ax] * ureg('V') * Q_(bendc[ax])).to(xy_unit)
-            vector = (scan_vectors[ax] * ureg('V') * Q_(bendc[ax])).to(xy_unit)
+            grid = (grids[ax] * ureg('V') * Q_(scannerc[ax])).to(xy_unit)
+            vector = (scan_vectors[ax] * ureg('V') * Q_(scannerc[ax])).to(xy_unit)
             arrays.update({ax.upper(): grid, ax: vector})
     return arrays
 
@@ -276,7 +291,7 @@ def to_real_units(data_set: Any, ureg: Any=None) -> Any:
         ureg.load_definitions('./squid_units.txt')
     meta = data_set.metadata['loop']['metadata']
     data = np.full_like(data_set.daq_ai_voltage, np.nan, dtype=np.double)
-    for i, ch in enumerate(['MAG', 'SUSCX', 'SUSCY', 'CAP']):
+    for i, ch in enumerate(meta['channels']):
         array = data_set.daq_ai_voltage[:,i,:] * ureg('V')
         unit = meta['channels'][ch]['unit']
         data[:,i,:] = (array * ureg.Quantity(meta['prefactors'][ch])).to(unit)
