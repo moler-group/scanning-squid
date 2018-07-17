@@ -23,6 +23,7 @@ class ScanPlot(object):
         self.ureg = ureg
         self.Q_ = ureg.Quantity
         self.channels = {}
+        #for ch in scan_params['channels']:
         for ch in ['MAG', 'SUSCX', 'SUSCY', 'CAP']:
             self.channels.update({ch: scan_params['channels'][ch]})
         self.fast_ax = scan_params['fast_ax']
@@ -34,7 +35,7 @@ class ScanPlot(object):
         plot_rows = int(np.ceil(N / cols))
         rows = 3 * plot_rows
         self.fig, self.ax = plt.subplots(rows, cols, figsize=(10,4.5 * plot_rows), tight_layout=True,
-                                         gridspec_kw={"height_ratios":[(0.075, 1, 0.5)*plot_rows]})
+                                         gridspec_kw={"height_ratios":list((0.075, 1, 0.5)*plot_rows)})
         self.fig.patch.set_alpha(1)
         self.plots = {'colorbars': {}, 'images': {}, 'lines': {}}
         for i, ch in enumerate(self.channels.keys()):
