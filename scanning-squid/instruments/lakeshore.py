@@ -58,6 +58,7 @@ class Model_335(VisaInstrument):
             self.add_submodule(chan_name, channel)
         channels.lock()
         self.add_submodule("channels", channels)
+        ###############
         self.add_parameter(name='set_temperature',
                    get_cmd='SETP?',
                    get_parser=float,
@@ -65,4 +66,5 @@ class Model_335(VisaInstrument):
                    label='Set Temerature',
                    vals=Numbers(4, 300),
                    unit='K')
+        ##############
         self.connect_message()
