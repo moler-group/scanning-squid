@@ -206,7 +206,7 @@ class TDCPlot(object):
         #self.meta = data_set.metadata['loop']['metadata']
         npnts = len(all_data[:,0,0][np.isfinite(all_data[:,0,0])])
         self.hdata = self.heights[:npnts]
-        for i, ch in enumerate(self.channels)
+        for i, ch in enumerate(self.channels):
             data = all_data[:,i,0][np.isfinite(all_data[:,i,0])]
             if len(self.hdata) == len(data):
                 self._clear_artists(ax[i])
