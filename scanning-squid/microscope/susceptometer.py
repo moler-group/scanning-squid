@@ -68,15 +68,18 @@ class SusceptometerMicroscope(Microscope):
                 r_lead = self.Q_(measurement['channels'][ch]['r_lead'])
                 amp = (self.SUSC_lockin.sigout_amplitude() *
                     self.SUSC_lockin.sigout_range() * self.ureg('V'))
+                #: sqrt(2) because auxouts are Vpk, not Vrms
                 prefactor *=  np.sqrt(2) * (r_lead / amp) / (mod_width * self.SUSC_lockin.gain_X())
             elif ch == 'SUSCY':
                 snap_susc = getattr(self, 'SUSC_lockin').snapshot(update=update)['parameters']
                 r_lead = self.Q_(measurement['channels'][ch]['r_lead'])
                 amp = (self.SUSC_lockin.sigout_amplitude() *
                     self.SUSC_lockin.sigout_range() * self.ureg('V'))
+                #: sqrt(2) because auxouts are Vpk, not Vrms
                 prefactor *=  np.sqrt(2) * (r_lead / amp) / (mod_width * self.SUSC_lockin.gain_Y())
             elif ch == 'CAP':
                 gain_cap = self.CAP_lockin.gain_X()
+                #: sqrt(2) because auxouts are Vpk, not Vrms
                 prefactor *= np.sqrt(2) / (self.Q_(self.scanner.metadata['cantilever']['calibration']) * gain_cap)
             elif ch in ['x_cap', 'y_cap']:
                 prefactor *= self.Q_(measurement['channels'][ch]['conversion'])

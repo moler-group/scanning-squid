@@ -260,10 +260,10 @@ class Scanner(Instrument):
                 log.warning('Capacitance bridge is too unbalanced to continue.')
                 self.break_loop = True
                 return
-            if any(abs(cdata[pt-i] * self.ureg(cap_unit)/prefactor) > self.Q_('5 V') for i in range(2)):
-                log.warning('CAP_lockin is railing.')
-                self.break_loop = True
-                return
+            # if any(abs(cdata[pt-i] * self.ureg(cap_unit)/prefactor) > self.Q_('5 V') for i in range(2)):
+            #     log.warning('CAP_lockin is railing.')
+            #     self.break_loop = True
+            #     return
         #: Partition data in window into two subsets,
         #: fit a line to each subset, and repeat for next partition
         #: Touchdown point is the partition point that minimizes the sum of squared residuals
@@ -283,8 +283,8 @@ class Scanner(Instrument):
             p0, _ = fit_line(x0, cdata[-nwindow:imin+1])
             x1 = hdata[imin:]
             p1, _ = fit_line(x1, cdata[imin:])
-            tdc_plot.ax.plot(x0, p0[0] * x0 + p0[1], 'r-')
-            tdc_plot.ax.plot(x1, p1[0] * x1 + p1[1], 'r-')
+            tdc_plot.ax[0].plot(x0, p0[0] * x0 + p0[1], 'r-')
+            tdc_plot.ax[0].plot(x1, p1[0] * x1 + p1[1], 'r-')
             tdc_plot.fig.canvas.draw()
             tdc_plot.fig.show()
             if abs(p0[0]) > max_slope:
@@ -331,19 +331,19 @@ class Scanner(Instrument):
             tdc_plot.pre_td_slope = '{} {}/V'.format(p0[0], cap_unit)
             tdc_plot.post_td_slope = '{} {}/V'.format(p1[0], cap_unit)
             tdc_plot._clear_artists()
-            tdc_plot.ax.plot(hdata, cdata, 'b.')
-            tdc_plot.ax.plot(hdata[-1], cdata[-1], 'r.')
-            tdc_plot.ax.plot(hdata[-nwindow:i+3], hdata[-nwindow:i+3] * p0[0] + p0[1], 'r-')
-            tdc_plot.ax.plot(hdata[i-2:], hdata[i-2:] * p1[0] + p1[1], 'r-')
-            tdc_plot.ax.set_title('Touchdown: {:.4} V'.format(self.td_height))
+            tdc_plot.ax[0].plot(hdata, cdata, 'b.')
+            tdc_plot.ax[0].plot(hdata[-1], cdata[-1], 'r.')
+            tdc_plot.ax[0].plot(hdata[-nwindow:i+3], hdata[-nwindow:i+3] * p0[0] + p0[1], 'r-')
+            tdc_plot.ax[0].plot(hdata[i-2:], hdata[i-2:] * p1[0] + p1[1], 'r-')
+            tdc_plot.ax[0].set_title('Touchdown: {:.4} V'.format(self.td_height))
             tdc_plot.fig.canvas.draw()
             tdc_plot.fig.show()
             log.info('Touchdown occurred at {:.4} V.'.format(self.td_height))
-            if self.td_height < 0:
-                msg = 'Touchdown occurred at a negative voltage. '
-                msg += 'Consider Atto stepping further from the sample '
-                msg += 'to touchdown at a positive voltage.'
-                log.warning(msg)
+            # if self.td_height < 0:
+            #     msg = 'Touchdown occurred at a negative voltage. '
+            #     msg += 'Consider Atto stepping further from the sample '
+            #     msg += 'to touchdown at a positive voltage.'
+            #     log.warning(msg)
             log.info('Pre-touchdown slope: {}.'.format(tdc_plot.pre_td_slope))
             log.info('Post-touchdown slope: {}.'.format(tdc_plot.post_td_slope))
             self.metadata['plane'].update({'z': self.td_height})

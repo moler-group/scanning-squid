@@ -65,8 +65,7 @@ class DAQAnalogInputs(Instrument):
             'dev_name': dev_name,
             'rate': '{} Hz'.format(rate),
             'channels': channels})
-        for ch in ['MAG', 'SUSCX', 'SUSCY', 'CAP', 'x_cap', 'y_cap']:
-            idx = channels[ch]
+        for ch, idx in channels.items():
             channel = '{}/ai{}'.format(dev_name, idx)
             self.task.ai_channels.add_ai_voltage_chan(channel, ch)
         if clock_src is None:

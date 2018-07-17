@@ -25,6 +25,7 @@ class AttocubeController(VisaInstrument):
         self.metadata.update(atto_config)
         self.visa_handle.baud_rate = atto_config['baud_rate']
         self.visa_handle.stop_bits = visa.constants.StopBits.one
+        self.visa_handle.data_bits = 8
         self.visa_handle.parity = visa.constants.Parity.none
         _ = self.parameters.pop('IDN') # Get rid of this parameter
         self.ureg = ureg

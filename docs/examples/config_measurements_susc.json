@@ -2,15 +2,15 @@
     "scan": {
         "fname": "scan",
         "fast_ax": "x",
-        "range": {"x": "10 V", "y": "10 V"},
-        "center": {"x": "0 V", "y": "0 V"},
-        "height": "-0.2 V",
-        "scan_rate": "10 pixels/s",
+        "range": {"x": "100 um", "y": "100 um"},
+        "center": {"x": "0 um", "y": "0 um"},
+        "height": "-0.3 V",
+        "scan_rate": "40 um/s",
         "scan_size": {"x": 100, "y": 100},
         "channels": {
             "MAG": {
                 "label": "Magnetometry",
-                "gain": 1,
+                "gain": 10,
                 "filters": {
                     "lowpass": {"cutoff": "100 kHz", "slope": "12 dB/octave"},
                     "highpass": {"cutoff": "0 Hz","slope": "0 dB/octave"}
@@ -20,9 +20,7 @@
             },
             "SUSCX": {
                 "lockin": {
-                    "name": "SUSC",
-                    "amplitude": "1 V",
-                    "frequency": "131.79 Hz"
+                    "name": "SUSC"
                 },
                 "label": "Susceptibility",
                 "gain": 1,
@@ -42,9 +40,7 @@
             },
             "CAP": {
                 "lockin": {
-                    "name": "CAP",
-                    "amplitude": "1 V",
-                    "frequency": "6.271 kHz"
+                    "name": "CAP"
                 },
                 "label": "Capacitance",
                 "gain": 1,
@@ -53,11 +49,15 @@
             },
             "x_cap": {
                 "label": "X position",
+                "gain": 1,
+                "conversion": "1 mm/V",
                 "unit": "mm",
                 "unit_latex": "mm"
             },
             "y_cap": {
                 "label": "Y position",
+                "gain": 1,
+                "conversion": "1 mm/V",
                 "unit": "mm",
                 "unit_latex": "mm"
             }
@@ -66,23 +66,41 @@
     "td_cap": {
         "fname": "td_cap",
         "dV": "0.1 V",
-        "range": ["-9.5 V","9.5 V"],
+        "range": ["0 V","7.5 V"],
         "channels": {
             "CAP": {
                 "lockin": {
-                    "name": "CAP",
-                    "amplitude": "1 V",
-                    "frequency": "6.271 kHz"
+                    "name": "CAP"
                 },
                 "label": "Capacitance",
                 "gain": 1,
                 "unit": "fF",
                 "unit_latex": "fF"
+            },
+            "SUSCX": {
+                "lockin": {
+                    "name": "SUSC"
+                },
+                "label": "Susceptibility",
+                "gain": 1,
+                "r_lead": "1 kOhm",
+                "unit": "Phi0/A",
+                "unit_latex": "$\\Phi_0$/A"
+            },
+            "SUSCY": {
+                "lockin": {
+                    "name": "SUSC"
+                },
+                "label": "Susceptibility (out of phase)",
+                "gain": 1,
+                "r_lead": "1 kOhm",
+                "unit": "Phi0/A",
+                "unit_latex": "$\\Phi_0$/A"
             }
         },
         "constants": {
             "max_slope": "3 fF/V",
-            "max_delta_cap": "20 pF",
+            "max_delta_cap": "15 fF",
             "initial_cap":"0 pF",
             "nfitmin":10,
             "nwindow":30,
