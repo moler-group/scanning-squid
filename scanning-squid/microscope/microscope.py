@@ -244,6 +244,7 @@ class Microscope(Station):
             tdc_plot.fig.show()
             tdc_plot.save()
             log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
+        utils.td_to_mat_file(data, real_units=True)
         return data, tdc_plot
 
     def approach(self, tdc_params: Dict[str, Any], attosteps: int=100) -> None:

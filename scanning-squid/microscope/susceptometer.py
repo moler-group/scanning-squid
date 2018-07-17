@@ -206,4 +206,7 @@ class SusceptometerMicroscope(Microscope):
             #self.SUSC_lockin.amplitude(0.004)
             log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
         self.remove_component('daq_ai')
+        utils.scan_to_mat_file(data, real_units=True)
         return data, scan_plot
+
+        

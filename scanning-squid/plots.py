@@ -78,7 +78,6 @@ class ScanPlot(object):
         """
         self.location = data_set.location
         self.fig.suptitle(self.location, x=0.5, y=1) 
-        #data = self._to_real_units(data_set)
         data = to_real_units(data_set)
         meta = data_set.metadata['loop']['metadata']
         slow_ax = 'x' if meta['fast_ax'] == 'y' else 'y'
@@ -126,15 +125,6 @@ class ScanPlot(object):
         if fname is None:
             fname = self.location + '/' + self.scan_params['fname'] +'.png'
         plt.savefig(fname)
-    
-    # def _clear_artists(self, ax):
-    #     """Clears lines and collections of lines from given matplotlib axis.
-
-    #     Args:
-    #         ax: axis to clear.
-    #     """
-    #     for artist in ax.lines + ax.collections:
-    #         artist.remove()
             
 class ScanPlotFromDataSet(ScanPlot):
     """Generate ScanPlot instance from a completed DataSet rather than during a Loop.
@@ -199,9 +189,7 @@ class TDCPlot(object):
         self.location = data_set.location
         self.fig.suptitle(self.location, x=0.5, y=1)
         self.prefactors = data_set.metadata['loop']['metadata']['prefactors']
-        #data = self._to_real_units(data_set)
         all_data = to_real_units(data_set)
-        #self.meta = data_set.metadata['loop']['metadata']
         npnts = len(all_data[:,0,0][np.isfinite(all_data[:,0,0])])
         self.hdata = self.heights[:npnts]
         for i, ch in enumerate(self.channels):
@@ -232,6 +220,7 @@ class TDCPlot(object):
 
     # def _clear_artists(self, ax):
     #     """Clears lines and collections of lines from given matplotlib axis.
+
     #     Args:
     #         ax: axis to clear.
     #     """
