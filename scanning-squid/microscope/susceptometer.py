@@ -11,7 +11,7 @@ from nidaqmx.constants import AcquisitionType
 #: scanning-squid modules
 from instruments.daq import DAQAnalogInputs
 from plots import ScanPlot, TDCPlot
-from .micropscope import Microscope
+from .microscope import Microscope
 
 #: Pint for manipulating physical units
 from pint import UnitRegistry
@@ -69,7 +69,7 @@ class SusceptometerMicroscope(Microscope):
                 amp = snap['amplitude']['value'] * self.ureg(snap['amplitude']['unit'])
                 #: The factor of 10 here is because SR830 output gain is 10/sensitivity
                 prefactor *=  (r_lead / amp) / (mod_width * 10 / susc_sensitivity)
-            elif if ch == 'CAP':
+            elif ch == 'CAP':
                 snap = getattr(self, 'CAP_lockin').snapshot(update=update)['parameters']
                 cap_sensitivity = snap['sensitivity']['value']
                 #: The factor of 10 here is because SR830 output gain is 10/sensitivity
