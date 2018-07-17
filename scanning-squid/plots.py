@@ -55,6 +55,7 @@ class ScanPlot(object):
         """Initialize the plot with all images empty. They will be filled during the scan.
         """
         self.scan_vectors = make_scan_vectors(self.scan_params, self.scanner_constants, self.temp, self.ureg)
+        self.scan_vectors['y'] = self.scan_vectors['y'][::-1]
         self.X, self.Y = np.meshgrid(self.scan_vectors['x'], self.scan_vectors['y'])
         empty = np.full_like(self.X, np.nan, dtype=np.double)
         for ch in self.channels:
@@ -102,7 +103,9 @@ class ScanPlot(object):
             self.plots['colorbars'][ch]['cbar'].update_ticks()
             self.plots['colorbars'][ch]['cbar'].set_label(r'{}'.format(self.channels[ch]['unit_latex']))
             self.plots['colorbars'][ch]['cbar'].update_normal(self.plots['images'][ch]['quad'])
-            self.plots['images'][ch]['ax'].relim()
+            #self.plots['images'][ch]['ax'].relim()
+            self.plots['images'][ch]['ax'].set_xlim(min(self.scan_vectors['x']), max(self.scan_vectors['x']))
+            self.plots['images'][ch]['ax'].set_ylim(max(self.scan_vectors['y']), min(self.scan_vectors['y']))
             self.plots['lines'][ch].relim()
             self.plots['colorbars'][ch]['cax'].minorticks_on()
             #: Update linecuts
@@ -173,7 +176,7 @@ class TDCPlot(object):
         self.channels = tdc_params['channels']
         self.ureg = ureg
         self.Q_ = ureg.Quantity
-        self.fig, self.ax = plt.subplots(1,len(self.channels), figsize=(8,2), tight_layout=True)
+        self.fig, self.ax = plt.subplots(1,len(self.channels), figsize=(9,3), tight_layout=True)
         self.fig.patch.set_alpha(1)
         self.init_empty()
 
@@ -209,10 +212,10 @@ class TDCPlot(object):
         for i, ch in enumerate(self.channels):
             data = all_data[:,i,0][np.isfinite(all_data[:,i,0])]
             if len(self.hdata) == len(data):
-                self._clear_artists(ax[i])
+                self._clear_artists(self.ax[i])
                 self.ax[i].plot(self.hdata, data, 'b.')
                 self.ax[i].plot(self.hdata[-1], data[-1], 'r.')
-                self.ax[i].relim()
+                #self.ax[i].relim()
             if ch == 'CAP':
                 self.cdata = data
             elif ch == 'SUSCX':

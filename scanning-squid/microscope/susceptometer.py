@@ -1,6 +1,8 @@
 #: Various Python utilities
 from typing import Dict, List, Sequence, Any, Union, Tuple
 import numpy as np
+import time
+from IPython.display import clear_output
 
 #: Qcodes for running measurements and saving data
 import qcodes as qc
@@ -202,6 +204,7 @@ class SusceptometerMicroscope(Microscope):
         #: If loop is aborted by user:
         except KeyboardInterrupt:
             log.warning('Scan interrupted by user. Going to [0, 0, 0] V.')
+            self.abort_scan_loop = True
             #: Stop 'scan_plane_ai_task' so that we can read our current position
             ai_task.stop()
             ai_task.close()
@@ -216,4 +219,46 @@ class SusceptometerMicroscope(Microscope):
             #self.SUSC_lockin.amplitude(0.004)
             log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
         self.remove_component('daq_ai')
+        utils.scan_to_mat_file(data, real_units=True)
         return data, scan_plot
+
+    def multi_fc_scan(self, mfs_params: Dict[str, Any], scan_params: Dict[str, Any]):
+        log.info('Starting multiple field-cooling scans.')
+        self.abort_scan_loop = False
+        self.keithley.mode('CURR')
+        #self.keithley.sense('VOLT')
+        self.keithley.rangei(100e-3)
+        self.keithley.compliancev(10)
+        self.keithley.curr(mfs_params['current'][0])
+        self.keithley.output(1)
+        for current in mfs_params['current']:
+            if not self.abort_scan_loop:
+                log.info('Setting current to {} A'.format(current))
+                self.keithley.curr(current)
+                self.cycle_T(mfs_params['t_low'], mfs_params['t_high'])
+                _ = self.scan_plane(scan_params)
+                clear_output(wait=True)
+
+    def cycle_T(self, t_low: float, t_high: float):
+        log.info('Starting temperature cycle. Warming to {}.'.format(t_high))
+        try:
+            self.temp_controller.ramp_rate(0)
+            time.sleep(0.1)
+            self.temp_controller.set_temperature(t_high)
+            time.sleep(0.1)
+            self.temp_controller.heater_range(2)
+            for _ in range(90):
+                time.sleep(1)
+            self.temp_controller.ramp_rate(0.1)
+            time.sleep(0.1)
+            self.temp_controller.set_temperature(t_low)
+            dt = t_high - t_low
+            ramp_time = int(60 * dt / 0.1 + 10)
+            for _ in range(ramp_time):
+                time.sleep(1)
+            self.temp_controller.heater_range(0)
+            t = self.temp_controller.A.temperature()
+            log.info('Temperature cycle complete. Current temperature: {} K.'.format(t))
+        except KeyboardInterrupt:
+            log.warning('Temperature cycle interrupted by user. Turning off heater.')
+            self.temp_controller.heater_range(0)

@@ -17,7 +17,10 @@ from IPython.display import clear_output
 #: Qcodes for running measurements and saving data
 import qcodes as qc
 from qcodes.station import Station
+#from qcodes.instrument_drivers.tektronix.Keithley_2400 import Keithley_2400
+from instruments.keithley_2400 import Keithley_2400
 from instruments.hf2li import HF2LI
+from instruments.lakeshore import Model_335
 
 #: NI DAQ library
 import nidaqmx
@@ -87,6 +90,8 @@ class Microscope(Station):
         self.temp = temp
 
         #self._add_atto()
+        self._add_temp_controller()
+        self._add_keithley()
         self._add_scanner()
         self._add_SQUID()
         self._add_lockins()
@@ -102,6 +107,35 @@ class Microscope(Station):
         self.atto = atto.ANC300(atto_config, self.temp, self.ureg, ts_fmt)
         self.add_component(self.atto)
         log.info('Attocube controller successfully added to microscope.')
+
+    def _add_temp_controller(self):
+        """Add temperature controller to microscope.
+        """
+        tc_config = self.config['instruments']['temp_controller']
+        if hasattr(self, 'temp_controller'):
+            self.temp_controller.clear_instances()
+        self.remove_component(tc_config['name'])
+        self.temp_controller = Model_335(tc_config['name'], tc_config['address'])
+        self.add_component(self.temp_controller)
+        self.temp_controller.heater_range(0)
+        self.temp_controller.ramp_rate(0)
+        log.info('Temperature controller successfully added to microscope.')
+
+    def _add_keithley(self):
+        """Add Keithley to microscope.
+        """
+        k_config = self.config['instruments']['keithley']
+        if hasattr(self, 'keithley'):
+            self.keithley.clear_instances()
+        self.remove_component(k_config['name'])
+        self.keithley = Keithley_2400(k_config['name'], k_config['address'])
+        self.add_component(self.keithley)
+        self.keithley.mode('CURR')
+        #self.keithley.sense('VOLT')
+        self.keithley.rangei(100e-3)
+        self.keithley.compliancev(10)
+        self.keithley.output(0)
+        log.info('Keithley controller successfully added to microscope.')
 
     def _add_scanner(self):
         """Add scanner instrument to microscope.

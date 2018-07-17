@@ -52,7 +52,7 @@ class Model_335(VisaInstrument):
         self.visa_handle.parity = visa.constants.Parity.odd
         self.visa_handle.data_bits = 7
         channels = ChannelList(self, "TempSensors", SensorChannel, snapshotable=False)
-        for chan_name in ('A', 'B'):
+        for chan_name in ('A'):
             channel = SensorChannel(self, 'Chan{}'.format(chan_name), chan_name)
             channels.append(channel)
             self.add_submodule(chan_name, channel)
@@ -66,5 +66,19 @@ class Model_335(VisaInstrument):
                    label='Set Temerature',
                    vals=Numbers(4, 300),
                    unit='K')
+        self.add_parameter(name='heater_range',
+                   get_cmd='RANGE?',
+                   get_parser=int,
+                   set_cmd='RANGE 1,{}',
+                   label='Heater range',
+                   vals=Enum(0, 1, 2, 3),
+                   unit='')
+        self.add_parameter(name='ramp_rate',
+                   get_cmd='RAMP? 1',
+                   get_parser=str,
+                   set_cmd='RAMP 1,1,{}',
+                   label='Heater range',
+                   vals=Numbers(min_value=0),
+                   unit='K/min')
         ##############
         self.connect_message()

@@ -330,7 +330,7 @@ class Scanner(Instrument):
             tdc_plot.td_height = self.td_height
             tdc_plot.pre_td_slope = '{} {}/V'.format(p0[0], cap_unit)
             tdc_plot.post_td_slope = '{} {}/V'.format(p1[0], cap_unit)
-            tdc_plot._clear_artists()
+            tdc_plot._clear_artists(tdc_plot.ax[0])
             tdc_plot.ax[0].plot(hdata, cdata, 'b.')
             tdc_plot.ax[0].plot(hdata[-1], cdata[-1], 'r.')
             tdc_plot.ax[0].plot(hdata[-nwindow:i+3], hdata[-nwindow:i+3] * p0[0] + p0[1], 'r-')
