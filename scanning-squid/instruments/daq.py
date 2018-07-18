@@ -34,7 +34,8 @@ class DAQAnalogInputs(Instrument):
     """Instrument to acquire DAQ analog input data in a qcodes Loop or measurement.
     """
     def __init__(self, name: str, dev_name: str, rate: Union[int, float], channels: Dict[str, int],
-                 task: Any, clock_src: Optional[str]=None, samples_to_read: Optional[int]=2,
+                 task: Any, min_val: Optional[float]=-5, max_val: Optional[float]=5,
+                 clock_src: Optional[str]=None, samples_to_read: Optional[int]=2,
                  target_points: Optional[int]=None, **kwargs) -> None:
         """
         Args:
@@ -43,6 +44,8 @@ class DAQAnalogInputs(Instrument):
             rate: Desired DAQ sampling rate in Hz.
             channels: Dict of analog input channel configuration.
             task: fresh nidaqmx.Task to be populated with ai_channels.
+            min_val: minimum of input voltage range (-0.1, -0.2, -0.5, -1, -2, -5 [default], or -10)
+            max_val: maximum of input voltage range (0.1, 0.2, 0.5, 1, 2, 5 [default], or 10)
             clock_src: Sample clock source for analog inputs. Default: None
             samples_to_read: Number of samples to acquire from the DAQ
                 per channel per measurement/loop iteration.
@@ -67,7 +70,7 @@ class DAQAnalogInputs(Instrument):
             'channels': channels})
         for ch, idx in channels.items():
             channel = '{}/ai{}'.format(dev_name, idx)
-            self.task.ai_channels.add_ai_voltage_chan(channel, ch)
+            self.task.ai_channels.add_ai_voltage_chan(channel, ch, min_val=min_val, max_val=max_val)
         if clock_src is None:
             #: Use default sample clock timing: ai/SampleClockTimebase
             self.task.timing.cfg_samp_clk_timing(
