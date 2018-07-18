@@ -131,7 +131,9 @@ class SusceptometerMicroscope(Microscope):
         #: get channel prefactors in string form so they can be saved in metadata
         prefactor_strs = {}
         for ch, prefac in prefactors.items():
-            prefactor_strs.update({ch: '{} {}'.format(prefac.magnitude, prefac.units)})
+            unit = tdc_params['channels'][ch]['unit']
+            pre = prefac.to('{}/V'.format(unit))
+            prefactor_strs.update({ch: '{} {}'.format(pre.magnitude, pre.units)})
         ai_task = nidaqmx.Task('scan_plane_ai_task')
         self.remove_component('daq_ai')
         if hasattr(self, 'daq_ai'):
@@ -209,4 +211,3 @@ class SusceptometerMicroscope(Microscope):
         utils.scan_to_mat_file(data, real_units=True)
         return data, scan_plot
 
-        
