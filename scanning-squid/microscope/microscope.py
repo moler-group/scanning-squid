@@ -277,7 +277,7 @@ class Microscope(Station):
                 log.info('Touchdown confirmed.')
 
     def get_plane(self, x_vec: np.ndarray, y_vec: np.ndarray,
-        tdc_params: Dict[str, Any]) -> Tuple[Union[np.ndarray, None]]:
+                  tdc_params: Dict[str, Any]) -> Tuple[Union[np.ndarray, None]]:
         """Performs touchdowns on a grid and fits a plane to the resulting surface.
 
         Args:
