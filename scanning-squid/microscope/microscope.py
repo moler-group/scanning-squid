@@ -233,7 +233,9 @@ class Microscope(Station):
         #: get channel prefactors in string form so they can be saved in metadata
         prefactor_strs = {}
         for ch, prefac in prefactors.items():
-            prefactor_strs.update({ch: '{} {}'.format(prefac.magnitude, prefac.units)})
+            unit = tdc_params['channels'][ch]['unit']
+            pre = prefac.to('{}/V'.format(unit))
+            prefactor_strs.update({ch: '{} {}'.format(pre.magnitude, pre.units)})
         ai_task =  nidaqmx.Task('td_cap_ai_task')
         self.remove_component('daq_ai')
         if hasattr(self, 'daq_ai'):
@@ -280,6 +282,7 @@ class Microscope(Station):
             tdc_plot.fig.show()
             tdc_plot.save()
             log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
+        utils.td_to_mat_file(data, real_units=True)
         return data, tdc_plot
 
     def approach(self, tdc_params: Dict[str, Any], attosteps: int=100) -> None:
