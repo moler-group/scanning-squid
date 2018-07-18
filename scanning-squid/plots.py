@@ -161,7 +161,7 @@ class TDCPlot(object):
         self.channels = tdc_params['channels']
         self.ureg = ureg
         self.Q_ = ureg.Quantity
-        self.fig, self.ax = plt.subplots(1,len(self.channels), figsize=(9,3), tight_layout=True)
+        self.fig, self.ax = plt.subplots(1,len(self.channels), figsize=(3*len(self.channels),3), tight_layout=True)
         self.fig.patch.set_alpha(1)
         self.init_empty()
 
