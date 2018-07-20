@@ -95,7 +95,7 @@ class ScanPlot(object):
             self._clear_artists(self.plots['lines'][ch])
             norm = colors.Normalize().autoscale(np.ma.masked_invalid(data_ch))
             self.plots['images'][ch]['quad'] = self.plots['images'][ch]['ax'].pcolormesh(
-                self.X, self.Y, np.ma.masked_invalid(data_ch), norm=norm)
+                self.X, self.Y, np.ma.masked_invalid(data_ch), cmap='Greys', norm=norm)
             self.plots['colorbars'][ch]['cbar'] = self.fig.colorbar(self.plots['images'][ch]['quad'],
                                                                     cax=self.plots['colorbars'][ch]['cax'],
                                                                     orientation='horizontal')
