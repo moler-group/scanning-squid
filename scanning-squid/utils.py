@@ -205,7 +205,7 @@ def scan_to_arrays(scan_data: Any, ureg: Optional[Any]=None, real_units: Optiona
     arrays = {'X': grids['x'] * ureg('V'), 'Y': grids['y']* ureg('V')}
     arrays.update({'x': scan_vectors['x'] * ureg('V'), 'y': scan_vectors['y'] * ureg('V')})
     for ch, info in meta['channels'].items():
-        array = scan_data.daq_ai_voltage[:,info['ai'],:] * ureg('V')
+        array = scan_data.daq_ai_voltage[:,info['idx'],:] * ureg('V')
         if real_units:
             pre = meta['prefactors'][ch]
             arrays.update({ch: (Q_(pre) * array).to(info['unit'])})
@@ -246,7 +246,7 @@ def td_to_arrays(td_data: Any, ureg: Optional[Any]=None, real_units: Optional[bo
     heights = np.linspace(h[0], h[1], int((h[1]-h[0])/dV))
     arrays = {'height': heights * ureg('V')}
     for ch, info in meta['channels'].items():
-        array = td_data.daq_ai_voltage[:,info['ai'],0] * ureg('V')
+        array = td_data.daq_ai_voltage[:,info['idx'],0] * ureg('V')
         if real_units:
             pre = meta['prefactors'][ch]
             arrays.update({ch: (Q_(pre) * array).to(info['unit'])})
@@ -308,12 +308,14 @@ def td_to_mat_file(td_data: Any, real_units: Optional[bool]=True, fname: Optiona
     arrays = td_to_arrays(td_data, ureg=ureg, real_units=real_units)
     mdict = {}
     for name, arr in arrays.items():
-        unit = meta['channels'][name]['unit'] if real_units else 'V'
-        mdict.update({name: {'array': arr.to(unit).magnitude, 'unit': unit}})
+        if name is not 'height':
+            unit = meta['channels'][name]['unit'] if real_units else 'V'
+            mdict.update({name: {'array': arr.to(unit).magnitude, 'unit': unit}})
+    mdict.update({'height': {'array': arrays['height'], 'unit': 'V'}})
     mdict.update({'prefactors': meta['prefactors'], 'location': td_data.location})
     if fname is None:
         fname = meta['fname']
-    fpath = scan_data.location + '/'
+    fpath = td_data.location + '/'
     io.savemat(next_file_name(fpath + fname, 'mat'), mdict)
 
 def moving_avg(x: Union[List, np.ndarray], y: Union[List, np.ndarray],

@@ -184,8 +184,8 @@ class SusceptometerMicroscope(Microscope):
         #: loop.metadata will be saved in DataSet
         loop.metadata.update(scan_params)
         loop.metadata.update({'prefactors': prefactor_strs})
-        for ch, idx in channels.items():
-            loop.metadata['channels'][ch].update({'ai': idx})
+        for idx, ch in enumerate(meas_channels):
+            loop.metadata['channels'][ch].update({'idx': idx})
         data = loop.get_data_set(name=scan_params['fname'])
         #: Run the loop
         try:
