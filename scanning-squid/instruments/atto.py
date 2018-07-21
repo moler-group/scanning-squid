@@ -41,22 +41,9 @@ class AttocubeController(VisaInstrument):
                             get_parser=str,
                             snapshot_get=False
                             )
-        self.add_parameter('serialnum',
-                            label='Controller serial number',
-                            get_cmd='getcser',
-                            get_parser=str,
-                            snapshot_get=False
-                            )
         for axis, idx in self.axes.items():
             self.voltage_limits.update(
                 {axis: self.Q_(self.metadata['voltage_limits'][temp][axis]).to('V').magnitude})
-            #: serial number for axis controller module (gettable only)
-            self.add_parameter('serialnum_ax{}'.format(idx),
-                                label='{} axis serial number'.format(axis),
-                                get_cmd='getser {}'.format(idx),
-                                get_parser=str,
-                                snapshot_get=False
-                                )
             #: axis mode (gettable and settable)
             self.add_parameter('mode_ax{}'.format(idx),
                                 label='{} axis mode'.format(axis),
@@ -95,24 +82,6 @@ class AttocubeController(VisaInstrument):
                                get_parser=self._cap_parser,
                                snapshot_get=False
                               )
-        self.initialize()
-
-    def initialize(self) -> None:
-        """Initialize instrument with parameters from self.metadata.
-        """
-        log.info('Initializing Attocube controller.')
-        for axis, idx in self.axes.items():
-            freq_in_Hz = self.Q_(self.metadata['default_frequency'][axis]).to('Hz').magnitude
-            voltage_lim = self.voltage_limits[axis]
-            self.parameters['freq_ax{}'.format(idx)].set(freq_in_Hz)
-            self.parameters['voltage_ax{}'.format(idx)].set(voltage_lim)
-            self.parameters['mode_ax{}'.format(idx)].set('gnd')
-        self.version() #: sometimes returns 'OK' instead of version info on the first try
-        self.serialnum()
-        self.serialnum_ax1()
-        self.serialnum_ax2()
-        self.serialnum_ax3()
-        print(self.version())
     
     def ask_raw(self, cmd: str) -> str:
         """Query instrument with cmd and return response.
@@ -295,11 +264,57 @@ class ANC300(AttocubeController):
     def __init__(self, atto_config: Dict, temp: str, ureg: Any,
                  timestamp_format: str, **kwargs) -> None:
         super().__init__(atto_config, temp, ureg, timestamp_format, **kwargs)
+        self.add_parameter('serialnum',
+                    label='Controller serial number',
+                    get_cmd='getcser',
+                    get_parser=str,
+                    snapshot_get=False
+                    )
+        for axis, idx in self.axes.items():
+            #: serial number for axis controller module (gettable only)
+            self.add_parameter('serialnum_ax{}'.format(idx),
+                                label='{} axis serial number'.format(axis),
+                                get_cmd='getser {}'.format(idx),
+                                get_parser=str,
+                                snapshot_get=False
+                                )
+        self.initialize()
+
+    def initialize(self) -> None:
+        """Initialize instrument with parameters from self.metadata.
+        """
+        log.info('Initializing ANC300 controller.')
+        for axis, idx in self.axes.items():
+            freq_in_Hz = self.Q_(self.metadata['default_frequency'][axis]).to('Hz').magnitude
+            voltage_lim = self.voltage_limits[axis]
+            self.parameters['freq_ax{}'.format(idx)].set(freq_in_Hz)
+            self.parameters['voltage_ax{}'.format(idx)].set(voltage_lim)
+            self.parameters['mode_ax{}'.format(idx)].set('gnd')
+        self.version() #: sometimes returns 'OK' instead of version info on the first try
+        self.serialnum()
+        self.serialnum_ax1()
+        self.serialnum_ax2()
+        self.serialnum_ax3()
+        print('Connected to: {}.'.format(self.version()))
         
-#class ANC150(AttocubeController):
+# class ANC150(AttocubeController):
 #    """ANC150 Attocube controller instrument.
 #    """
 #    def __init__(self, atto_config: Dict, temp: str, ureg: Any,
 #                 timestamp_format: str, **kwargs) -> None:
-#        super().__init__(atto_config, temp, ureg, timestamp_format, **kwargs)
+#         super().__init__(atto_config, temp, ureg, timestamp_format, **kwargs)
+#         self.initialize()
+
+#     def initialize(self) -> None:
+#         """Initialize instrument with parameters from self.metadata.
+#         """
+#         log.info('Initializing ANC150 controller.')
+#         for axis, idx in self.axes.items():
+#             freq_in_Hz = self.Q_(self.metadata['default_frequency'][axis]).to('Hz').magnitude
+#             voltage_lim = self.voltage_limits[axis]
+#             self.parameters['freq_ax{}'.format(idx)].set(freq_in_Hz)
+#             self.parameters['voltage_ax{}'.format(idx)].set(voltage_lim)
+#             self.parameters['mode_ax{}'.format(idx)].set('gnd')
+#         self.version() #: sometimes returns 'OK' instead of version info on the first try
+#         print('Connected to: {}.'.format(self.version()))
         

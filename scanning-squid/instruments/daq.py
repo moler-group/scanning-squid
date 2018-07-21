@@ -1,5 +1,6 @@
 from qcodes.instrument.base import Instrument
-from qcodes.instrument.parameter import ArrayParameter
+from qcodes.instrument.parameter import Parameter, ArrayParameter
+import nidaqmx
 from nidaqmx.constants import AcquisitionType, TaskMode
 from typing import Dict, Optional, Sequence, Any, Union
 import numpy as np
@@ -33,7 +34,8 @@ class DAQAnalogInputs(Instrument):
     """Instrument to acquire DAQ analog input data in a qcodes Loop or measurement.
     """
     def __init__(self, name: str, dev_name: str, rate: Union[int, float], channels: Dict[str, int],
-                 task: Any, clock_src: Optional[str]=None, samples_to_read: Optional[int]=2,
+                 task: Any, min_val: Optional[float]=-5, max_val: Optional[float]=5,
+                 clock_src: Optional[str]=None, samples_to_read: Optional[int]=2,
                  target_points: Optional[int]=None, **kwargs) -> None:
         """
         Args:
@@ -42,6 +44,8 @@ class DAQAnalogInputs(Instrument):
             rate: Desired DAQ sampling rate in Hz.
             channels: Dict of analog input channel configuration.
             task: fresh nidaqmx.Task to be populated with ai_channels.
+            min_val: minimum of input voltage range (-0.1, -0.2, -0.5, -1, -2, -5 [default], or -10)
+            max_val: maximum of input voltage range (0.1, 0.2, 0.5, 1, 2, 5 [default], or 10)
             clock_src: Sample clock source for analog inputs. Default: None
             samples_to_read: Number of samples to acquire from the DAQ
                 per channel per measurement/loop iteration.
@@ -57,7 +61,7 @@ class DAQAnalogInputs(Instrument):
             else:
                 target_points = samples_to_read
         self.rate = rate
-        nchannels = len(list(channels.keys()))
+        nchannels = len(channels)
         self.samples_to_read = samples_to_read
         self.task = task
         self.metadata.update({
@@ -66,7 +70,7 @@ class DAQAnalogInputs(Instrument):
             'channels': channels})
         for ch, idx in channels.items():
             channel = '{}/ai{}'.format(dev_name, idx)
-            self.task.ai_channels.add_ai_voltage_chan(channel, ch)
+            self.task.ai_channels.add_ai_voltage_chan(channel, ch, min_val=min_val, max_val=max_val)
         if clock_src is None:
             #: Use default sample clock timing: ai/SampleClockTimebase
             self.task.timing.cfg_samp_clk_timing(
@@ -76,22 +80,84 @@ class DAQAnalogInputs(Instrument):
         else:
             #: Clock the inputs on some other clock signal, e.g. 'ao/SampleClock'
             self.task.timing.cfg_samp_clk_timing(
-                rate,
-                source=clock_src,
-                sample_mode=AcquisitionType.FINITE,
-                samps_per_chan=samples_to_read)
+                    rate,
+                    source=clock_src,
+                    sample_mode=AcquisitionType.FINITE,
+                    samps_per_chan=samples_to_read
+            )
         #: We need a parameter in order to acquire voltage in a qcodes Loop or Measurement
-        self.add_parameter(name='voltage',
-                           parameter_class=DAQAnalogInputVoltages,
-                           task=self.task,
-                           samples_to_read=samples_to_read,
-                           shape=(nchannels, target_points),
-                           label='Voltage',
-                           unit='V'
-                          ) 
+        self.add_parameter(
+            name='voltage',
+            parameter_class=DAQAnalogInputVoltages,
+            task=self.task,
+            samples_to_read=samples_to_read,
+            shape=(nchannels, target_points),
+            label='Voltage',
+            unit='V'
+        ) 
         
     def clear_instances(self):
         """Clear instances of DAQAnalogInputs Instruments.
+        """
+        for instance in self.instances():
+            self.remove_instance(instance)
+
+class DAQAnalogOutputVoltage(Parameter):
+    """Writes data to one or several DAQ analog outputs.
+    """
+    def __init__(self, name: str, dev_name: str, idx: int, **kwargs) -> None:
+        """
+        Args:
+            name: Name of parameter (usually 'voltage').
+            dev_name: DAQ device name (e.g. 'Dev1').
+            idx: AO channel inde.
+            **kwargs: Keyword arguments to be passed to ArrayParameter constructor.
+        """
+        super().__init__(name, **kwargs)
+        self.dev_name = dev_name
+        self.idx = idx
+        self.voltage = '?'
+     
+    def set_raw(self, voltage: Union[int, float]) -> None:
+        with nidaqmx.Task('daq_ao_task') as ao_task:
+            channel = '{}/ao{}'.format(self.dev_name, self.idx)
+            ao_task.ao_channels.add_ao_voltage_chan(channel, self.name)
+            ao_task.write(voltage, auto_start=True)
+        self.voltage = voltage
+
+    def get_raw(self):
+        """Returns last voltage array written to outputs.
+        """
+        return self.voltage
+
+class DAQAnalogOutputs(Instrument):
+    """Instrument to write DAQ analog output data in a qcodes Loop or measurement.
+    """
+    def __init__(self, name: str, dev_name: str, channels: Dict[str, int], **kwargs) -> None:
+        """
+        Args:
+            name: Name of instrument (usually 'daq_ao').
+            dev_name: NI DAQ device name (e.g. 'Dev1').
+            channels: Dict of analog output channel configuration.
+            **kwargs: Keyword arguments to be passed to Instrument constructor.
+        """
+        super().__init__(name, **kwargs)
+        self.metadata.update({
+            'dev_name': dev_name,
+            'channels': channels})
+        #: We need parameters in order to write voltages in a qcodes Loop or Measurement
+        for ch, idx in channels.items():
+            self.add_parameter(
+                name='voltage_{}'.format(ch.lower()),
+                dev_name=dev_name,
+                idx=idx,
+                parameter_class=DAQAnalogOutputVoltage,
+                label='Voltage',
+                unit='V'
+            ) 
+        
+    def clear_instances(self):
+        """Clear instances of DAQAnalogOutputs Instruments.
         """
         for instance in self.instances():
             self.remove_instance(instance)

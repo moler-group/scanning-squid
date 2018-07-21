@@ -2,7 +2,10 @@ import os
 import numpy as np
 from typing import Dict, List, Optional, Sequence, Any, Union, Tuple
 import qcodes as qc
+from qcodes.instrument.parameter import ArrayParameter
 from scipy import io
+from collections import OrderedDict
+import json
 
 #: Tell the UnitRegistry what a Phi0 is, and that ohm and Ohm are the same thing.
 with open('squid_units.txt', 'w') as f:
@@ -17,6 +20,18 @@ class Counter(object):
         
     def advance(self):
         self.count += 1
+
+def load_json_ordered(filename: str) -> OrderedDict:
+    """Loads json file as an ordered dict.
+    Args:
+        filname: Path to json file to be loaded.
+    Returns:
+        OrderedDict: odict
+            OrderedDict containing data from json file.
+    """
+    with open(filename) as f:
+        odict = json.load(f, object_pairs_hook=OrderedDict)
+    return odict
         
 def next_file_name(fpath: str, extension: str) -> str:
     """Appends an integer to fpath to create a unique file name:
@@ -132,9 +147,34 @@ def validate_scan_params(scanner_config: Dict[str, Any], scan_params: Dict[str, 
     x_pixels = scan_params['scan_size']['x']
     y_pixels = scan_params['scan_size']['y']
     logger.info('Scan parameters are valid. Starting scan.')
-    
-def to_arrays(scan_data: Any, ureg: Optional[Any]=None, real_units: Optional[bool]=True,
-              xy_unit: Optional[str]=None) -> Dict[str, Any]:
+
+def to_real_units(data_set: Any, ureg: Any=None) -> Any:
+    """Converts DataSet arrays from DAQ voltage to real units using recorded metadata.
+        Preserves shape of DataSet arrays.
+
+    Args:
+        data_set: qcodes DataSet created by Microscope.scan_plane
+        ureg: Pint UnitRegistry. Default None.
+        
+    Returns:
+        np.ndarray: data
+            ndarray like the DataSet array, but in real units as prescribed by
+            factors in DataSet metadata.
+    """
+    if ureg is None:
+        from pint import UnitRegistry
+        ureg = UnitRegistry()
+        ureg.load_definitions('./squid_units.txt')
+    meta = data_set.metadata['loop']['metadata']
+    data = np.full_like(data_set.daq_ai_voltage, np.nan, dtype=np.double)
+    for i, ch in enumerate(meta['channels'].keys()):
+        array = data_set.daq_ai_voltage[:,i,:] * ureg('V')
+        unit = meta['channels'][ch]['unit']
+        data[:,i,:] = (array * ureg.Quantity(meta['prefactors'][ch])).to(unit)
+    return data
+
+def scan_to_arrays(scan_data: Any, ureg: Optional[Any]=None, real_units: Optional[bool]=True,
+                   xy_unit: Optional[str]=None) -> Dict[str, Any]:
     """Extracts scan data from DataSet and converts to requested units.
 
     Args:
@@ -166,7 +206,7 @@ def to_arrays(scan_data: Any, ureg: Optional[Any]=None, real_units: Optional[boo
     arrays = {'X': grids['x'] * ureg('V'), 'Y': grids['y']* ureg('V')}
     arrays.update({'x': scan_vectors['x'] * ureg('V'), 'y': scan_vectors['y'] * ureg('V')})
     for ch, info in meta['channels'].items():
-        array = scan_data.daq_ai_voltage[:,info['ai'],:] * ureg('V')
+        array = scan_data.daq_ai_voltage[:,info['idx'],:] * ureg('V')
         if real_units:
             pre = meta['prefactors'][ch]
             arrays.update({ch: (Q_(pre) * array).to(info['unit'])})
@@ -178,6 +218,41 @@ def to_arrays(scan_data: Any, ureg: Optional[Any]=None, real_units: Optional[boo
             grid = (grids[ax] * ureg('V') * Q_(bendc[ax])).to(xy_unit)
             vector = (scan_vectors[ax] * ureg('V') * Q_(bendc[ax])).to(xy_unit)
             arrays.update({ax.upper(): grid, ax: vector})
+    return arrays
+
+def td_to_arrays(td_data: Any, ureg: Optional[Any]=None, real_units: Optional[bool]=True) -> Dict[str, Any]:
+    """Extracts scan data from DataSet and converts to requested units.
+
+    Args:
+        td_data: qcodes DataSet created by Microscope.td_cap
+        ureg: pint UnitRegistry, manages physical units.
+        real_units: If True, converts data from DAQ voltage into
+            units specified in measurement configuration file.
+    Returns:
+        Dict: arrays
+            Dict of measured data in requested units.
+    """
+    if ureg is None:
+        from pint import UnitRegistry
+        ureg = UnitRegistry()
+        #: Tell the UnitRegistry what a Phi0 is, and that ohm and Ohm are the same thing.
+        with open('squid_units.txt', 'w') as f:
+            f.write('Phi0 = 2.067833831e-15 * Wb\n')
+            f.write('Ohm = ohm\n')
+        ureg.load_definitions('./squid_units.txt')
+    Q_ = ureg.Quantity
+    meta = td_data.metadata['loop']['metadata']
+    h = [Q_(val).to('V').magnitude for val in meta['range']]
+    dV = Q_(meta['dV']).to('V').magnitude
+    heights = np.linspace(h[0], h[1], int((h[1]-h[0])/dV))
+    arrays = {'height': heights * ureg('V')}
+    for ch, info in meta['channels'].items():
+        array = td_data.daq_ai_voltage[:,info['idx'],0] * ureg('V')
+        if real_units:
+            pre = meta['prefactors'][ch]
+            arrays.update({ch: (Q_(pre) * array).to(info['unit'])})
+        else:
+            arrays.update({ch: array})
     return arrays
 
 def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True,
@@ -199,7 +274,7 @@ def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True,
     ureg.load_definitions('./squid_units.txt')
     Q_ = ureg.Quantity
     meta = scan_data.metadata['loop']['metadata']
-    arrays = to_arrays(scan_data, ureg=ureg, real_units=real_units, xy_unit=xy_unit)
+    arrays = scan_to_arrays(scan_data, ureg=ureg, real_units=real_units, xy_unit=xy_unit)
     mdict = {}
     for name, arr in arrays.items():
         if real_units:
@@ -214,6 +289,34 @@ def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True,
     if fname is None:
         fname = meta['fname']
     fpath = scan_data.location + '/'
+    io.savemat(next_file_name(fpath + fname, 'mat'), mdict)
+
+def td_to_mat_file(td_data: Any, real_units: Optional[bool]=True, fname: Optional[str]=None) -> None:
+    """Export DataSet created by microscope.td_cap to .mat file for analysis.
+
+    Args:
+        td_data: qcodes DataSet created by Microscope.td_cap
+        real_units: If True, converts data from DAQ voltage into
+            units specified in measurement configuration file.
+        fname: File name (without extension) for resulting .mat file.
+            If None, uses the file name defined in measurement configuration file.
+    """
+    from pint import UnitRegistry
+    ureg = UnitRegistry()
+    ureg.load_definitions('./squid_units.txt')
+    Q_ = ureg.Quantity
+    meta = td_data.metadata['loop']['metadata']
+    arrays = td_to_arrays(td_data, ureg=ureg, real_units=real_units)
+    mdict = {}
+    for name, arr in arrays.items():
+        if name is not 'height':
+            unit = meta['channels'][name]['unit'] if real_units else 'V'
+            mdict.update({name: {'array': arr.to(unit).magnitude, 'unit': unit}})
+    mdict.update({'height': {'array': arrays['height'], 'unit': 'V'}})
+    mdict.update({'prefactors': meta['prefactors'], 'location': td_data.location})
+    if fname is None:
+        fname = meta['fname']
+    fpath = td_data.location + '/'
     io.savemat(next_file_name(fpath + fname, 'mat'), mdict)
 
 def moving_avg(x: Union[List, np.ndarray], y: Union[List, np.ndarray],
@@ -250,28 +353,6 @@ def fit_line(x: Union[list, np.ndarray], y: Union[list, np.ndarray]) -> Tuple[np
     rms = np.sqrt(np.mean(np.square(residuals)))
     return p, rms
 
-def to_real_units(data_set: Any, ureg: Any=None) -> Any:
-    """Converts DataSet arrays from DAQ voltage to real units using recorded metadata.
-        Preserves shape of DataSet arrays.
-
-    Args:
-        data_set: qcodes DataSet created by Microscope.scan_plane
-        prefactors: Dict of {channel_name: prefactor}.
-        ureg: Pint UnitRegistry. Default None.
-        
-    Returns:
-        np.ndarray: data
-            ndarray like the DataSet array, but in real units as prescribed by
-            factors in DataSet metadata.
-    """
-    if ureg is None:
-        from pint import UnitRegistry
-        ureg = UnitRegistry()
-        ureg.load_definitions('./squid_units.txt')
-    meta = data_set.metadata['loop']['metadata']
-    data = np.full_like(data_set.daq_ai_voltage, np.nan, dtype=np.double)
-    for i, ch in enumerate(meta['channels'].keys()):
-        array = data_set.daq_ai_voltage[:,i,:] * ureg('V')
-        unit = meta['channels'][ch]['unit']
-        data[:,i,:] = (array * ureg.Quantity(meta['prefactors'][ch])).to(unit)
-    return data
+def clear_artists(ax):
+    for artist in ax.lines + ax.collections:
+        artist.remove()
