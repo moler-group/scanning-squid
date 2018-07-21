@@ -25,11 +25,11 @@ class SensorChannel33x(InstrumentChannel):
                            get_parser=float,
                            label='Raw_Reading',
                            unit='V')  # TODO: This will vary based on sensor type
-        self.add_parameter('sensor_status', get_cmd='RDGST? {}'.format(self._channel),
+        self.add_parameter('sensor_status', get_cmd='RDGST? {}'.format(self._channel), get_parser=int,
                            val_mapping={'OK': 0, 'Invalid Reading': 1, 'Temp Underrange': 16, 'Temp Overrange': 32,
                            'Sensor Units Zero': 64, 'Sensor Units Overrange': 128}, label='Sensor_Status')
         self.add_parameter('sensor_name', get_cmd='INNAME? {}'.format(self._channel),
-                           get_parser=str, set_cmd='INNAME {},\"{{}}\"'.format(self._channel), vals=Strings(15),
+                           get_parser=str, set_cmd='INNAME {},\"{{}}\"'.format(self._channel), vals=Strings(),
                            label='Sensor_Name')
 
 class Model_331(VisaInstrument):
@@ -79,7 +79,7 @@ class Model_331(VisaInstrument):
                    get_parser=str,
                    set_cmd='RAMP 1,1,{}',
                    label='Heater range',
-                   vals=Numbers(min_value=0, max_val=100),
+                   vals=Numbers(min_value=0, max_value=100),
                    unit='K/min')
         ##############
         self.connect_message()
@@ -140,8 +140,8 @@ class SensorChannel372(InstrumentChannel):
     """
     A single sensor channel of a temperature controller
     """
-
-    _CHANNEL_VAL = MultiType(Enum('A'), Ints(1, 16))
+    valid_channels = ('A',) + tuple('ch{}'.format(i) for i in range(1,17))
+    _CHANNEL_VAL = Enum(*valid_channels)
 
     def __init__(self, parent, name, channel, sensor_name):
         super().__init__(parent, name)
@@ -151,22 +151,25 @@ class SensorChannel372(InstrumentChannel):
         self._channel = channel  # Channel on the temperature controller. Can be 1-16
 
         # Add the various channel parameters
-        self.add_parameter('temperature', get_cmd='KRDG? {}'.format(self._channel),
+        self.add_parameter('temperature', get_cmd='KRDG? {}'.format(self._channel[2:]),
                            get_parser=float,
                            label='Temerature',
                            unit='K')
-        self.add_parameter('sensor_raw', get_cmd='SRDG? {}'.format(self._channel),
+        self.add_parameter('sensor_raw', get_cmd='SRDG? {}'.format(self._channel[2:]),
                            get_parser=float,
                            label='Raw_Reading',
                            unit='Ohms')  # TODO: This will vary based on sensor type
-        self.add_parameter('sensor_status', get_cmd='RDGST? {}'.format(self._channel),
+        self.add_parameter('sensor_status', get_cmd='RDGST? {}'.format(self._channel[2:]), get_parser=int,
                            val_mapping={'OK': 0, 'CS Overload': 1, 'VCM Overload': 2, 'VMIX Overload': 4,
                            'VDIF Overload': 8, 'Resisance Overrange': 16, 'Resistance Underrange': 32,
                            'Temp Overrange': 64, 'Temp Underrange': 128}, label='Sensor_Status')
-        self.add_parameter('sensor_name', get_cmd='INNAME? {}'.format(self._channel),
-                           get_parser=str, set_cmd='INNAME {},\"{{}}\"'.format(self._channel), vals=Strings(15),
-                           label='Sensor_Name')
+        self.add_parameter('sensor_name', get_cmd='INNAME? {}'.format(self._channel[2:]),
+                           get_parser=self._sensor_name_parser, set_cmd='INNAME {},\"{{}}\"'.format(self._channel[2:]),
+                           vals=Strings(), label='Sensor_Name')
         self.sensor_name(sensor_name)
+
+    def _sensor_name_parser(self, msg):
+        return str(msg).strip()
 
 class Model_372(VisaInstrument):
     """
@@ -175,7 +178,7 @@ class Model_372(VisaInstrument):
     Adapted from QCoDeS Lakeshore 336 driver
     """
 
-    def __init__(self, name, address, channels={1: '50K Plate', 2: '3K Plate'}, **kwargs):
+    def __init__(self, name, address, active_channels={'ch1': '50K Plate', 'ch2': '3K Plate'}, **kwargs):
         super().__init__(name, address, terminator="\r\n", **kwargs)
 
         # Allow access to channels either by referring to the channel name
@@ -189,7 +192,7 @@ class Model_372(VisaInstrument):
         # self.visa_handle.parity = visa.constants.Parity.odd
         # self.visa_handle.data_bits = 7
         channels = ChannelList(self, "TempSensors", SensorChannel372, snapshotable=False)
-        for chan_name, sensor_name in channels.items():
+        for chan_name, sensor_name in active_channels.items():
             channel = SensorChannel372(self, 'Chan{}'.format(chan_name), chan_name, sensor_name)
             channels.append(channel)
             self.add_submodule(chan_name, channel)

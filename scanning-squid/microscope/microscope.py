@@ -61,6 +61,7 @@ class Microscope(Station):
             **kwargs: Keyword arguments to be passed to Station constructor.
         """
         super().__init__(**kwargs)
+        qc.Instrument.close_all()
         self.config = utils.load_json_ordered(config_file)
         if not os.path.exists('logs'):
             os.mkdir('logs')
@@ -97,7 +98,8 @@ class Microscope(Station):
         atto_config = self.config['instruments']['atto']
         ts_fmt = self.config['info']['timestamp_format']
         if hasattr(self, 'atto'):
-            self.atto.clear_instances()
+        #     self.atto.clear_instances()
+            self.atto.close()
         self.remove_component(atto_config['name'])
         self.atto = atto.ANC300(atto_config, self.temp, self.ureg, ts_fmt)
         self.add_component(self.atto)
@@ -109,7 +111,8 @@ class Microscope(Station):
         scanner_config = self.config['instruments']['scanner']
         daq_config = self.config['instruments']['daq']
         if hasattr(self, 'scanner'):
-            self.scanner.clear_instances()
+            #self.scanner.clear_instances()
+            self.scanner.close()
         self.remove_component(scanner_config['name'])
         self.scanner = Scanner(scanner_config, daq_config, self.temp, self.ureg)
         self.add_component(self.scanner)
@@ -120,7 +123,8 @@ class Microscope(Station):
         """
         squid_config = self.config['SQUID']
         if hasattr(self, 'SQUID'):
-            self.SQUID.clear_instances()
+            #self.SQUID.clear_instances()
+            self.SQUID.close()
         self.remove_component(squid_config['name'])
         squid_type = squid_config['type'].lower().capitalize()
         self.SQUID = getattr(sys.modules['squids'], squid_type)(squid_config)
@@ -134,7 +138,8 @@ class Microscope(Station):
             name = '{}_lockin'.format(lockin)
             address = lockin_info['address']
             if hasattr(self, name):
-                getattr(self, name, 'clear_instances')()
+                #getattr(self, name, 'clear_instances')()
+                getattr(self, name, 'close')()
             self.remove_component(name)
             instr = SR830(name, address, metadata={lockin: lockin_info})
             setattr(self, name, instr)
@@ -202,7 +207,8 @@ class Microscope(Station):
         ai_task =  nidaqmx.Task('td_cap_ai_task')
         self.remove_component('daq_ai')
         if hasattr(self, 'daq_ai'):
-            self.daq_ai.clear_instances()
+            #self.daq_ai.clear_instances()
+            self.daq_ai.close()
         self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, daq_rate, channels, ai_task)
         loop_counter = utils.Counter()
         tdc_plot = TDCPlot(tdc_params, self.ureg) 

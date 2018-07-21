@@ -5,6 +5,7 @@ import qcodes as qc
 from qcodes.instrument.parameter import ArrayParameter
 from scipy import io
 from collections import OrderedDict
+import json
 
 #: Tell the UnitRegistry what a Phi0 is, and that ohm and Ohm are the same thing.
 with open('squid_units.txt', 'w') as f:

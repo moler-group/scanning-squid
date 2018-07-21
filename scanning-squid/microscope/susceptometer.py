@@ -137,7 +137,8 @@ class SusceptometerMicroscope(Microscope):
         ai_task = nidaqmx.Task('scan_plane_ai_task')
         self.remove_component('daq_ai')
         if hasattr(self, 'daq_ai'):
-            self.daq_ai.clear_instances()
+            #self.daq_ai.clear_instances()
+            self.daq_ai.close()
         self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, daq_rate, channels, ai_task,
                                       samples_to_read=pts_per_line, target_points=pix_per_line,
                                       #: Very important to synchronize AOs and AIs
@@ -176,7 +177,8 @@ class SusceptometerMicroscope(Microscope):
         ).then(
             qc.Task(ai_task.stop),
             qc.Task(ai_task.close),
-            qc.Task(self.daq_ai.clear_instances),
+            qc.Task(self.daq_ai.close),
+            #qc.Task(self.daq_ai.clear_instances),
             qc.Task(self.scanner.goto, old_pos),
             #qc.Task(self.CAP_lockin.amplitude, 0.004),
             #qc.Task(self.SUSC_lockin.amplitude, 0.004)

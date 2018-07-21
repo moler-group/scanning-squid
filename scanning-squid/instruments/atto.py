@@ -297,24 +297,24 @@ class ANC300(AttocubeController):
         self.serialnum_ax3()
         print('Connected to: {}.'.format(self.version()))
         
-class ANC150(AttocubeController):
-   """ANC150 Attocube controller instrument.
-   """
-   def __init__(self, atto_config: Dict, temp: str, ureg: Any,
-                timestamp_format: str, **kwargs) -> None:
-       super().__init__(atto_config, temp, ureg, timestamp_format, **kwargs)
-       self.initialize()
+# class ANC150(AttocubeController):
+#    """ANC150 Attocube controller instrument.
+#    """
+#    def __init__(self, atto_config: Dict, temp: str, ureg: Any,
+#                 timestamp_format: str, **kwargs) -> None:
+#         super().__init__(atto_config, temp, ureg, timestamp_format, **kwargs)
+#         self.initialize()
 
-    def initialize(self) -> None:
-        """Initialize instrument with parameters from self.metadata.
-        """
-        log.info('Initializing ANC150 controller.')
-        for axis, idx in self.axes.items():
-            freq_in_Hz = self.Q_(self.metadata['default_frequency'][axis]).to('Hz').magnitude
-            voltage_lim = self.voltage_limits[axis]
-            self.parameters['freq_ax{}'.format(idx)].set(freq_in_Hz)
-            self.parameters['voltage_ax{}'.format(idx)].set(voltage_lim)
-            self.parameters['mode_ax{}'.format(idx)].set('gnd')
-        self.version() #: sometimes returns 'OK' instead of version info on the first try
-        print('Connected to: {}.'.format(self.version()))
+#     def initialize(self) -> None:
+#         """Initialize instrument with parameters from self.metadata.
+#         """
+#         log.info('Initializing ANC150 controller.')
+#         for axis, idx in self.axes.items():
+#             freq_in_Hz = self.Q_(self.metadata['default_frequency'][axis]).to('Hz').magnitude
+#             voltage_lim = self.voltage_limits[axis]
+#             self.parameters['freq_ax{}'.format(idx)].set(freq_in_Hz)
+#             self.parameters['voltage_ax{}'.format(idx)].set(voltage_lim)
+#             self.parameters['mode_ax{}'.format(idx)].set('gnd')
+#         self.version() #: sometimes returns 'OK' instead of version info on the first try
+#         print('Connected to: {}.'.format(self.version()))
         
