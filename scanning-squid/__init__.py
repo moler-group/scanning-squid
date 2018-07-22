@@ -1,1 +1,1 @@
-name='qcodes_squid'
+name='scanning_squid'
