@@ -301,7 +301,6 @@ class Microscope(Station):
         old_pos = self.scanner.position()
         #: True if touchdown doesn't occur for any point in the grid
         out_of_range = False
-        first_iteration = True
         #: True if the loop is exited before finishing
         premature_exit = False
         self.scanner.break_loop = False
@@ -328,30 +327,28 @@ class Microscope(Station):
                     premature_exit = True
                     break #: goes to outer break statement
                 else:
-                    if not first_iteration:
-                        clear_output(wait=True)
-                        if self.scanner.td_height is None:
-                            out_of_range = True
-                            premature_exit = True
-                            log.warning('Touchdown out of range. Stopping get_plane().')
-                            self.scanner.goto(old_pos)
-                            break #: goes to outer break statement
-                        plt.close(fig)
-                        fig = plt.figure(figsize=(4,3))
-                        ax = fig.add_subplot(111, projection='3d')
-                        ax.scatter(x_grid[np.isfinite(td_grid)], y_grid[np.isfinite(td_grid)],
-                            td_grid[np.isfinite(td_grid)], cmap='viridis')
-                        ax.set_xlabel('x position [V]')
-                        ax.set_ylabel('y position [V]')
-                        ax.set_zlabel('z position [V]')
-                        ax.set_title('Sample Plane')  
-                        fig.canvas.draw()  
-                        fig.show()
-                        plt.close(tdc_plot.fig)
                     self.scanner.goto([x_grid[i,j], y_grid[i,j], v_retract])
                     data, tdc_plot = self.td_cap(tdc_params, update_snap=False)
                     td_grid[i,j] = self.scanner.td_height
-                    first_iteration = False
+                    clear_output(wait=True)
+                    if self.scanner.td_height is None:
+                        out_of_range = True
+                        premature_exit = True
+                        log.warning('Touchdown out of range. Stopping get_plane().')
+                        self.scanner.goto(old_pos)
+                        break #: goes to outer break statement
+                    plt.close(fig)
+                    fig = plt.figure(figsize=(4,3))
+                    ax = fig.add_subplot(111, projection='3d')
+                    ax.scatter(x_grid[np.isfinite(td_grid)], y_grid[np.isfinite(td_grid)],
+                        td_grid[np.isfinite(td_grid)], cmap='viridis')
+                    ax.set_xlabel('x position [V]')
+                    ax.set_ylabel('y position [V]')
+                    ax.set_zlabel('z position [V]')
+                    ax.set_title('Sample Plane')  
+                    fig.canvas.draw()  
+                    fig.show()
+                    plt.close(tdc_plot.fig)
                     continue #: skips outer break statement
                 break #: occurs only if out_of_range or loop is broken
         self.scanner.goto(old_pos)
