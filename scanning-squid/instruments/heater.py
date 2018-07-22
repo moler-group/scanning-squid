@@ -4,8 +4,6 @@ import qcodes.utils.validators as vals
 import numpy as np
 import visa
 import time
-import logging
-log = logging.getLogger(__name__)
 
 class EL320P(VisaInstrument):
     """Qcodes driver for AIM & Therlby EL320P power supply.
