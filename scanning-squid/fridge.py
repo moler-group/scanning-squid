@@ -51,7 +51,7 @@ def BF4K_cooldown(fname=None, gpib372=13, sample_thermometer=True, gpib331=30,
                 time.sleep(0.1)
                 Tsamp = ls331.A.temperature()
                 tempsamp.append(Tsamp)
-                mdict.update('tempsamp': tempsamp)
+                mdict.update({'tempsamp': tempsamp})
             io.savemat(fname, mdict)
             try:
                 plt.clear()
