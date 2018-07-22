@@ -144,8 +144,6 @@ def validate_scan_params(scanner_config: Dict[str, Any], scan_params: Dict[str, 
         if np.max(scan_grids[ax]) < min(limits) or np.max(scan_grids[ax] > max(limits)):
             err = 'Requested {} axis position is outside of allowed range: {} V.'
             raise ValueError(err.format(ax, limits))        
-    x_pixels = scan_params['scan_size']['x']
-    y_pixels = scan_params['scan_size']['y']
     logger.info('Scan parameters are valid. Starting scan.')
 
 def to_real_units(data_set: Any, ureg: Any=None) -> Any:
