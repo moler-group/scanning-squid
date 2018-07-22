@@ -59,10 +59,10 @@ def BF4K_cooldown(fname=None, gpib372=13, sample_thermometer=True, gpib331=30,
                 plt.clear()
             except:
                 pass
-            plt.plot(elapsed_time, temp50K, 'ro-', label='50K Plate')
-            plt.plot(elapsed_time, temp3K, 'bo-', label='3K Plate')
+            plt.plot(elapsed_time, temp50K, 'r.-', label='50K Plate')
+            plt.plot(elapsed_time, temp3K, 'b.-', label='3K Plate')
             if sample_thermometer:
-                plt.plot(elapsed_time, tempsamp, 'ko-', label='Sample')
+                plt.plot(elapsed_time, tempsamp, 'k.-', label='Sample')
             if t == dt:
                 plt.legend(loc=0)
             plt.xlabel('Elapsed Time [s]')
@@ -157,10 +157,10 @@ def BF4K_warmup(fname=None, t_heater_off=290, t_stop_logging=295, heater_i=2, he
                 plt.clear()
             except:
                 pass
-            plt.plot(elapsed_time, temp50K, 'ro-', label='50K Plate')
-            plt.plot(elapsed_time, temp3K, 'bo-', label='3K Plate')
+            plt.plot(elapsed_time, temp50K, 'r.-', label='50K Plate')
+            plt.plot(elapsed_time, temp3K, 'b.-', label='3K Plate')
             if sample_thermometer:
-                plt.plot(elapsed_time, tempsamp, 'ko-', label='Sample')
+                plt.plot(elapsed_time, tempsamp, 'k.-', label='Sample')
             if t == dt:
                 plt.legend(loc=0)
             plt.xlabel('Elapsed Time [s]')
