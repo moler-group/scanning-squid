@@ -94,13 +94,12 @@
         },
         "constants": {
             "max_slope": "3 fF/V",
-            "max_delta_cap": "20 pF",
+            "max_delta_cap": "15 pF",
             "initial_cap":"0 pF",
             "nfitmin":10,
             "nwindow":30,
             "ntest":8,
             "wait_factor":3
         }
-    },
-    "tdSUSC":{}
+    }
 }
