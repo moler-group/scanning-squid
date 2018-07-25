@@ -82,8 +82,7 @@ class ScanPlot(object):
         meta = data_set.metadata['loop']['metadata']
         slow_ax = 'x' if meta['fast_ax'] == 'y' else 'y'
         line = loop_counter.count if not offline else meta['scan_size'][slow_ax] - 1
-        for ch in self.channels:
-            idx = meta['channels'][ch]['ai']
+        for idx, ch in enumerate(self.channels):
             data_ch = data[:,idx,:]
             if self.fast_ax.lower() == 'y':
                 data_ch = data_ch.T

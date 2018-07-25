@@ -30,6 +30,8 @@ import utils
 from scanner import Scanner
 from instruments.daq import DAQAnalogInputs
 from plots import ScanPlot, TDCPlot
+from instruments.lakeshore import Model_372, Model_331
+from instruments.heater import EL320P
 
 #: Pint for manipulating physical units
 from pint import UnitRegistry
@@ -86,7 +88,8 @@ class Microscope(Station):
         self.temp = temp
 
         self._add_atto()
-        #self._add_temp_controller()
+        self._add_ls372()
+        self._add_ls331()
         #self._add_keithley()
         self._add_scanner()
         self._add_SQUID()
@@ -104,6 +107,30 @@ class Microscope(Station):
         self.atto = atto.ANC300(atto_config, self.temp, self.ureg, ts_fmt)
         self.add_component(self.atto)
         log.info('Attocube controller successfully added to microscope.')
+
+    def _add_ls372(self):
+        """Add Lakeshore 372 temperature controller to microscope.
+        """
+        ls_config = self.config['instruments']['ls372']
+        if hasattr(self, 'ls372'):
+        #     self.atto.clear_instances()
+            self.ls372.close()
+        self.remove_component(ls_config['name'])
+        self.ls372 = Model_372(ls_config['name'], ls_config['address'])
+        self.add_component(self.ls372)
+        log.info('Lakeshore 372 successfully added to microscope.')
+
+    def _add_ls331(self):
+        """Add Lakeshore 331 temperature controller to microscope.
+        """
+        ls_config = self.config['instruments']['ls331']
+        if hasattr(self, 'ls331'):
+        #     self.atto.clear_instances()
+            self.ls331.close()
+        self.remove_component(ls_config['name'])
+        self.ls331 = Model_331(ls_config['name'], ls_config['address'])
+        self.add_component(self.ls331)
+        log.info('Lakeshore 331 successfully added to microscope.')
 
     def _add_scanner(self):
         """Add scanner instrument to microscope.
@@ -234,7 +261,7 @@ class Microscope(Station):
         loop.metadata.update({'prefactors': prefactor_strs})
         for idx, ch in enumerate(meas_channels):
             loop.metadata['channels'][ch].update({'idx': idx})
-        data = loop.get_data_set(name=tdc_params['fname'])
+        data = loop.get_data_set(name=tdc_params['fname'], write_period=None)
         try:
             log.info('Starting capacitive touchdown.')
             loop.run()

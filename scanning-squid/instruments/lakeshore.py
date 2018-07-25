@@ -65,7 +65,7 @@ class Model_331(VisaInstrument):
                    get_parser=float,
                    set_cmd='SETP 1,{}',
                    label='Set Temerature',
-                   vals=Numbers(4, 300),
+                   vals=Numbers(3, 300),
                    unit='K')
         self.add_parameter(name='heater_range',
                    get_cmd='RANGE?',

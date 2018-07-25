@@ -10,8 +10,9 @@ from nidaqmx.constants import AcquisitionType
 
 #: scanning-squid modules
 from instruments.daq import DAQAnalogInputs
-from plots import ScanPlot, TDCPlot
+from plots import ScanPlot
 from .microscope import Microscope
+import utils
 
 #: Pint for manipulating physical units
 from pint import UnitRegistry
@@ -75,7 +76,7 @@ class SusceptometerMicroscope(Microscope):
                 #: The factor of 10 here is because SR830 output gain is 10/sensitivity
                 prefactor /= (self.Q_(self.scanner.metadata['cantilever']['calibration']) * 10 / cap_sensitivity)
             prefactor /= measurement['channels'][ch]['gain']
-            prefactors.update({ch: prefactor})
+            prefactors.update({ch: prefactor.to('{}/V'.format(measurement['channels'][ch]['unit']))})
         return prefactors
 
     def scan_plane(self, scan_params: Dict[str, Any]) -> Any:
@@ -131,7 +132,7 @@ class SusceptometerMicroscope(Microscope):
         #: get channel prefactors in string form so they can be saved in metadata
         prefactor_strs = {}
         for ch, prefac in prefactors.items():
-            unit = tdc_params['channels'][ch]['unit']
+            unit = scan_params['channels'][ch]['unit']
             pre = prefac.to('{}/V'.format(unit))
             prefactor_strs.update({ch: '{} {}'.format(pre.magnitude, pre.units)})
         ai_task = nidaqmx.Task('scan_plane_ai_task')

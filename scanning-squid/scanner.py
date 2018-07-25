@@ -1,7 +1,7 @@
 import qcodes as qc
 from qcodes.instrument.base import Instrument
 import qcodes.utils.validators as vals
-from utils import fit_line
+import utils
 from typing import Dict, List, Optional, Sequence, Any, Union
 import numpy as np
 import nidaqmx
@@ -31,7 +31,6 @@ class Scanner(Instrument):
         self.ureg = ureg
         self.Q_ = ureg.Quantity
         self.metadata.update(scanner_config)
-        self.metadata['plane'].update({'is_current': False})
         self.metadata.update({'daq': daq_config})
         self._parse_unitful_quantities()
         self._initialize_parameters()
@@ -272,19 +271,19 @@ class Scanner(Instrument):
             imin = - nwindow + nfitmin 
             rmsmin = np.inf
             for i in range(-nwindow + nfitmin, -nfitmin):
-                p0, rms0 = fit_line(hdata[-nwindow:i+1], cdata[-nwindow:i+1])
-                p1, rms1 = fit_line(hdata[i:], cdata[i:])
+                p0, rms0 = utils.fit_line(hdata[-nwindow:i+1], cdata[-nwindow:i+1])
+                p1, rms1 = utils.fit_line(hdata[i:], cdata[i:])
                 rms = rms0 + rms1
                 if rms < rmsmin:
                     imin = i
                     rmsmin = rms
             #: Get the slope of the two lines that minimize rms residual
             x0 = hdata[-nwindow:imin+1]
-            p0, _ = fit_line(x0, cdata[-nwindow:imin+1])
+            p0, _ = utils.fit_line(x0, cdata[-nwindow:imin+1])
             x1 = hdata[imin:]
-            p1, _ = fit_line(x1, cdata[imin:])
-            tdc_plot.ax.plot(x0, p0[0] * x0 + p0[1], 'r-')
-            tdc_plot.ax.plot(x1, p1[0] * x1 + p1[1], 'r-')
+            p1, _ = utils.fit_line(x1, cdata[imin:])
+            tdc_plot.ax[0].plot(x0, p0[0] * x0 + p0[1], 'r-')
+            tdc_plot.ax[0].plot(x1, p1[0] * x1 + p1[1], 'r-')
             tdc_plot.fig.canvas.draw()
             tdc_plot.fig.show()
             if abs(p0[0]) > max_slope:
@@ -317,15 +316,15 @@ class Scanner(Instrument):
             imin = -ntest
             rmsmin = np.inf
             for i in range(-nwindow + ntest, -ntest):
-                p0, rms0 = fit_line(hdata[-nwindow:i+1], cdata[-nwindow:i+1])
-                p1, rms1 = fit_line(hdata[i:], cdata[i:])
+                p0, rms0 = utils.fit_line(hdata[-nwindow:i+1], cdata[-nwindow:i+1])
+                p1, rms1 = utils.fit_line(hdata[i:], cdata[i:])
                 rms = rms0 + rms1
                 if rms < rmsmin:
                     imin = i
                     rmsmin = rms
             #: Get the slope of the two lines that minimize rms residual
-            p0, _ = fit_line(hdata[-nwindow:imin+1], cdata[-nwindow:imin+1])
-            p1, _ = fit_line(hdata[imin:], cdata[imin:])
+            p0, _ = utils.fit_line(hdata[-nwindow:imin+1], cdata[-nwindow:imin+1])
+            p1, _ = utils.fit_line(hdata[imin:], cdata[imin:])
             self.td_height = (p1[1]-p0[1]) / (p0[0] - p1[0])
             tdc_plot.td_height = self.td_height
             tdc_plot.pre_td_slope = '{} {}/V'.format(p0[0], cap_unit)

@@ -55,10 +55,6 @@ def BF4K_cooldown(fname=None, gpib372=13, sample_thermometer=True, gpib331=30,
                 tempsamp.append(Tsamp)
                 mdict.update({'tempsamp': tempsamp})
             io.savemat(fname, mdict)
-            try:
-                plt.clear()
-            except:
-                pass
             plt.plot(elapsed_time, temp50K, 'r.-', label='50K Plate')
             plt.plot(elapsed_time, temp3K, 'b.-', label='3K Plate')
             if sample_thermometer:
@@ -71,6 +67,7 @@ def BF4K_cooldown(fname=None, gpib372=13, sample_thermometer=True, gpib331=30,
             plt.gcf().canvas.draw()
             plt.savefig(fname[:-3] + 'png')
         print('stop_temp reached at {}.'.format(time.strftime(ts_fmt)))
+        plt.show()
     except KeyboardInterrupt:
         print('Script interrupted by user at {}.'.format(time.strftime(ts_fmt)))
     qc.Instrument.close_all()
