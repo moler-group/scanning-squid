@@ -76,11 +76,13 @@ def BF4K_cooldown(fname=None, gpib372=13, sample_thermometer=True, gpib331=30,
     print('50K Plate: {} K, 3K Plate: {} K, Sample: {} K'.format(T50K, T3K, Tsamp))
 
 def BF4K_warmup(fname=None, t_heater_off=290, t_stop_logging=295, heater_i=2, heater_v=30, dt=60, 
-                gpib372=13, sample_thermometer=True, gpib331=30, heater_addr='ASRL3::INSTR'):
+                gpib372=13, sample_thermometer=True, gpib331=30, heater_addr='ASRL3::INSTR',
+                ts_fmt='%Y-%m-%d_%H:%M:%S'):
     """Applies (heater_i*heater_v) Watts to the 3 K plate and monitors temperature during a warmup.
     """
     if t_heater_off >= t_stop_logging:
         raise ValueError('t_heater_off must be less than t_stop_logging.')
+    qc.Instrument.close_all()
     t0 = time.strftime(ts_fmt)
     if fname is None:
         fname = next_file_name('warmup', 'mat')
@@ -107,17 +109,24 @@ def BF4K_warmup(fname=None, t_heater_off=290, t_stop_logging=295, heater_i=2, he
     print('Current temperature')
     print('-------------------')
     print('50K Plate: {} K, 3K Plate: {} K, Sample: {} K'.format(T50K, T3K, Tsamp))
-    response = input('Continue with warmup? y/[n]')
+    response = input('You are about to apply {} Watts to the 3 K plate.\nContinue with warmup? y/[n] '.format(heater_i * heater_v))
     if response.lower() != 'y':
         print('Warmup aborted.')
-        qc.Instrument.close_all()
+        for inst in Model_331.instances():
+            inst.close()
+        for inst in Model_372.instances():
+            inst.close()
         return
     warmup_heater = EL320P('warmup_heater', heater_addr)
     err = warmup_heater.error()
     if err != 'OK':
         print('Heater error: {}. Turning heater off.'.format(err))
         warmup_heater.output('OFF')
-        qc.Instrument.close_all()
+        for inst in Model_331.instances():
+            inst.close()
+        for inst in Model_372.instances():
+            inst.close()
+        warmup_heater.close()
         return
     print('Warmup started at {}.'.format(t0))
     warmup_heater.voltage_set(heater_v)
@@ -145,15 +154,12 @@ def BF4K_warmup(fname=None, t_heater_off=290, t_stop_logging=295, heater_i=2, he
                 Tsamp = ls331.A.temperature()
                 tempsamp.append(Tsamp)
                 mdict.update({'tempsamp': tempsamp})
-            if T3K > t_heater_off or T50K > t_heater_off:
-                print('t_heater_off reached at {}.'.format(time.strftime(ts_fmt)))
-                print('Turning heater off.')
-                warmup_heater.output('OFF')                
+            if warmup_heater.output() != 'OFF':
+                if T3K > t_heater_off or T50K > t_heater_off:
+                    print('t_heater_off reached at {}.'.format(time.strftime(ts_fmt)))
+                    print('Turning heater off.')
+                    warmup_heater.output('OFF')                
             io.savemat(fname, mdict)
-            try:
-                plt.clear()
-            except:
-                pass
             plt.plot(elapsed_time, temp50K, 'r.-', label='50K Plate')
             plt.plot(elapsed_time, temp3K, 'b.-', label='3K Plate')
             if sample_thermometer:
@@ -170,8 +176,13 @@ def BF4K_warmup(fname=None, t_heater_off=290, t_stop_logging=295, heater_i=2, he
         warmup_heater.output('OFF')
         io.savemat(fname, mdict)
         print('Script interrupted by user at {}. Turning heater off.'.format(time.strftime(ts_fmt)))
-    warmup_heater.ouput('OFF')
-    qc.Instrument.close_all()
+    warmup_heater.output('OFF')
+    for inst in Model_331.instances():
+        inst.close()
+    for inst in Model_372.instances():
+        inst.close()
+    for inst in EL320P.instances():
+        inst.close()
     print('Current temperature')
     print('-------------------')
     print('50K Plate: {} K, 3K Plate: {} K, Sample: {} K'.format(T50K, T3K, Tsamp))
