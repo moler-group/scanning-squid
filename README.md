@@ -7,7 +7,7 @@ scanning-squid is an instrument control and data acquisition package for scannin
 #### Contact: Logan Bishop-Van Horn (lbvh [at] stanford [dot] edu).
 
 #### Installation
-scanning-squid is not yet packaged for [pip](https://pypi.org/) or [conda](https://conda.io/docs/). It is recommended that you set up a `conda env` in which to run scanning-squid by following the steps below. This will install all of the packages on which scanning-squid depends.
+It is recommended that you set up a `conda env` in which to run scanning-squid by following the steps below. This will install all of the packages on which scanning-squid depends.
 
 ##### Windows
 - Download and install [Anaconda](https://www.anaconda.com/download/#windows) (the latest Python 3 version).
