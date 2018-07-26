@@ -10,8 +10,9 @@ from nidaqmx.constants import AcquisitionType
 
 #: scanning-squid modules
 from instruments.daq import DAQAnalogInputs
-from plots import ScanPlot, TDCPlot
+from plots import ScanPlot
 from .microscope import Microscope
+import utils
 
 #: Pint for manipulating physical units
 from pint import UnitRegistry
@@ -45,13 +46,11 @@ class SusceptometerMicroscope(Microscope):
 
     def get_prefactors(self, measurement: Dict[str, Any], update: bool=True) -> Dict[str, Any]:
         """For each channel, calculate prefactors to convert DAQ voltage into real units.
-
         Args:
             measurement: Dict of measurement parameters as defined
                 in measurement configuration file.
             update: Whether to query instrument parameters or simply trust the
                 latest values (should this even be an option)?
-
         Returns:
             Dict[str, pint.Quantity]: prefactors
                 Dict of {channel_name: prefactor} where prefactor is a pint Quantity.
@@ -75,18 +74,16 @@ class SusceptometerMicroscope(Microscope):
                 #: The factor of 10 here is because SR830 output gain is 10/sensitivity
                 prefactor /= (self.Q_(self.scanner.metadata['cantilever']['calibration']) * 10 / cap_sensitivity)
             prefactor /= measurement['channels'][ch]['gain']
-            prefactors.update({ch: prefactor})
+            prefactors.update({ch: prefactor.to('{}/V'.format(measurement['channels'][ch]['unit']))})
         return prefactors
 
     def scan_plane(self, scan_params: Dict[str, Any]) -> Any:
         """
         Scan the current plane while acquiring data in the channels defined in
         measurement configuration file (e.g. MAG, SUSCX, SUSCY, CAP).
-
         Args:
             scan_params: Dict of scan parameters as defined
                 in measuremnt configuration file.
-
         Returns:
             Tuple[qcodes.DataSet, plots.ScanPlot]: data, plot
                 qcodes DataSet containing acquired arrays and metdata,
@@ -131,7 +128,7 @@ class SusceptometerMicroscope(Microscope):
         #: get channel prefactors in string form so they can be saved in metadata
         prefactor_strs = {}
         for ch, prefac in prefactors.items():
-            unit = tdc_params['channels'][ch]['unit']
+            unit = scan_params['channels'][ch]['unit']
             pre = prefac.to('{}/V'.format(unit))
             prefactor_strs.update({ch: '{} {}'.format(pre.magnitude, pre.units)})
         ai_task = nidaqmx.Task('scan_plane_ai_task')
@@ -212,4 +209,3 @@ class SusceptometerMicroscope(Microscope):
         self.remove_component('daq_ai')
         utils.scan_to_mat_file(data, real_units=True)
         return data, scan_plot
-

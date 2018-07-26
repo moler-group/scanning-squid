@@ -1,7 +1,7 @@
 import qcodes as qc
 from qcodes.instrument.base import Instrument
 import qcodes.utils.validators as vals
-from utils import fit_line
+import utils
 from typing import Dict, List, Optional, Sequence, Any, Union
 import numpy as np
 import nidaqmx
@@ -31,7 +31,6 @@ class Scanner(Instrument):
         self.ureg = ureg
         self.Q_ = ureg.Quantity
         self.metadata.update(scanner_config)
-        self.metadata['plane'].update({'is_current': False})
         self.metadata.update({'daq': daq_config})
         self._parse_unitful_quantities()
         self._initialize_parameters()
@@ -85,7 +84,6 @@ class Scanner(Instrument):
         
     def get_pos(self) -> np.ndarray:
         """Get current scanner [x, y, z] position.
-
         Returns:
             numpy.ndarray: pos
                 Array of current [x, y, z] scanner voltage.
@@ -111,7 +109,6 @@ class Scanner(Instrument):
              speed: Optional[str]=None, quiet: Optional[bool]=False) -> None:
         """Move scanner to given position.
         By default moves all three axes simultaneously, if necessary.
-
         Args:
             new_pos: List of [x, y, z] scanner voltage to go to.
             retract_first: If True, scanner retracts to value determined by self.temp,
@@ -158,7 +155,6 @@ class Scanner(Instrument):
             
     def retract(self, speed: Optional[str]=None, quiet: Optional[bool]=False) -> None:
         """Retracts z-bender fully based on whether temp is LT or RT.
-
         Args:
                 speed: Speed at which to move the scanner (e.g. '2 V/s') in DAQ voltage units.
                     Default set in microscope configuration JSON file.
@@ -175,7 +171,6 @@ class Scanner(Instrument):
     def scan_line(self, scan_grids: Dict[str, np.ndarray], ao_channels: Dict[str, int],
                   daq_rate: Union[int, float], counter: Any, reverse=False) -> None:
         """Scan a single line of a plane.
-
         Args:
             scan_grids: Dict of {axis_name: axis_meshgrid} from utils.make_scan_grids().
             ao_channels: Dict of {axis_name: ao_index} for the scanner ao channels.
@@ -204,7 +199,6 @@ class Scanner(Instrument):
         
     def goto_start_of_next_line(self, scan_grids: Dict[str, np.ndarray], counter: Any) -> None:
         """Moves scanner to the start of the next line to scan.
-
         Args:
             scan_grids: Dict of {axis_name: axis_meshgrid} from utils.make_scan_grids().
             counter: utils.Counter instance, determines current line of the grid.
@@ -219,7 +213,6 @@ class Scanner(Instrument):
 
     def check_for_td(self, tdc_plot: Any, data_set: Any, counter: Any) -> None:
         """Check whether touchdown has occurred during a capacitive touchdown.
-
         Args:
             tdc_plot: plots.TDCPlot instance, which contains current data and parameters
                 of the touchdown Loop.
@@ -272,19 +265,19 @@ class Scanner(Instrument):
             imin = - nwindow + nfitmin 
             rmsmin = np.inf
             for i in range(-nwindow + nfitmin, -nfitmin):
-                p0, rms0 = fit_line(hdata[-nwindow:i+1], cdata[-nwindow:i+1])
-                p1, rms1 = fit_line(hdata[i:], cdata[i:])
+                p0, rms0 = utils.fit_line(hdata[-nwindow:i+1], cdata[-nwindow:i+1])
+                p1, rms1 = utils.fit_line(hdata[i:], cdata[i:])
                 rms = rms0 + rms1
                 if rms < rmsmin:
                     imin = i
                     rmsmin = rms
             #: Get the slope of the two lines that minimize rms residual
             x0 = hdata[-nwindow:imin+1]
-            p0, _ = fit_line(x0, cdata[-nwindow:imin+1])
+            p0, _ = utils.fit_line(x0, cdata[-nwindow:imin+1])
             x1 = hdata[imin:]
-            p1, _ = fit_line(x1, cdata[imin:])
-            tdc_plot.ax.plot(x0, p0[0] * x0 + p0[1], 'r-')
-            tdc_plot.ax.plot(x1, p1[0] * x1 + p1[1], 'r-')
+            p1, _ = utils.fit_line(x1, cdata[imin:])
+            tdc_plot.ax[0].plot(x0, p0[0] * x0 + p0[1], 'r-')
+            tdc_plot.ax[0].plot(x1, p1[0] * x1 + p1[1], 'r-')
             tdc_plot.fig.canvas.draw()
             tdc_plot.fig.show()
             if abs(p0[0]) > max_slope:
@@ -299,7 +292,6 @@ class Scanner(Instrument):
 
     def get_td_height(self, tdc_plot: Any, task: bool=True) -> None:
         """If a touchdown has occurred, finds the z voltage at which it occurred.
-
         Args:
             tdc_plot: plots.TDCPlot instance containing data from touchdown.
             task: True if get_td_height is being called as a qcodes Task (no return value allowed).
@@ -317,15 +309,15 @@ class Scanner(Instrument):
             imin = -ntest
             rmsmin = np.inf
             for i in range(-nwindow + ntest, -ntest):
-                p0, rms0 = fit_line(hdata[-nwindow:i+1], cdata[-nwindow:i+1])
-                p1, rms1 = fit_line(hdata[i:], cdata[i:])
+                p0, rms0 = utils.fit_line(hdata[-nwindow:i+1], cdata[-nwindow:i+1])
+                p1, rms1 = utils.fit_line(hdata[i:], cdata[i:])
                 rms = rms0 + rms1
                 if rms < rmsmin:
                     imin = i
                     rmsmin = rms
             #: Get the slope of the two lines that minimize rms residual
-            p0, _ = fit_line(hdata[-nwindow:imin+1], cdata[-nwindow:imin+1])
-            p1, _ = fit_line(hdata[imin:], cdata[imin:])
+            p0, _ = utils.fit_line(hdata[-nwindow:imin+1], cdata[-nwindow:imin+1])
+            p1, _ = utils.fit_line(hdata[imin:], cdata[imin:])
             self.td_height = (p1[1]-p0[1]) / (p0[0] - p1[0])
             tdc_plot.td_height = self.td_height
             tdc_plot.pre_td_slope = '{} {}/V'.format(p0[0], cap_unit)
@@ -358,7 +350,6 @@ class Scanner(Instrument):
             
     def control_ao_task(self, cmd: str) -> None:
         """Write commands to the DAQ AO Task. Used during qc.Loops.
-
         Args:
             cmd: What you want the Task to do. For example,
                 self.control_ao_task('stop') is equivalent to self.ao_task.stop()
@@ -368,12 +359,10 @@ class Scanner(Instrument):
 
     def make_ramp(self, pos0: List, pos1: List, speed: Union[int, float]) -> np.ndarray:
         """Generates a ramp in x,y,z scanner voltage from point pos0 to point pos1 at given speed.
-
         Args:
             pos0: List of initial [x, y, z] scanner voltages.
             pos1: List of final [x, y, z] scanner votlages.
             speed: Speed at which to go to pos0 to pos1, in DAQ voltage/second.
-
         Returns:
             numpy.ndarray: ramp
                 Array of x, y, z values to write to DAQ AOs to move
@@ -394,7 +383,6 @@ class Scanner(Instrument):
     
     def _goto_x(self, xpos: float) -> None:
         """Go to given x position.
-
         Args:
             xpos: x position to go to, in DAQ voltage.
         """
@@ -403,7 +391,6 @@ class Scanner(Instrument):
         
     def _goto_y(self, ypos: float) -> None:
         """Go to given y position.
-
         Args:
             ypos: y position to go to, in DAQ voltage.
         """
@@ -412,7 +399,6 @@ class Scanner(Instrument):
     
     def _goto_z(self, zpos: float) -> None:
         """Go to given z position.
-
         Args:
             zpos: z position to go to, in DAQ voltage.
         """

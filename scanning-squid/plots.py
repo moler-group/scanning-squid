@@ -66,14 +66,12 @@ class ScanPlot(object):
     def update(self, data_set: Any, loop_counter: Any, num_lines: Optional[int]=5,
                offline: Optional[bool]=False) -> None:
         """Update the plot with updated DataSet. Called after each line of the scan.
-
         Args:
             DataSet: active data set, with a new line of data added with each loop iteration.
             loop_counter: utils.Counter instance, lets us know where we are in the scan.
             num_lines: Number of previous linecuts to plot, including the line just scanned.
                 Currently can only handle num_lines <= 5.
             offline: False if this is being called during a scan.
-
         ..TODO:: Add support for arbitrary num_lines?
         """
         self.location = data_set.location
@@ -82,8 +80,7 @@ class ScanPlot(object):
         meta = data_set.metadata['loop']['metadata']
         slow_ax = 'x' if meta['fast_ax'] == 'y' else 'y'
         line = loop_counter.count if not offline else meta['scan_size'][slow_ax] - 1
-        for ch in self.channels:
-            idx = meta['channels'][ch]['ai']
+        for idx, ch in enumerate(self.channels):
             data_ch = data[:,idx,:]
             if self.fast_ax.lower() == 'y':
                 data_ch = data_ch.T
@@ -117,7 +114,6 @@ class ScanPlot(object):
         
     def save(self, fname=None):
         """Save plot to png file.
-
         Args:
             fname: File to which to save the plot.
                 If fname is None, saves to data location as {scan_params['fname']}.png
