@@ -34,9 +34,8 @@ class SensorChannel33x(InstrumentChannel):
 
 class Model_331(VisaInstrument):
     """
-    Lakeshore Model 331 Temperature Controller Driver
-    Controlled via sockets
-    Adapted from QCoDeS Lakeshore 336 driver
+    Lakeshore Model 331 Temperature Controller Driver.
+    Adapted from QCoDeS Lakeshore 336 driver.
     """
 
     def __init__(self, name, address, **kwargs):
@@ -86,9 +85,8 @@ class Model_331(VisaInstrument):
 
 class Model_335(VisaInstrument):
     """
-    Lakeshore Model 335 Temperature Controller Driver
-    Controlled via sockets
-    Adapted from QCoDeS Lakeshore 336 driver
+    Lakeshore Model 335 Temperature Controller Driver.
+    Adapted from QCoDeS Lakeshore 336 driver.
     """
 
     def __init__(self, name, address, **kwargs):
@@ -173,9 +171,8 @@ class SensorChannel372(InstrumentChannel):
 
 class Model_372(VisaInstrument):
     """
-    Lakeshore Model 372 Temperature Controller Driver
-    Controlled via sockets
-    Adapted from QCoDeS Lakeshore 336 driver
+    Lakeshore Model 372 Temperature Controller Driver.
+    Adapted from QCoDeS Lakeshore 336 driver.
     """
 
     def __init__(self, name, address, active_channels={'ch1': '50K Plate', 'ch2': '3K Plate'}, **kwargs):

@@ -46,11 +46,13 @@ class SusceptometerMicroscope(Microscope):
 
     def get_prefactors(self, measurement: Dict[str, Any], update: bool=True) -> Dict[str, Any]:
         """For each channel, calculate prefactors to convert DAQ voltage into real units.
+
         Args:
             measurement: Dict of measurement parameters as defined
                 in measurement configuration file.
             update: Whether to query instrument parameters or simply trust the
-                latest values (should this even be an option)?
+                latest values. Default: True.
+
         Returns:
             Dict[str, pint.Quantity]: prefactors
                 Dict of {channel_name: prefactor} where prefactor is a pint Quantity.
@@ -81,9 +83,11 @@ class SusceptometerMicroscope(Microscope):
         """
         Scan the current plane while acquiring data in the channels defined in
         measurement configuration file (e.g. MAG, SUSCX, SUSCY, CAP).
+
         Args:
             scan_params: Dict of scan parameters as defined
                 in measuremnt configuration file.
+                
         Returns:
             Tuple[qcodes.DataSet, plots.ScanPlot]: data, plot
                 qcodes DataSet containing acquired arrays and metdata,

@@ -10,7 +10,7 @@ Getting Started
 Installation
 ------------
 
-scanning-squid is not yet packaged for `pip <https://pypi.org/>`_ or `conda <https://conda.io/docs/>`_. It is recommended that you set up a :code:`conda env` in which to run scanning-squid by following the steps below. This will install all of the packages on which scanning-squid depends.
+We recommend that you set up a :code:`conda env` in which to run scanning-squid by following the steps below. This will install all of the packages on which scanning-squid depends.
 
 Windows
 ~~~~~~~
@@ -36,18 +36,4 @@ Mac
   		- :code:`conda env create -f environment.yml`
   		- :code:`source activate scanning-squid`
 
-After cloning the `scanning-squid repository <https://github.com/moler-group/scanning-squid>`_, to run scanning-squid from a Windows (Mac) machine, open the Anaconda Prompt (Terminal) and run :code:`activate scanning-squid` (:code:`source activate scanning-squid`), and launch a :code:`jupyter notebook` or :code:`jupyter lab`.
-
-Documentation
-~~~~~~~~~~~~~
-
-.. toctree::
-   :maxdepth: 4
-
-   /pages/microscope
-   /pages/config-files
-   /examples/PhysicalUnits
-   /pages/measurements
-   /pages/plots
-   /pages/utils
-   /examples/DataSetExample
+After cloning the `scanning-squid repository <https://github.com/moler-group/scanning-squid>`_, to run scanning-squid from a Windows (Mac) machine, open the Anaconda Prompt (Terminal) and run :code:`activate scanning-squid` (:code:`source activate scanning-squid`), and launch a :code:`jupyter notebook` or :code:`jupyter lab`. Alternatively, on a Windows machine, you can launch a Jupyter Notebook from the start menu (just make sure the Jupyter Notebook icon says "(scanning-squid)" next to it).

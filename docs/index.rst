@@ -10,6 +10,8 @@ Scanning SQUID measurement & control
 
 To install scanning-squid, see :ref:`getting-started`.
 
+Contact: Logan Bishop-Van Horn (lbvh [at] stanford [dot] edu).
+
    .. image:: https://readthedocs.org/projects/scanning-squid/badge/?version=latest
       :target: https://scanning-squid.readthedocs.io/en/latest/?badge=latest
       :alt: Documentation Status
@@ -26,3 +28,4 @@ To install scanning-squid, see :ref:`getting-started`.
    pages/plots
    pages/utils
    examples/DataSetExample
+   pages/workflow

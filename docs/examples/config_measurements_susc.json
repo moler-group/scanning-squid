@@ -2,15 +2,15 @@
     "scan": {
         "fname": "scan",
         "fast_ax": "x",
-        "range": {"x": "10 V", "y": "10 V"},
+        "range": {"x": "5 V", "y": "5 V"},
         "center": {"x": "0 V", "y": "0 V"},
         "height": "-0.2 V",
         "scan_rate": "10 pixels/s",
-        "scan_size": {"x": 100, "y": 100},
+        "scan_size": {"x": 50, "y": 50},
         "channels": {
             "MAG": {
                 "label": "Magnetometry",
-                "gain": 1,
+                "gain": 10,
                 "filters": {
                     "lowpass": {"cutoff": "100 kHz", "slope": "12 dB/octave"},
                     "highpass": {"cutoff": "0 Hz","slope": "0 dB/octave"}
@@ -25,7 +25,7 @@
                     "frequency": "131.79 Hz"
                 },
                 "label": "Susceptibility",
-                "gain": 1,
+                "gain": 10,
                 "r_lead": "1 kOhm",
                 "unit": "Phi0/A",
                 "unit_latex": "$\\Phi_0$/A"
@@ -35,7 +35,7 @@
                     "name": "SUSC"
                 },
                 "label": "Susceptibility (out of phase)",
-                "gain": 1,
+                "gain": 10,
                 "r_lead": "1 kOhm",
                 "unit": "Phi0/A",
                 "unit_latex": "$\\Phi_0$/A"
@@ -44,7 +44,7 @@
                 "lockin": {
                     "name": "CAP",
                     "amplitude": "1 V",
-                    "frequency": "6.271 kHz"
+                    "frequency": "6.281 kHz"
                 },
                 "label": "Capacitance",
                 "gain": 1,
@@ -62,7 +62,7 @@
                 "lockin": {
                     "name": "CAP",
                     "amplitude": "1 V",
-                    "frequency": "6.271 kHz"
+                    "frequency": "6.281 kHz"
                 },
                 "label": "Capacitance",
                 "gain": 1,
@@ -76,7 +76,7 @@
                     "frequency": "131.79 Hz"
                 },
                 "label": "Susceptibility",
-                "gain": 1,
+                "gain": 10,
                 "r_lead": "1 kOhm",
                 "unit": "Phi0/A",
                 "unit_latex": "$\\Phi_0$/A"
@@ -86,20 +86,20 @@
                     "name": "SUSC"
                 },
                 "label": "Susceptibility (out of phase)",
-                "gain": 1,
+                "gain": 10,
                 "r_lead": "1 kOhm",
                 "unit": "Phi0/A",
                 "unit_latex": "$\\Phi_0$/A"
             }
         },
         "constants": {
-            "max_slope": "3 fF/V",
-            "max_delta_cap": "15 pF",
+            "max_slope": "0.8 fF/V",
+            "max_delta_cap": "5 fF",
             "initial_cap":"0 pF",
             "nfitmin":10,
             "nwindow":30,
             "ntest":8,
-            "wait_factor":3
+            "wait_factor":2
         }
     }
 }

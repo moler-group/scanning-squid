@@ -59,6 +59,14 @@
                 "comment": "Approximate um/step at 3 K, 60 V. Sign is relative to scanner sign. 2018/02/22"},
             "history": {}
         },
+        "ls372":{
+            "name": "ls372",
+            "address": "GPIB0::13::7::INSTR"
+        },
+        "ls331":{
+            "name": "ls331",
+            "address": "GPIB0::30::7::INSTR"
+        },
         "scanner": {
             "name": "benders",
             "constants": {
