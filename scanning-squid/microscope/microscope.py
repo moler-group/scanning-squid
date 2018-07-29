@@ -278,7 +278,7 @@ class Microscope(Station):
             #self.CAP_lockin.amplitude(0.004)
             tdc_plot.fig.show()
             tdc_plot.save()
-            log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
+            log.info('Measuremet aborted by user. DataSet saved to {}.'.format(data.location))
         utils.td_to_mat_file(data, real_units=True)
         return data, tdc_plot
 
@@ -310,7 +310,7 @@ class Microscope(Station):
                 log.info('Touchdown confirmed.')
 
     def get_plane(self, x_vec: np.ndarray, y_vec: np.ndarray,
-                  tdc_params: Dict[str, Any]) -> Tuple[Union[np.ndarray, None]]:
+                  tdc_params: Dict[str, Any]) -> None:
         """Performs touchdowns on a grid and fits a plane to the resulting surface.
 
         Args:
@@ -396,9 +396,9 @@ class Microscope(Station):
             for i, axis in enumerate(['x', 'y', 'z']):
                 self.scanner.metadata['plane'].update({axis: plane[i][0]})
             self.atto.plane_is_current = True
-            return x_grid, y_grid, td_grid, plane
+            #return x_grid, y_grid, td_grid, plane
         #: If the loop didn't finish, return (None, None, None, None)
-        return (None,) * 4
+        #return (None,) * 4
  
     def remove_component(self, name: str) -> None:
         """Remove a component (instrument) from the microscope.

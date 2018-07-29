@@ -7,15 +7,6 @@ from scipy import io
 import nidaqmx
 import matplotlib.pyplot as plt
 
-from instruments.daq import DAQAnalogInputs
-import qcodes as qc
-from qcodes.data.io import DiskIO
-import pathlib
-import numpy as np
-from scipy import io
-import nidaqmx
-import matplotlib.pyplot as plt
-
 def fft_noise(dev_name, channel, prefactor, samplerate, sampleduration, navg, fmax):
     loc_provider = qc.FormatLocation(fmt='./data/{date}/#{counter}_{name}_{time}')
     loc = loc_provider(DiskIO('.'), record={'name': 'fft_noise'})
