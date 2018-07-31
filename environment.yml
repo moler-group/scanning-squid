@@ -27,3 +27,4 @@ dependencies:
     - qcodes==0.1.11
     - sphinxcontrib-jsonschema
     - nbsphinx
+    - stanford-theme
