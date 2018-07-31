@@ -1,0 +1,610 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>microscope.microscope &mdash; scanning-squid  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="scanning-squid  documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> scanning-squid
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/microscope.html">Microscope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/config-files.html">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/PhysicalUnits.html">Physical Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/measurements.html">Measurements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/plots.html">Plots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/utils.html">Utility Functions &amp; Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/DataSetExample.html">DataSet Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/workflow.html">Typical Workflow</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">scanning-squid</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>microscope.microscope</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for microscope.microscope</h1><div class="highlight"><pre>
+<span></span><span class="c1">#: Various Python utilities</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+
+<span class="c1">#: Plotting and math modules</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">mpl_toolkits.mplot3d.axes3d</span> <span class="k">as</span> <span class="nn">axes3d</span>
+<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">colors</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">lstsq</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="k">import</span> <span class="n">clear_output</span>
+
+<span class="c1">#: Qcodes for running measurements and saving data</span>
+<span class="kn">import</span> <span class="nn">qcodes</span> <span class="k">as</span> <span class="nn">qc</span>
+<span class="kn">from</span> <span class="nn">qcodes.station</span> <span class="k">import</span> <span class="n">Station</span>
+<span class="kn">from</span> <span class="nn">qcodes.instrument_drivers.stanford_research.SR830</span> <span class="k">import</span> <span class="n">SR830</span>
+
+<span class="c1">#: NI DAQ library</span>
+<span class="kn">import</span> <span class="nn">nidaqmx</span>
+<span class="kn">from</span> <span class="nn">nidaqmx.constants</span> <span class="k">import</span> <span class="n">AcquisitionType</span>
+
+<span class="c1">#: scanning-squid modules</span>
+<span class="kn">import</span> <span class="nn">squids</span>
+<span class="kn">import</span> <span class="nn">instruments.atto</span> <span class="k">as</span> <span class="nn">atto</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+<span class="kn">from</span> <span class="nn">scanner</span> <span class="k">import</span> <span class="n">Scanner</span>
+<span class="kn">from</span> <span class="nn">instruments.daq</span> <span class="k">import</span> <span class="n">DAQAnalogInputs</span>
+<span class="kn">from</span> <span class="nn">plots</span> <span class="k">import</span> <span class="n">ScanPlot</span><span class="p">,</span> <span class="n">TDCPlot</span>
+
+<span class="c1">#: Pint for manipulating physical units</span>
+<span class="kn">from</span> <span class="nn">pint</span> <span class="k">import</span> <span class="n">UnitRegistry</span>
+<span class="n">ureg</span> <span class="o">=</span> <span class="n">UnitRegistry</span><span class="p">()</span>
+<span class="c1">#: Tell UnitRegistry instance what a Phi0 is, and that Ohm = ohm</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;squid_units.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Phi0 = 2.067833831e-15 * Wb</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Ohm = ohm</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="n">ureg</span><span class="o">.</span><span class="n">load_definitions</span><span class="p">(</span><span class="s1">&#39;./squid_units.txt&#39;</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Microscope"><a class="viewcode-back" href="../../pages/microscope.html#microscope.microscope.Microscope">[docs]</a><span class="k">class</span> <span class="nc">Microscope</span><span class="p">(</span><span class="n">Station</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for scanning SQUID microscope.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">temp</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ureg</span><span class="p">:</span> <span class="n">Any</span><span class="o">=</span><span class="n">ureg</span><span class="p">,</span> <span class="n">log_level</span><span class="p">:</span> <span class="n">Any</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                 <span class="n">log_name</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            config_file: Path to microscope configuration JSON file.</span>
+<span class="sd">            temp: &#39;LT&#39; or &#39;RT&#39;, depending on whether the microscope is cold or not.</span>
+<span class="sd">                Sets the voltage limits for the scanner and Attocubes.</span>
+<span class="sd">            ureg: pint UnitRegistry for managing physical units.</span>
+<span class="sd">            log_level: e.g. logging.DEBUG or logging.INFO</span>
+<span class="sd">            log_name: Log file will be saved as logs/{log_name}.log.</span>
+<span class="sd">                Default is the name of the microscope configuration file.</span>
+<span class="sd">            **kwargs: Keyword arguments to be passed to Station constructor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">qc</span><span class="o">.</span><span class="n">Instrument</span><span class="o">.</span><span class="n">close_all</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">load_json_ordered</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s1">&#39;logs&#39;</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="s1">&#39;logs&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">log_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">log_file</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">next_file_name</span><span class="p">(</span><span class="s1">&#39;./logs/&#39;</span> <span class="o">+</span> <span class="n">config_file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;log&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log_file</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">next_file_name</span><span class="p">(</span><span class="s1">&#39;./logs/&#39;</span> <span class="o">+</span> <span class="n">log_name</span><span class="p">,</span> <span class="s1">&#39;log&#39;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+        	<span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+        	<span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(levelname)s</span><span class="s1">:</span><span class="si">%(asctime)s</span><span class="s1">:</span><span class="si">%(module)s</span><span class="s1">:</span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span>
+            <span class="n">datefmt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;info&#39;</span><span class="p">][</span><span class="s1">&#39;timestamp_format&#39;</span><span class="p">],</span>
+            <span class="n">handlers</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="n">log_file</span><span class="p">),</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()</span>
+            <span class="p">])</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Logging started.&#39;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Initializing microscope object using file </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">config_file</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ureg</span> <span class="o">=</span> <span class="n">ureg</span>
+        <span class="c1"># Callable for converting a string into a quantity with units</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span> <span class="o">=</span> <span class="n">ureg</span><span class="o">.</span><span class="n">Quantity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp</span> <span class="o">=</span> <span class="n">temp</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_atto</span><span class="p">()</span>
+        <span class="c1">#self._add_temp_controller()</span>
+        <span class="c1">#self._add_keithley()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_scanner</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_SQUID</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_lockins</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_add_atto</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add Attocube controller to microscope.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">atto_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;instruments&#39;</span><span class="p">][</span><span class="s1">&#39;atto&#39;</span><span class="p">]</span>
+        <span class="n">ts_fmt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;info&#39;</span><span class="p">][</span><span class="s1">&#39;timestamp_format&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;atto&#39;</span><span class="p">):</span>
+        <span class="c1">#     self.atto.clear_instances()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">atto</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_component</span><span class="p">(</span><span class="n">atto_config</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atto</span> <span class="o">=</span> <span class="n">atto</span><span class="o">.</span><span class="n">ANC300</span><span class="p">(</span><span class="n">atto_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">temp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ureg</span><span class="p">,</span> <span class="n">ts_fmt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_component</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atto</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Attocube controller successfully added to microscope.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_add_scanner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add scanner instrument to microscope.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scanner_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;instruments&#39;</span><span class="p">][</span><span class="s1">&#39;scanner&#39;</span><span class="p">]</span>
+        <span class="n">daq_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;instruments&#39;</span><span class="p">][</span><span class="s1">&#39;daq&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;scanner&#39;</span><span class="p">):</span>
+            <span class="c1">#self.scanner.clear_instances()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_component</span><span class="p">(</span><span class="n">scanner_config</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span> <span class="o">=</span> <span class="n">Scanner</span><span class="p">(</span><span class="n">scanner_config</span><span class="p">,</span> <span class="n">daq_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">temp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ureg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_component</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Scanner successfully added to microscope.&#39;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">_add_SQUID</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add SQUID instrument to microscope.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">squid_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;SQUID&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;SQUID&#39;</span><span class="p">):</span>
+            <span class="c1">#self.SQUID.clear_instances()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">SQUID</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_component</span><span class="p">(</span><span class="n">squid_config</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+        <span class="n">squid_type</span> <span class="o">=</span> <span class="n">squid_config</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SQUID</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="s1">&#39;squids&#39;</span><span class="p">],</span> <span class="n">squid_type</span><span class="p">)(</span><span class="n">squid_config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_component</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SQUID</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(SQUID) successfully added to microscope.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">squid_type</span><span class="p">))</span>
+        
+    <span class="k">def</span> <span class="nf">_add_lockins</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add lockins to microscope.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">lockin</span><span class="p">,</span> <span class="n">lockin_info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;instruments&#39;</span><span class="p">][</span><span class="s1">&#39;lockins&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_lockin&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lockin</span><span class="p">)</span>
+            <span class="n">address</span> <span class="o">=</span> <span class="n">lockin_info</span><span class="p">[</span><span class="s1">&#39;address&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+                <span class="c1">#getattr(self, name, &#39;clear_instances&#39;)()</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;close&#39;</span><span class="p">)()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_component</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">instr</span> <span class="o">=</span> <span class="n">SR830</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="n">lockin</span><span class="p">:</span> <span class="n">lockin_info</span><span class="p">})</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">instr</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_component</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_lockin&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lockin</span><span class="p">)))</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> successfully added to microscope.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+            
+<div class="viewcode-block" id="Microscope.set_lockins"><a class="viewcode-back" href="../../pages/microscope.html#microscope.microscope.Microscope.set_lockins">[docs]</a>    <span class="k">def</span> <span class="nf">set_lockins</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">measurement</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Initialize lockins for given measurement.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            measurement: Dict of measurement parameters as defined</span>
+<span class="sd">                in measurement configuration file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">channels</span> <span class="o">=</span> <span class="n">measurement</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">channels</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;lockin&#39;</span> <span class="ow">in</span> <span class="n">channels</span><span class="p">[</span><span class="n">ch</span><span class="p">]:</span>
+                <span class="n">lockin</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_lockin&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">channels</span><span class="p">[</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;lockin&#39;</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">channels</span><span class="p">[</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;lockin&#39;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">param</span> <span class="o">!=</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span>
+                        <span class="n">parameters</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lockin</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span>
+                        <span class="n">unit</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">channels</span><span class="p">[</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;lockin&#39;</span><span class="p">][</span><span class="n">param</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+                        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Setting </span><span class="si">{}</span><span class="s1"> on </span><span class="si">{}</span><span class="s1"> to </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">lockin</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">))</span>
+                        <span class="n">parameters</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Microscope.td_cap"><a class="viewcode-back" href="../../pages/microscope.html#microscope.microscope.Microscope.td_cap">[docs]</a>    <span class="k">def</span> <span class="nf">td_cap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tdc_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">update_snap</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Performs a capacitive touchdown.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tdc_params: Dict of capacitive touchdown parameters as defined</span>
+<span class="sd">                in measurement configuration file.</span>
+<span class="sd">            update_snap: Whether to update the microscope snapshot. Default True.</span>
+<span class="sd">                (You may want this to be False when getting a plane or approaching.)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple[qcodes.DataSet, plots.TDCPlot]: data, tdc_plot</span>
+<span class="sd">                DataSet and plot generated by the touchdown Loop.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">old_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">position</span><span class="p">()</span>
+        <span class="n">constants</span> <span class="o">=</span> <span class="n">tdc_params</span><span class="p">[</span><span class="s1">&#39;constants&#39;</span><span class="p">]</span>
+        <span class="n">daq_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;instruments&#39;</span><span class="p">][</span><span class="s1">&#39;daq&#39;</span><span class="p">]</span>
+        <span class="n">daq_name</span> <span class="o">=</span> <span class="n">daq_config</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+        <span class="n">ai_channels</span> <span class="o">=</span> <span class="n">daq_config</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">][</span><span class="s1">&#39;analog_inputs&#39;</span><span class="p">]</span>
+        <span class="n">meas_channels</span> <span class="o">=</span> <span class="n">tdc_params</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]</span>
+        <span class="n">channels</span> <span class="o">=</span> <span class="p">{}</span> 
+        <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">meas_channels</span><span class="p">:</span>
+            <span class="n">channels</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ch</span><span class="p">:</span> <span class="n">ai_channels</span><span class="p">[</span><span class="n">ch</span><span class="p">]})</span>
+        <span class="n">nchannels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">channels</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">daq_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">daq_config</span><span class="p">[</span><span class="s1">&#39;rate&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;Hz&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">/</span> <span class="n">nchannels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_lockins</span><span class="p">(</span><span class="n">tdc_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="n">update_snap</span><span class="p">)</span>
+        <span class="c1">#: z position voltage step</span>
+        <span class="n">dV</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">tdc_params</span><span class="p">[</span><span class="s1">&#39;dV&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+        <span class="c1">#: Start and end z position voltages</span>
+        <span class="n">startV</span><span class="p">,</span> <span class="n">endV</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">lim</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="k">for</span> <span class="n">lim</span> <span class="ow">in</span> <span class="n">tdc_params</span><span class="p">[</span><span class="s1">&#39;range&#39;</span><span class="p">]])</span>
+        <span class="n">delay</span> <span class="o">=</span> <span class="n">constants</span><span class="p">[</span><span class="s1">&#39;wait_factor&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">CAP_lockin</span><span class="o">.</span><span class="n">time_constant</span><span class="p">()</span>
+        <span class="n">prefactors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_prefactors</span><span class="p">(</span><span class="n">tdc_params</span><span class="p">)</span>
+        <span class="c1">#: get channel prefactors in string form so they can be saved in metadata</span>
+        <span class="n">prefactor_strs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">ch</span><span class="p">,</span> <span class="n">prefac</span> <span class="ow">in</span> <span class="n">prefactors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">unit</span> <span class="o">=</span> <span class="n">tdc_params</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;unit&#39;</span><span class="p">]</span>
+            <span class="n">pre</span> <span class="o">=</span> <span class="n">prefac</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/V&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">unit</span><span class="p">))</span>
+            <span class="n">prefactor_strs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ch</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pre</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">pre</span><span class="o">.</span><span class="n">units</span><span class="p">)})</span>
+        <span class="n">ai_task</span> <span class="o">=</span>  <span class="n">nidaqmx</span><span class="o">.</span><span class="n">Task</span><span class="p">(</span><span class="s1">&#39;td_cap_ai_task&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_component</span><span class="p">(</span><span class="s1">&#39;daq_ai&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;daq_ai&#39;</span><span class="p">):</span>
+            <span class="c1">#self.daq_ai.clear_instances()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">daq_ai</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">daq_ai</span> <span class="o">=</span> <span class="n">DAQAnalogInputs</span><span class="p">(</span><span class="s1">&#39;daq_ai&#39;</span><span class="p">,</span> <span class="n">daq_name</span><span class="p">,</span> <span class="n">daq_rate</span><span class="p">,</span> <span class="n">channels</span><span class="p">,</span> <span class="n">ai_task</span><span class="p">)</span>
+        <span class="n">loop_counter</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">Counter</span><span class="p">()</span>
+        <span class="n">tdc_plot</span> <span class="o">=</span> <span class="n">TDCPlot</span><span class="p">(</span><span class="n">tdc_params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ureg</span><span class="p">)</span> 
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">Loop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">position_z</span><span class="o">.</span><span class="n">sweep</span><span class="p">(</span><span class="n">startV</span><span class="p">,</span> <span class="n">endV</span><span class="p">,</span> <span class="n">dV</span><span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">each</span><span class="p">(</span>
+                <span class="n">qc</span><span class="o">.</span><span class="n">Task</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">,</span> <span class="n">delay</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">daq_ai</span><span class="o">.</span><span class="n">voltage</span><span class="p">,</span>
+                <span class="n">qc</span><span class="o">.</span><span class="n">Task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">check_for_td</span><span class="p">,</span> <span class="n">tdc_plot</span><span class="p">,</span> <span class="n">qc</span><span class="o">.</span><span class="n">loops</span><span class="o">.</span><span class="n">active_data_set</span><span class="p">,</span> <span class="n">loop_counter</span><span class="p">),</span>
+                <span class="n">qc</span><span class="o">.</span><span class="n">Task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">get_td_height</span><span class="p">,</span> <span class="n">tdc_plot</span><span class="p">),</span>
+                <span class="n">qc</span><span class="o">.</span><span class="n">BreakIf</span><span class="p">(</span><span class="k">lambda</span> <span class="n">scanner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="p">:</span> <span class="n">scanner</span><span class="o">.</span><span class="n">break_loop</span> <span class="ow">or</span> <span class="n">scanner</span><span class="o">.</span><span class="n">td_has_occurred</span><span class="p">),</span>
+                <span class="n">qc</span><span class="o">.</span><span class="n">Task</span><span class="p">(</span><span class="n">loop_counter</span><span class="o">.</span><span class="n">advance</span><span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">then</span><span class="p">(</span>
+                <span class="n">qc</span><span class="o">.</span><span class="n">Task</span><span class="p">(</span><span class="n">ai_task</span><span class="o">.</span><span class="n">stop</span><span class="p">),</span>
+                <span class="n">qc</span><span class="o">.</span><span class="n">Task</span><span class="p">(</span><span class="n">ai_task</span><span class="o">.</span><span class="n">close</span><span class="p">),</span>
+                <span class="c1">#qc.Task(self.CAP_lockin.amplitude, 0.004),</span>
+                <span class="c1">#qc.Task(self.SUSC_lockin.amplitude, 0.004),</span>
+                <span class="n">qc</span><span class="o">.</span><span class="n">Task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">retract</span><span class="p">),</span>
+                <span class="n">qc</span><span class="o">.</span><span class="n">Task</span><span class="p">(</span><span class="n">tdc_plot</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">),</span>
+                <span class="n">qc</span><span class="o">.</span><span class="n">Task</span><span class="p">(</span><span class="n">tdc_plot</span><span class="o">.</span><span class="n">save</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="c1">#: loop.metadata will be saved in DataSet</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">tdc_params</span><span class="p">)</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;prefactors&#39;</span><span class="p">:</span> <span class="n">prefactor_strs</span><span class="p">})</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">ch</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">meas_channels</span><span class="p">):</span>
+            <span class="n">loop</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;idx&#39;</span><span class="p">:</span> <span class="n">idx</span><span class="p">})</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">get_data_set</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">tdc_params</span><span class="p">[</span><span class="s1">&#39;fname&#39;</span><span class="p">])</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Starting capacitive touchdown.&#39;</span><span class="p">)</span>
+            <span class="n">loop</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">old_pos</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">0.002</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">old_pos</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">0.002</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">td_height</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;plane&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">td_height</span><span class="p">})</span>
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Touchdown interrupted by user. Retracting scanner.&#39;</span><span class="p">)</span>
+            <span class="c1">#: Set break_loop = True so that get_plane() and approach() will be aborted</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">break_loop</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="c1">#: Stop &#39;td_cap_ai_task&#39; so that we can read our current position</span>
+            <span class="n">ai_task</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="n">ai_task</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">retract</span><span class="p">()</span>
+            <span class="c1">#self.CAP_lockin.amplitude(0.004)</span>
+            <span class="n">tdc_plot</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="n">tdc_plot</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Scan aborted by user. DataSet saved to </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">location</span><span class="p">))</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">td_to_mat_file</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">real_units</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">tdc_plot</span></div>
+
+<div class="viewcode-block" id="Microscope.approach"><a class="viewcode-back" href="../../pages/microscope.html#microscope.microscope.Microscope.approach">[docs]</a>    <span class="k">def</span> <span class="nf">approach</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tdc_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">attosteps</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Approach the sample by iteratively stepping z Attocube and performing td_cap().</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tdc_params: Dict of capacitive touchdown parameters as defined</span>
+<span class="sd">                in measurement configuration file.</span>
+<span class="sd">            attosteps: Number of z atto steps to perform per iteration. Default 100.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Attempting to approach sample.&#39;</span><span class="p">)</span>
+        <span class="c1">#: Perform an initial touchdown to make sure we&#39;re not close to the sample.</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">tdc_plot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">td_cap</span><span class="p">(</span><span class="n">tdc_params</span><span class="p">,</span> <span class="n">update_snap</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">tdc_plot</span><span class="o">.</span><span class="n">fig</span><span class="p">)</span>
+        <span class="n">clear_output</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">break_loop</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">atto</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="n">attosteps</span><span class="p">)</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">tdc_plot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">td_cap</span><span class="p">(</span><span class="n">tdc_params</span><span class="p">,</span> <span class="n">update_snap</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">tdc_plot</span><span class="o">.</span><span class="n">fig</span><span class="p">)</span>
+            <span class="n">clear_output</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">td_has_occurred</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Touchdown detected. Performing td_cap() to confirm.&#39;</span><span class="p">)</span>    
+            <span class="n">data</span><span class="p">,</span> <span class="n">tdc_plot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">td_cap</span><span class="p">(</span><span class="n">tdc_params</span><span class="p">,</span> <span class="n">update_snap</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">td_has_occurred</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Could not confirm touchdown.&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Touchdown confirmed.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Microscope.get_plane"><a class="viewcode-back" href="../../pages/microscope.html#microscope.microscope.Microscope.get_plane">[docs]</a>    <span class="k">def</span> <span class="nf">get_plane</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_vec</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y_vec</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                  <span class="n">tdc_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Performs touchdowns on a grid and fits a plane to the resulting surface.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_vec: 1D array of x positions (must be same length as y_vec).</span>
+<span class="sd">            y_vec: 1D array of y positions (must be same length as x_vec).</span>
+<span class="sd">            tdc_params: Dict of capacitive touchdown parameters as defined</span>
+<span class="sd">                in measurement configuration file.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple[Union[np.ndarray, None]]: x_grid, y_grid, td_grid, plane</span>
+<span class="sd">                x, y, td grids and plane coefficients such that td_grid is</span>
+<span class="sd">                fit by x_grid * plane[0] + ygrid * plane[1] + plane[2].</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">old_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">position</span><span class="p">()</span>
+        <span class="c1">#: True if touchdown doesn&#39;t occur for any point in the grid</span>
+        <span class="n">out_of_range</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1">#: True if the loop is exited before finishing</span>
+        <span class="n">premature_exit</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">break_loop</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">td_has_occurred</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">x_grid</span><span class="p">,</span> <span class="n">y_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x_vec</span><span class="p">,</span> <span class="n">y_vec</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">)</span>
+        <span class="n">td_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">x_vec</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_vec</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Aqcuiring a plane.&#39;</span><span class="p">)</span>
+        <span class="n">v_retract</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">voltage_retract</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">temp</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;x position [V]&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;y position [V]&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;z position [V]&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Sample Plane&#39;</span><span class="p">)</span>  
+        <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>  
+        <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_vec</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_vec</span><span class="p">)):</span>
+                <span class="c1">#: If any of the safety limits in td_cap() are exceeded,</span>
+                <span class="c1">#: or the loop is interrupted by the user.</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">break_loop</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">td_has_occurred</span><span class="p">:</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Aborting get_plane().&#39;</span><span class="p">)</span>
+                    <span class="n">premature_exit</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span> <span class="c1">#: goes to outer break statement</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">goto</span><span class="p">([</span><span class="n">x_grid</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">],</span> <span class="n">y_grid</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">],</span> <span class="n">v_retract</span><span class="p">])</span>
+                    <span class="n">data</span><span class="p">,</span> <span class="n">tdc_plot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">td_cap</span><span class="p">(</span><span class="n">tdc_params</span><span class="p">,</span> <span class="n">update_snap</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="n">td_grid</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">td_height</span>
+                    <span class="n">clear_output</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">td_height</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">out_of_range</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="n">premature_exit</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Touchdown out of range. Stopping get_plane().&#39;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="n">old_pos</span><span class="p">)</span>
+                        <span class="k">break</span> <span class="c1">#: goes to outer break statement</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+                    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+                    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_grid</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">td_grid</span><span class="p">)],</span> <span class="n">y_grid</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">td_grid</span><span class="p">)],</span>
+                        <span class="n">td_grid</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">td_grid</span><span class="p">)],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;x position [V]&#39;</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;y position [V]&#39;</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;z position [V]&#39;</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Sample Plane&#39;</span><span class="p">)</span>  
+                    <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>  
+                    <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">tdc_plot</span><span class="o">.</span><span class="n">fig</span><span class="p">)</span>
+                    <span class="k">continue</span> <span class="c1">#: skips outer break statement</span>
+                <span class="k">break</span> <span class="c1">#: occurs only if out_of_range or loop is broken</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="n">old_pos</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">out_of_range</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">premature_exit</span><span class="p">:</span>
+            <span class="c1">#: Fit a plane to the td_grid</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x_grid</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">y_grid</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">td</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">td_grid</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+            <span class="n">plane</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">lstsq</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">td</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;New plane : </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">([</span><span class="n">plane</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]))</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot_surface</span><span class="p">(</span><span class="n">x_grid</span><span class="p">,</span> <span class="n">y_grid</span><span class="p">,</span> <span class="n">plane</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x_grid</span> <span class="o">+</span> <span class="n">plane</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">y_grid</span> <span class="o">+</span> <span class="n">plane</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">location</span><span class="p">)</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">location</span> <span class="o">+</span> <span class="s1">&#39;/plane.png&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">axis</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scanner</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;plane&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">axis</span><span class="p">:</span> <span class="n">plane</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">atto</span><span class="o">.</span><span class="n">plane_is_current</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">return</span> <span class="n">x_grid</span><span class="p">,</span> <span class="n">y_grid</span><span class="p">,</span> <span class="n">td_grid</span><span class="p">,</span> <span class="n">plane</span>
+        <span class="c1">#: If the loop didn&#39;t finish, return (None, None, None, None)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">*</span> <span class="mi">4</span></div>
+ 
+<div class="viewcode-block" id="Microscope.remove_component"><a class="viewcode-back" href="../../pages/microscope.html#microscope.microscope.Microscope.remove_component">[docs]</a>    <span class="k">def</span> <span class="nf">remove_component</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Remove a component (instrument) from the microscope.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: Name of component to remove.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Removed </span><span class="si">{}</span><span class="s1"> from microscope.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Microscope has no component with the name </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>  </div></div>
+            
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Stanford-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

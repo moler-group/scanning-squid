@@ -1,0 +1,372 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Plots &mdash; scanning-squid  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="scanning-squid  documentation" href="../index.html"/>
+        <link rel="next" title="Utility Functions &amp; Classes" href="utils.html"/>
+        <link rel="prev" title="Measurements" href="measurements.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> scanning-squid
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="microscope.html">Microscope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config-files.html">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/PhysicalUnits.html">Physical Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="measurements.html">Measurements</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Plots</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#scanplot">ScanPlot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tdcplot">TDCPlot</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utility Functions &amp; Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/DataSetExample.html">DataSet Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Typical Workflow</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">scanning-squid</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Plots</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/pages/plots.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="plots">
+<h1>Plots<a class="headerlink" href="#plots" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="scanplot">
+<span id="id1"></span><h2>ScanPlot<a class="headerlink" href="#scanplot" title="Permalink to this headline">¶</a></h2>
+<p>This is the plot that is displayed during the course of a scan. It shows magnetometry, susceptibility (in and out of phase), and capacitance data as a function of x,y scanner voltage in the units requested in the <a class="reference internal" href="config-files.html#measurementconfig"><span class="std std-ref">Measurement Configuration</span></a> file. The plot is saved as a png file to the DataSet location after each line of the scan. The last five lines of data are displayed below the colorplot, with the most recent line in red.</p>
+<blockquote>
+<div><div class="figure">
+<a class="reference internal image-reference" href="../_images/scanplot_example.png"><img alt="../_images/scanplot_example.png" src="../_images/scanplot_example.png" style="width: 700.0px; height: 315.0px;" /></a>
+</div>
+<span class="target" id="module-plots"></span><dl class="class">
+<dt id="plots.ScanPlot">
+<em class="property">class </em><code class="descclassname">plots.</code><code class="descname">ScanPlot</code><span class="sig-paren">(</span><em>scan_params: Dict[str, Any], ureg: Any, **kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/plots.html#ScanPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plots.ScanPlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot displaying acquired images in all measurement channels, updated live during a scan.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>scan_params</strong> – Scan parameters as defined in measurement configuration file.</li>
+<li><strong>prefactors</strong> – Dict of pint quantities defining conversion factor from
+DAQ voltage to real units for each measurement channel.</li>
+<li><strong>ureg</strong> – pint UnitRegistry, manages units.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="plots.ScanPlot.init_empty">
+<code class="descname">init_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/plots.html#ScanPlot.init_empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plots.ScanPlot.init_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the plot with all images empty. They will be filled during the scan.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="plots.ScanPlot.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>fname=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/plots.html#ScanPlot.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plots.ScanPlot.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save plot to png file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fname</strong> – File to which to save the plot.
+If fname is None, saves to data location as {scan_params[‘fname’]}.png</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="plots.ScanPlot.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>data_set: Any</em>, <em>loop_counter: Any</em>, <em>num_lines: Union[int</em>, <em>NoneType] = 5</em>, <em>offline: Union[bool</em>, <em>NoneType] = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/plots.html#ScanPlot.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plots.ScanPlot.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the plot with updated DataSet. Called after each line of the scan.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>DataSet</strong> – active data set, with a new line of data added with each loop iteration.</li>
+<li><strong>loop_counter</strong> – utils.Counter instance, lets us know where we are in the scan.</li>
+<li><strong>num_lines</strong> – Number of previous linecuts to plot, including the line just scanned.
+Currently can only handle num_lines &lt;= 5.</li>
+<li><strong>offline</strong> – False if this is being called during a scan.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="tdcplot">
+<span id="id2"></span><h2>TDCPlot<a class="headerlink" href="#tdcplot" title="Permalink to this headline">¶</a></h2>
+<p>This is the plot that is displayed during a touchdown. It shows capacitance and susceptibility (in and out of phase) as a function of z scanner voltage in the units requested in the <a class="reference internal" href="config-files.html#measurementconfig"><span class="std std-ref">Measurement Configuration</span></a> file. The plot is saved as a png file to the DataSet location at the end of the measurement.</p>
+<blockquote>
+<div><div class="figure">
+<a class="reference internal image-reference" href="../_images/tdcplot_example.png"><img alt="../_images/tdcplot_example.png" src="../_images/tdcplot_example.png" style="width: 630.0px; height: 210.0px;" /></a>
+</div>
+<span class="target" id="module-plots"></span><dl class="class">
+<dt id="plots.TDCPlot">
+<em class="property">class </em><code class="descclassname">plots.</code><code class="descname">TDCPlot</code><span class="sig-paren">(</span><em>tdc_params: Dict[str, Any], ureg: Any</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/plots.html#TDCPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plots.TDCPlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot displaying capacitance as a function of z voltage, updated live during a scan.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>tdc_params</strong> – Touchdown parameters as defined in measurement configuration file.</li>
+<li><strong>ureg</strong> – pint UnitRegistry, manages units.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="plots.TDCPlot.init_empty">
+<code class="descname">init_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/plots.html#TDCPlot.init_empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plots.TDCPlot.init_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the plot with no data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="plots.TDCPlot.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>fname=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/plots.html#TDCPlot.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plots.TDCPlot.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save plot to png file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fname</strong> – File to which to save the plot.
+If fname is None, saves to data location as {tdc_params[‘fname’]}.png</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="plots.TDCPlot.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>data_set: Any</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/plots.html#TDCPlot.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plots.TDCPlot.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update plot with data from data_set.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data_set</strong> – DataSet generated by Loop in Microscope.td_cap().</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="utils.html" class="btn btn-neutral float-right" title="Utility Functions &amp; Classes" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="measurements.html" class="btn btn-neutral" title="Measurements" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Stanford-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

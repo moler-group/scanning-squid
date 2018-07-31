@@ -1,0 +1,295 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Getting Started &mdash; scanning-squid  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="scanning-squid  documentation" href="../index.html"/>
+        <link rel="next" title="Microscope" href="microscope.html"/>
+        <link rel="prev" title="Scanning SQUID measurement &amp; control" href="../index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> scanning-squid
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mac">Mac</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="microscope.html">Microscope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config-files.html">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/PhysicalUnits.html">Physical Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="measurements.html">Measurements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plots.html">Plots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utility Functions &amp; Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/DataSetExample.html">DataSet Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Typical Workflow</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">scanning-squid</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Getting Started</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/pages/getting-started.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="getting-started">
+<span id="id1"></span><h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="https://github.com/moler-group/scanning-squid">scanning-squid</a> is an instrument control and data acquisition package for scanning SQUID (Superconducting QUantum Interference Device) microscopy. It is based on the <a class="reference external" href="http://qcodes.github.io/Qcodes/">QCoDeS</a> framework, and is designed to run in either a standalone <a class="reference external" href="http://jupyter.org/index.html">Jupyter Notebook</a>, or in <a class="reference external" href="http://jupyterlab.readthedocs.io/en/stable/">Jupyter Lab</a>.</p>
+<p><strong>Contact: Logan Bishop-Van Horn (lbvh [at] stanford [dot] edu).</strong></p>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>We recommend that you set up a <code class="code docutils literal notranslate"><span class="pre">conda</span> <span class="pre">env</span></code> in which to run scanning-squid by following the steps below. This will install all of the packages on which scanning-squid depends.</p>
+<div class="section" id="windows">
+<h3>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><ul>
+<li><p class="first">Download and install <a class="reference external" href="https://www.anaconda.com/download/#windows">Anaconda</a> (the latest Python 3 version).</p>
+</li>
+<li><p class="first">Download <a class="reference external" href="https://github.com/moler-group/scanning-squid/blob/master/environment.yml">environment.yml</a> from the scanning-squid repository</p>
+</li>
+<li><p class="first">Launch an Anaconda Prompt (start typing anaconda in the start menu and click on Anaconda Prompt)</p>
+</li>
+<li><p class="first">In the Anaconda Prompt, navigate to the directory containing environment.yml (<code class="code docutils literal notranslate"><span class="pre">cd</span> <span class="pre">&lt;path-to-directory-containing-environment-file&gt;</span></code>)</p>
+</li>
+<li><p class="first">Run the following two commands in the Anaconda Prompt:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="code docutils literal notranslate"><span class="pre">conda</span> <span class="pre">env</span> <span class="pre">create</span> <span class="pre">-f</span> <span class="pre">environment.yml</span></code></li>
+<li><code class="code docutils literal notranslate"><span class="pre">activate</span> <span class="pre">scanning-squid</span></code></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="mac">
+<h3>Mac<a class="headerlink" href="#mac" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><ul>
+<li><p class="first">Download and install <a class="reference external" href="https://www.anaconda.com/download/#macos">Anaconda</a> (the latest Python 3 version).</p>
+</li>
+<li><p class="first">Download <a class="reference external" href="https://github.com/moler-group/scanning-squid/blob/master/environment.yml">environment.yml</a> from the scanning-squid repository</p>
+</li>
+<li><p class="first">Launch a Terminal.</p>
+</li>
+<li><p class="first">In the Terminal, navigate to the directory containing environment.yml (<code class="code docutils literal notranslate"><span class="pre">cd</span> <span class="pre">&lt;path-to-directory-containing-environment-file&gt;</span></code>)</p>
+</li>
+<li><p class="first">Run the following two commands in the Terminal:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="code docutils literal notranslate"><span class="pre">conda</span> <span class="pre">env</span> <span class="pre">create</span> <span class="pre">-f</span> <span class="pre">environment.yml</span></code></li>
+<li><code class="code docutils literal notranslate"><span class="pre">source</span> <span class="pre">activate</span> <span class="pre">scanning-squid</span></code></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+<p>After cloning the <a class="reference external" href="https://github.com/moler-group/scanning-squid">scanning-squid repository</a>, to run scanning-squid from a Windows (Mac) machine, open the Anaconda Prompt (Terminal) and run <code class="code docutils literal notranslate"><span class="pre">activate</span> <span class="pre">scanning-squid</span></code> (<code class="code docutils literal notranslate"><span class="pre">source</span> <span class="pre">activate</span> <span class="pre">scanning-squid</span></code>), and launch a <code class="code docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">notebook</span></code> or <code class="code docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">lab</span></code>. Alternatively, on a Windows machine, you can launch a Jupyter Notebook from the start menu (just make sure the Jupyter Notebook icon says “(scanning-squid)” next to it).</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="microscope.html" class="btn btn-neutral float-right" title="Microscope" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../index.html" class="btn btn-neutral" title="Scanning SQUID measurement &amp; control" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Stanford-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

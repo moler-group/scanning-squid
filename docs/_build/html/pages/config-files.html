@@ -1,0 +1,474 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Configuration Files &mdash; scanning-squid  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="scanning-squid  documentation" href="../index.html"/>
+        <link rel="next" title="Physical Units" href="../examples/PhysicalUnits.html"/>
+        <link rel="prev" title="Microscope Components" href="components.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> scanning-squid
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="microscope.html">Microscope</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration Files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#microscope-configuration">Microscope Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#measurement-configuration">Measurement Configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/PhysicalUnits.html">Physical Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="measurements.html">Measurements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plots.html">Plots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utility Functions &amp; Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/DataSetExample.html">DataSet Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Typical Workflow</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">scanning-squid</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Configuration Files</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/pages/config-files.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="configuration-files">
+<h1>Configuration Files<a class="headerlink" href="#configuration-files" title="Permalink to this headline">¶</a></h1>
+<p>Parameters of both the microscope itself and of measurements it will perform are defined in <a class="reference external" href="https://realpython.com/python-json/">JSON</a> files. These parameters are loaded into memory as an <a class="reference external" href="https://docs.python.org/3/library/collections.html#collections.OrderedDict">OrderedDict</a> using <a class="reference internal" href="utils.html#utils.load_json_ordered" title="utils.load_json_ordered"><code class="xref py py-meth docutils literal notranslate"><span class="pre">utils.load_json_ordered()</span></code></a> so that they are accessible to the <code class="xref py py-class docutils literal notranslate"><span class="pre">Microscope</span></code>.</p>
+<div class="section" id="microscope-configuration">
+<span id="microscopeconfig"></span><h2>Microscope Configuration<a class="headerlink" href="#microscope-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Example configuration file for a <a class="reference internal" href="microscope.html#microscope.susceptometer.SusceptometerMicroscope" title="microscope.susceptometer.SusceptometerMicroscope"><code class="xref py py-class docutils literal notranslate"><span class="pre">microscope.susceptometer.SusceptometerMicroscope</span></code></a>.</p>
+<blockquote>
+<div><div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;instruments&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;daq&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;NI USB-6363&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Dev1&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;channels&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;analog_inputs&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="nt">&quot;MAG&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                    <span class="nt">&quot;SUSCX&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="nt">&quot;SUSCY&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                    <span class="nt">&quot;CAP&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+                    <span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+                    <span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+                    <span class="nt">&quot;z&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">},</span>
+                <span class="nt">&quot;analog_outputs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span><span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span><span class="nt">&quot;z&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;rate&quot;</span><span class="p">:</span> <span class="s2">&quot;1 MHz&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;max_rate&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;analog_inputs&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="nt">&quot;1 channel&quot;</span><span class="p">:</span> <span class="s2">&quot;2 MHz&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;multichannel&quot;</span><span class="p">:</span> <span class="s2">&quot;1 MHz&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;comment&quot;</span><span class="p">:</span> <span class="s2">&quot;Multichannel value is aggregate for all ai channels.&quot;</span><span class="p">},</span>
+                <span class="nt">&quot;analog_outputs&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="nt">&quot;1 channels&quot;</span><span class="p">:</span> <span class="s2">&quot;2.86 MHz&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;2 channels&quot;</span><span class="p">:</span> <span class="s2">&quot;2.00 MHz&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;3 channels&quot;</span><span class="p">:</span> <span class="s2">&quot;1.54 MHz&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;4 channels&quot;</span><span class="p">:</span> <span class="s2">&quot;1.25 MHz&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;comment&quot;</span><span class="p">:</span> <span class="s2">&quot;Max ao rates are per channel.&quot;</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="nt">&quot;lockins&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;SUSC&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;SR830&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;address&quot;</span><span class="p">:</span> <span class="s2">&quot;GPIB0::12::7::INSTR&quot;</span><span class="p">},</span>
+            <span class="nt">&quot;CAP&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;SR830&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;address&quot;</span><span class="p">:</span> <span class="s2">&quot;GPIB0::28::7::INSTR&quot;</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="nt">&quot;atto&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;atto&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;ANC300&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;address&quot;</span><span class="p">:</span> <span class="s2">&quot;ASRL1::INSTR&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;timeout&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+            <span class="nt">&quot;terminator&quot;</span><span class="p">:</span> <span class="s2">&quot;\r\n&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;stopbits&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="nt">&quot;baud_rate&quot;</span> <span class="p">:</span> <span class="mi">38400</span><span class="p">,</span>
+            <span class="nt">&quot;axes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span><span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span><span class="nt">&quot;z&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
+            <span class="nt">&quot;voltage_limits&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;RT&quot;</span><span class="p">:{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;25 V&quot;</span><span class="p">,</span><span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;25 V&quot;</span><span class="p">,</span><span class="nt">&quot;z&quot;</span><span class="p">:</span> <span class="s2">&quot;40 V&quot;</span><span class="p">},</span>
+                <span class="nt">&quot;LT&quot;</span><span class="p">:{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;60 V&quot;</span><span class="p">,</span><span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;60 V&quot;</span><span class="p">,</span><span class="nt">&quot;z&quot;</span><span class="p">:</span> <span class="s2">&quot;60 V&quot;</span><span class="p">}</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;default_frequency&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;100 Hz&quot;</span><span class="p">,</span> <span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;100 Hz&quot;</span><span class="p">,</span> <span class="nt">&quot;z&quot;</span><span class="p">:</span> <span class="s2">&quot;100 Hz&quot;</span><span class="p">},</span>
+            <span class="nt">&quot;constants&quot;</span><span class="p">:{</span>
+                <span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;-0.66 um&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;-0.55 um&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;z&quot;</span><span class="p">:</span> <span class="s2">&quot;0.2 um&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;comment&quot;</span><span class="p">:</span> <span class="s2">&quot;Approximate um/step at 3 K, 60 V. Sign is relative to scanner sign. 2018/02/22&quot;</span><span class="p">},</span>
+            <span class="nt">&quot;history&quot;</span><span class="p">:</span> <span class="p">{}</span>
+        <span class="p">},</span>
+        <span class="nt">&quot;ls372&quot;</span><span class="p">:{</span>
+            <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;ls372&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;address&quot;</span><span class="p">:</span> <span class="s2">&quot;GPIB0::13::7::INSTR&quot;</span>
+        <span class="p">},</span>
+        <span class="nt">&quot;ls331&quot;</span><span class="p">:{</span>
+            <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;ls331&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;address&quot;</span><span class="p">:</span> <span class="s2">&quot;GPIB0::30::7::INSTR&quot;</span>
+        <span class="p">},</span>
+        <span class="nt">&quot;scanner&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;benders&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;constants&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;17 um/V&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;18 um/V&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;z&quot;</span><span class="p">:</span> <span class="s2">&quot;2 um/V&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;comment&quot;</span><span class="p">:</span> <span class="s2">&quot;um/V_daq (2018/02)&quot;</span><span class="p">},</span>
+            <span class="nt">&quot;voltage_limits&quot;</span><span class="p">:{</span>
+                <span class="nt">&quot;RT&quot;</span><span class="p">:{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">-2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">-2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="nt">&quot;z&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">-2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]},</span>
+                <span class="nt">&quot;LT&quot;</span><span class="p">:{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">-10</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span><span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">-10</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="nt">&quot;z&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">-10</span><span class="p">,</span> <span class="mi">10</span><span class="p">]},</span>
+                <span class="nt">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;V&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;comment&quot;</span><span class="p">:</span><span class="s2">&quot;V_daq should never be outside of voltage_limits.&quot;</span><span class="p">},</span>
+            <span class="nt">&quot;voltage_retract&quot;</span><span class="p">:{</span><span class="nt">&quot;RT&quot;</span><span class="p">:</span> <span class="s2">&quot;-2 V&quot;</span><span class="p">,</span><span class="nt">&quot;LT&quot;</span><span class="p">:</span> <span class="s2">&quot;-10 V&quot;</span><span class="p">},</span>
+            <span class="nt">&quot;speed&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;2 V/s&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;comment&quot;</span><span class="p">:</span><span class="s2">&quot;Rate of movement of the scanner (when not scanning).&quot;</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;plane&quot;</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="nt">&quot;cantilever&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;calibration&quot;</span><span class="p">:</span> <span class="s2">&quot;326 uV/pF&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;comment&quot;</span><span class="p">:</span><span class="s2">&quot;CAP lockin X reading, freq = 6.821 kHz, amp = 1 V&quot;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;SQUID&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;SQUID&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;susceptometer&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;IBM deep-etched 0.3um susceptometer&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;modulation_width&quot;</span><span class="p">:</span> <span class="s2">&quot;0.19 V/Phi0&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;FC_PU_mutual&quot;</span><span class="p">:</span> <span class="s2">&quot;0 Phi0/A&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;feedback&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Red Pitaya + pyrpl&quot;</span>
+        <span class="p">},</span>
+        <span class="nt">&quot;dimensions&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;PU_ri&quot;</span><span class="p">:</span> <span class="s2">&quot;0.3 um&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;PU_ro&quot;</span><span class="p">:</span> <span class="s2">&quot;0.5 um&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;FC_ri&quot;</span><span class="p">:</span> <span class="s2">&quot;1.0 um&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;FC_ro&quot;</span><span class="p">:</span> <span class="s2">&quot;1.5 um&quot;</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;info&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;timestamp_format&quot;</span><span class="p">:</span><span class="s2">&quot;%Y-%m-%d_%H:%M:%S&quot;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="measurement-configuration">
+<span id="measurementconfig"></span><h2>Measurement Configuration<a class="headerlink" href="#measurement-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Example configuration file for <a class="reference internal" href="microscope.html#microscope.susceptometer.SusceptometerMicroscope" title="microscope.susceptometer.SusceptometerMicroscope"><code class="xref py py-class docutils literal notranslate"><span class="pre">microscope.susceptometer.SusceptometerMicroscope</span></code></a> measurements.</p>
+<blockquote>
+<div><div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;scan&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;fname&quot;</span><span class="p">:</span> <span class="s2">&quot;scan&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;fast_ax&quot;</span><span class="p">:</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;range&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;5 V&quot;</span><span class="p">,</span> <span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;5 V&quot;</span><span class="p">},</span>
+        <span class="nt">&quot;center&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;0 V&quot;</span><span class="p">,</span> <span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;0 V&quot;</span><span class="p">},</span>
+        <span class="nt">&quot;height&quot;</span><span class="p">:</span> <span class="s2">&quot;-0.2 V&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;scan_rate&quot;</span><span class="p">:</span> <span class="s2">&quot;10 pixels/s&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;scan_size&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;x&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="nt">&quot;y&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
+        <span class="nt">&quot;channels&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;MAG&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Magnetometry&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;gain&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+                <span class="nt">&quot;filters&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="nt">&quot;lowpass&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;cutoff&quot;</span><span class="p">:</span> <span class="s2">&quot;100 kHz&quot;</span><span class="p">,</span> <span class="nt">&quot;slope&quot;</span><span class="p">:</span> <span class="s2">&quot;12 dB/octave&quot;</span><span class="p">},</span>
+                    <span class="nt">&quot;highpass&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;cutoff&quot;</span><span class="p">:</span> <span class="s2">&quot;0 Hz&quot;</span><span class="p">,</span><span class="nt">&quot;slope&quot;</span><span class="p">:</span> <span class="s2">&quot;0 dB/octave&quot;</span><span class="p">}</span>
+                <span class="p">},</span>
+                <span class="nt">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;mPhi0&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;unit_latex&quot;</span><span class="p">:</span> <span class="s2">&quot;m$\\Phi_0$&quot;</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;SUSCX&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;lockin&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;SUSC&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;amplitude&quot;</span><span class="p">:</span> <span class="s2">&quot;1 V&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;131.79 Hz&quot;</span>
+                <span class="p">},</span>
+                <span class="nt">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Susceptibility&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;gain&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+                <span class="nt">&quot;r_lead&quot;</span><span class="p">:</span> <span class="s2">&quot;1 kOhm&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;Phi0/A&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;unit_latex&quot;</span><span class="p">:</span> <span class="s2">&quot;$\\Phi_0$/A&quot;</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;SUSCY&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;lockin&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;SUSC&quot;</span>
+                <span class="p">},</span>
+                <span class="nt">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Susceptibility (out of phase)&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;gain&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+                <span class="nt">&quot;r_lead&quot;</span><span class="p">:</span> <span class="s2">&quot;1 kOhm&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;Phi0/A&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;unit_latex&quot;</span><span class="p">:</span> <span class="s2">&quot;$\\Phi_0$/A&quot;</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;CAP&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;lockin&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;CAP&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;amplitude&quot;</span><span class="p">:</span> <span class="s2">&quot;1 V&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;6.281 kHz&quot;</span>
+                <span class="p">},</span>
+                <span class="nt">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Capacitance&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;gain&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="nt">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;fF&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;unit_latex&quot;</span><span class="p">:</span> <span class="s2">&quot;fF&quot;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;td_cap&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;fname&quot;</span><span class="p">:</span> <span class="s2">&quot;td_cap&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;dV&quot;</span><span class="p">:</span> <span class="s2">&quot;0.1 V&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;range&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;-9.5 V&quot;</span><span class="p">,</span><span class="s2">&quot;9.5 V&quot;</span><span class="p">],</span>
+        <span class="nt">&quot;channels&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;CAP&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;lockin&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;CAP&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;amplitude&quot;</span><span class="p">:</span> <span class="s2">&quot;1 V&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;6.281 kHz&quot;</span>
+                <span class="p">},</span>
+                <span class="nt">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Capacitance&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;gain&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="nt">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;fF&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;unit_latex&quot;</span><span class="p">:</span> <span class="s2">&quot;fF&quot;</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;SUSCX&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;lockin&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;SUSC&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;amplitude&quot;</span><span class="p">:</span> <span class="s2">&quot;1 V&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;131.79 Hz&quot;</span>
+                <span class="p">},</span>
+                <span class="nt">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Susceptibility&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;gain&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+                <span class="nt">&quot;r_lead&quot;</span><span class="p">:</span> <span class="s2">&quot;1 kOhm&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;Phi0/A&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;unit_latex&quot;</span><span class="p">:</span> <span class="s2">&quot;$\\Phi_0$/A&quot;</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;SUSCY&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;lockin&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;SUSC&quot;</span>
+                <span class="p">},</span>
+                <span class="nt">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Susceptibility (out of phase)&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;gain&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+                <span class="nt">&quot;r_lead&quot;</span><span class="p">:</span> <span class="s2">&quot;1 kOhm&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;Phi0/A&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;unit_latex&quot;</span><span class="p">:</span> <span class="s2">&quot;$\\Phi_0$/A&quot;</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="nt">&quot;constants&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;max_slope&quot;</span><span class="p">:</span> <span class="s2">&quot;0.8 fF/V&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;max_delta_cap&quot;</span><span class="p">:</span> <span class="s2">&quot;5 fF&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;initial_cap&quot;</span><span class="p">:</span><span class="s2">&quot;0 pF&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;nfitmin&quot;</span><span class="p">:</span><span class="mi">10</span><span class="p">,</span>
+            <span class="nt">&quot;nwindow&quot;</span><span class="p">:</span><span class="mi">30</span><span class="p">,</span>
+            <span class="nt">&quot;ntest&quot;</span><span class="p">:</span><span class="mi">8</span><span class="p">,</span>
+            <span class="nt">&quot;wait_factor&quot;</span><span class="p">:</span><span class="mi">2</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../examples/PhysicalUnits.html" class="btn btn-neutral float-right" title="Physical Units" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="components.html" class="btn btn-neutral" title="Microscope Components" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Stanford-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

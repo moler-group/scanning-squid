@@ -1,0 +1,828 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>instruments.afg3000 &mdash; scanning-squid  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="scanning-squid  documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> scanning-squid
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/microscope.html">Microscope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/config-files.html">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/PhysicalUnits.html">Physical Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/measurements.html">Measurements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/plots.html">Plots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/utils.html">Utility Functions &amp; Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/DataSetExample.html">DataSet Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/workflow.html">Typical Workflow</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">scanning-squid</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>instruments.afg3000</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for instruments.afg3000</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">qcodes</span> <span class="k">import</span> <span class="n">VisaInstrument</span>
+<span class="kn">import</span> <span class="nn">qcodes.utils.validators</span> <span class="k">as</span> <span class="nn">vals</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AFG3000"><a class="viewcode-back" href="../../pages/components.html#instruments.afg3000.AFG3000">[docs]</a><span class="k">class</span> <span class="nc">AFG3000</span><span class="p">(</span><span class="n">VisaInstrument</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Qcodes driver for Tektronix AFG3000 series arbitrary function generator.</span>
+
+<span class="sd">    Not all instrument functionality is included here.</span>
+<span class="sd">    By default, most parameters are not queried during a snapshot.</span>
+<span class="sd">    Logan Bishop-Van Horn (2018)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">terminator</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;trigger_mode&#39;</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Trigger mode&#39;</span><span class="p">,</span>
+                <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;OUTPut:TRIGger:MODE?&#39;</span><span class="p">,</span>
+                <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;OUTPut:TRIGger:MODE </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+                <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;TRIGger&#39;</span><span class="p">,</span> <span class="s1">&#39;TRIG&#39;</span><span class="p">,</span> <span class="s1">&#39;SYNC&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1">#: Source/output parameters, 2 channels</span>
+        <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>
+
+            <span class="c1">#: Outputs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;impedance_output</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Output </span><span class="si">{}</span><span class="s1"> impedance&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Ohm&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;OUTPut</span><span class="si">{}</span><span class="s1">:IMPedance?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;OUTPut</span><span class="si">{}</span><span class="s1">:IMPedance {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;polarity_output</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Output </span><span class="si">{}</span><span class="s1"> polarity&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;OUTPut</span><span class="si">{}</span><span class="s1">:POLarity?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;OUTPut</span><span class="si">{}</span><span class="s1">:POLarity {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;NORMal&#39;</span><span class="p">,</span> <span class="s1">&#39;NORM&#39;</span><span class="p">,</span> <span class="s1">&#39;INVerted&#39;</span><span class="p">,</span> <span class="s1">&#39;INV&#39;</span><span class="p">)</span>
+            <span class="p">)</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;state_output</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Output </span><span class="si">{}</span><span class="s1"> state&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;OUTPut</span><span class="si">{}</span><span class="s1">:STATe?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;OUTPut</span><span class="si">{}</span><span class="s1">:STATe {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;ON&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>  
+
+            <span class="c1">#: Amplitude modulation</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;am_depth</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> AM depth&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;%&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:AM:DEPTh?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:AM:DEPTh {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+
+            <span class="c1">#: Frequency modulation</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;fm_deviation</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> FM deviation&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Hz&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FM:DEViation?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FM:DEViation {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+
+            <span class="c1">#: Phase modulation</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;pm_deviation</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> PM deviation&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Radians&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PM:DEViation?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PM:DEViation {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+
+            <span class="c1">#: Pulse-width modulation</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;pwm_duty_deviation</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> PWM duty cycle deviation&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;%&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PWM:DEViation:DCYCle?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PWM:DEViation:DCYCle {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Numbers</span><span class="p">(</span><span class="n">min_value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="c1">#: Amplitude, frequency, phase, and pulse-width modulation</span>
+            <span class="k">for</span> <span class="n">mod_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;AM&#39;</span><span class="p">,</span> <span class="s1">&#39;FM&#39;</span><span class="p">,</span> <span class="s1">&#39;PM&#39;</span><span class="p">,</span> <span class="s1">&#39;PWM&#39;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_internal_freq</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod_type</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">src</span><span class="p">),</span>
+                       <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> interal frequency&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">mod_type</span><span class="p">),</span>
+                       <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Hz&#39;</span><span class="p">,</span>
+                       <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:INTernal:FREQuency?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">mod_type</span><span class="p">),</span>
+                       <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                       <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:INTernal:FREQuency {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">mod_type</span><span class="p">),</span>
+                       <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+                <span class="p">)</span>              
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_internal_function</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod_type</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">src</span><span class="p">),</span>
+                       <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> interal function&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">mod_type</span><span class="p">),</span>
+                       <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                       <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:INTernal:FUNCtion?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">mod_type</span><span class="p">),</span>
+                       <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                       <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:INTernal:FUNCtion {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">mod_type</span><span class="p">),</span>
+                       <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span>
+                        <span class="s1">&#39;SINusoid&#39;</span><span class="p">,</span> <span class="s1">&#39;SIN&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;SQUare&#39;</span><span class="p">,</span>  <span class="s1">&#39;SQU&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;TRIangle&#39;</span><span class="p">,</span> <span class="s1">&#39;TRI&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;RAMP&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;NRAMp&#39;</span><span class="p">,</span> <span class="s1">&#39;NRAM&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;PRNoise&#39;</span><span class="p">,</span> <span class="s1">&#39;PRN&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;USER&#39;</span><span class="p">,</span> <span class="s1">&#39;USER1&#39;</span><span class="p">,</span> <span class="s1">&#39;USER2&#39;</span><span class="p">,</span> <span class="s1">&#39;USER3&#39;</span><span class="p">,</span> <span class="s1">&#39;USER4&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;EMEMory&#39;</span><span class="p">,</span> <span class="s1">&#39;EMEM&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;EFILe&#39;</span><span class="p">,</span> <span class="s1">&#39;EFIL&#39;</span><span class="p">)</span>
+                <span class="p">)</span> 
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_internal_efile</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod_type</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">src</span><span class="p">),</span>
+                       <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> interal EFile&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">mod_type</span><span class="p">),</span>
+                       <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                       <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:INTernal:FUNCtion:EFILe?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">mod_type</span><span class="p">),</span>
+                       <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                       <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:INTernal:FUNCtion:EFILe {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">mod_type</span><span class="p">),</span>
+                       <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_internal_source</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod_type</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">src</span><span class="p">),</span>
+                       <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> source&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">mod_type</span><span class="p">),</span>
+                       <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                       <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:SOURce?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">mod_type</span><span class="p">),</span>
+                       <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                       <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:SOURce? {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">mod_type</span><span class="p">),</span>
+                       <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;INTernal&#39;</span><span class="p">,</span> <span class="s1">&#39;INT&#39;</span><span class="p">,</span> <span class="s1">&#39;EXTernal&#39;</span><span class="p">,</span> <span class="s1">&#39;EXT&#39;</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_state</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod_type</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">src</span><span class="p">),</span>
+                       <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> interal state&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">mod_type</span><span class="p">),</span>
+                       <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                       <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:STATe?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">mod_type</span><span class="p">),</span>
+                       <span class="n">get_parser</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span>
+                       <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:STATe {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">mod_type</span><span class="p">),</span>
+                       <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;ON&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="c1">#: Burst mode</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;burst_mode</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> burst mode&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:BURSt:MODE?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:BURSt:MODE {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;TRIGgered&#39;</span><span class="p">,</span> <span class="s1">&#39;TRIG&#39;</span><span class="p">,</span> <span class="s1">&#39;GATed&#39;</span><span class="p">,</span> <span class="s1">&#39;GAT&#39;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;burst_ncycles</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> burst N cycles&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:BURSt:NCYCles?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:BURSt:NCYCles {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">MultiType</span><span class="p">(</span>
+                        <span class="n">vals</span><span class="o">.</span><span class="n">Ints</span><span class="p">(</span><span class="n">min_value</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">1000000</span><span class="p">),</span>
+                        <span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;INFinity&#39;</span><span class="p">,</span> <span class="s1">&#39;INF&#39;</span><span class="p">,</span> <span class="s1">&#39;MAXimum&#39;</span><span class="p">,</span> <span class="s1">&#39;MAX&#39;</span><span class="p">,</span> <span class="s1">&#39;MINimum&#39;</span><span class="p">,</span> <span class="s1">&#39;MIN&#39;</span><span class="p">))</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;burst_state</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> burst state&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:BURSt:STATe?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:BURSt:STATe {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;ON&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;burst_tdelay</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> burst time delay&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:BURSt:TDELay?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:BURSt:TDELay {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">src</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">combine_enum</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;NOISe&#39;</span><span class="p">,</span> <span class="s1">&#39;NOIS&#39;</span><span class="p">,</span> <span class="s1">&#39;EXTernal&#39;</span><span class="p">,</span> <span class="s1">&#39;EXT&#39;</span><span class="p">,</span> <span class="s1">&#39;BOTH&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">combine_enum</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;NOISe&#39;</span><span class="p">,</span> <span class="s1">&#39;NOIS&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;combine</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> combine signals&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:COMBine:FEED?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:COMBine:FEED {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="n">combine_enum</span><span class="p">)</span>
+            <span class="p">)</span> 
+
+            <span class="c1">#: Frequency controls                 </span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;center_freq</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> center frequency&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Hz&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FREQuency:CENTer?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FREQuency:CENTer {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;freq_concurrent</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> concurrent frequency&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FREQuency:CONCurrent?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FREQuency:CONCurrent {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;ON&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;freq_cw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> continuous frequency&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Hz&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FREQuency:CW?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FREQuency:CW {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;freq_fixed</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> fixed frequency&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Hz&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FREQuency:FIXed?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FREQuency:FIXed {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;freq_mode</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> frequency mode&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FREQuency:MODE?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FREQuency:MODE {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;CW&#39;</span><span class="p">,</span> <span class="s1">&#39;FIXed&#39;</span><span class="p">,</span> <span class="s1">&#39;FIX&#39;</span><span class="p">,</span> <span class="s1">&#39;SWEep&#39;</span><span class="p">,</span> <span class="s1">&#39;SWE&#39;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;freq_span</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> frequency span&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Hz&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FREQuency:SPAN?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FREQuency:SPAN {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;freq_start</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> frequency start&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Hz&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FREQuency:STARt?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FREQuency:STARt {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;freq_stop</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> frequency stop&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Hz&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FREQuency:STOP?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FREQuency:STOP {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+
+            <span class="c1">#: FSK modulation</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;fsk_freq</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> FSK frequency&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Hz&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FSKey:FREQuency?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FSKey:FREQuency {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>            
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;fsk_internal_rate</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> FSK internal rate&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Hz&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FSKey:INTernal:RATE?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FSKey:INTernal:RATE {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;fsk_source</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> FSK source&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FSKey:SOURce?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FSKey:SOURce {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;INTernal&#39;</span><span class="p">,</span> <span class="s1">&#39;INT&#39;</span><span class="p">,</span> <span class="s1">&#39;EXTernal&#39;</span><span class="p">,</span> <span class="s1">&#39;EXT&#39;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;fsk_state</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> FSK state&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FSKey:STATe?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FSKey:STATe {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;ON&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="c1">#: Function parameters</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;function_efile</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> function efile&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FUNCtion:EFILe?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FUNCtion:EFILe {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;function_ramp_symmetry</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> function ramp symmetry&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;%&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FUNCtion:RAMP:SYMMetry?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FUNCtion:RAMP:SYMMetry {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Numbers</span><span class="p">(</span><span class="n">min_value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;function_shape</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> function shape&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FUNCtion:SHAPe?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:FUNCtion:SHAPe {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span>
+                    <span class="s1">&#39;SINusoid&#39;</span><span class="p">,</span> <span class="s1">&#39;SIN&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;SQUare&#39;</span><span class="p">,</span>  <span class="s1">&#39;SQU&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;TRIangle&#39;</span><span class="p">,</span> <span class="s1">&#39;TRI&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;RAMP&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;NRAMp&#39;</span><span class="p">,</span> <span class="s1">&#39;NRAM&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;PRNoise&#39;</span><span class="p">,</span> <span class="s1">&#39;PRN&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;USER&#39;</span><span class="p">,</span> <span class="s1">&#39;USER1&#39;</span><span class="p">,</span> <span class="s1">&#39;USER2&#39;</span><span class="p">,</span> <span class="s1">&#39;USER3&#39;</span><span class="p">,</span> <span class="s1">&#39;USER4&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;EMEMory&#39;</span><span class="p">,</span> <span class="s1">&#39;EMEM&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;EFILe&#39;</span><span class="p">,</span> <span class="s1">&#39;EFIL&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;USER&#39;</span><span class="p">,</span> <span class="s1">&#39;USER1&#39;</span><span class="p">,</span> 
+                    <span class="s1">&#39;USER2&#39;</span><span class="p">,</span> <span class="s1">&#39;USER3&#39;</span><span class="p">,</span> <span class="s1">&#39;USER4&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;EMEMory&#39;</span><span class="p">,</span> <span class="s1">&#39;EMEM&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;EFILe&#39;</span><span class="p">,</span> <span class="s1">&#39;EFIL&#39;</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="c1">#: Phase parameters</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;phase</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> phase&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Radians&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PHASe:ADJust?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PHASe:ADJust {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+
+            <span class="c1">#: Pulse parameters</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;pulse_duty_cycle</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> pulse duty cycle&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;%&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PULSe:DCYCle?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PULSe:DCYCle {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>            
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;pulse_delay</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> pulse delay&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PULSe:DELay?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PULSe:DELay {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;pulse_hold</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> pulse hold&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PULSe:HOLD?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PULSe:HOLD {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;WIDTh&#39;</span><span class="p">,</span> <span class="s1">&#39;WIDT&#39;</span><span class="p">,</span> <span class="s1">&#39;DUTY&#39;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;pulse_period</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> pulse period&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PULSe:PERiod?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PULSe:PERiod {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;pulse_trans_lead</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> pulse leading edge time&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PULSe:TRANsition:LEADing?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PULSe:TRANsition:LEADing {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;pulse_trans_trail</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> pulse trailing edge time&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PULSe:TRANsition:TRAiling?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PULSe:TRANsition:TRAiling {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;pulse_width</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> pulse width&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PULSe:WIDTh?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PULSe:WIDTh {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+
+            <span class="c1">#: Sweep parameters</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;sweep_hold_time</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> sweep hold time&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:SWEep:HTIMe?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:SWEep:HTIMe {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>            
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;sweep_mode</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> sweep mode&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:SWEep:MODE?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:SWEep:MODE {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;AUTO&#39;</span><span class="p">,</span> <span class="s1">&#39;MANual&#39;</span><span class="p">,</span> <span class="s1">&#39;MAN&#39;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;sweep_return_time</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> sweep return time&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:SWEep:RTIMe?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:SWEep:RTIMe {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>                  
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;sweep_spacing</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> sweep spacing&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:SWEep:SPACing?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:SWEep:SPACing {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;LINear&#39;</span><span class="p">,</span> <span class="s1">&#39;LIN&#39;</span><span class="p">,</span> <span class="s1">&#39;LOGarithmic&#39;</span><span class="p">,</span> <span class="s1">&#39;LOG&#39;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;sweep_time</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> sweep time&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:SWEep:TIME?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:SWEep:TIME {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+
+            <span class="c1">#: Voltage parameters       </span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;voltage_concurrent</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> concurrent voltage&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:VOLTage:CONCurrent:STATe?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:VOLTage:CONCurrent:STATe {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;ON&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;voltage_high</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> high voltage level&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;V&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:VOLTage:LEVel:IMMediate:HIGH?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:VOLTage:LEVel:IMMediate:HIGH {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;voltage_low</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> low voltage level&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;V&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:VOLTage:LEVel:IMMediate:LOW?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:VOLTage:LEVel:IMMediate:LOW {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;voltage_offset</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> voltage offset&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;V&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:VOLTage:LEVel:IMMediate:OFFSet?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:VOLTage:LEVel:IMMediate:OFFSet {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;voltage_unit</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> voltage unit&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:VOLTage:UNIT?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:VOLTage:UNIT {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;VPP&#39;</span><span class="p">,</span> <span class="s1">&#39;VRMS&#39;</span><span class="p">,</span> <span class="s1">&#39;DBM&#39;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;voltage_amplitude</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> voltage amplitude&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;voltage_unit</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">))(),</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:VOLTage:LEVel:IMMediate:AMPLitude?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:VOLTage:LEVel:IMMediate:AMPLitude {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;voltage_limit_high</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> voltage limit high&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;V&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:VOLTage:LIMit:HIGH?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:VOLTage:LIMit:HIGH {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;voltage_limit_low</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> voltage limit low&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;V&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:VOLTage:LIMit:LOW?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:VOLTage:LIMit:LOW {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+
+        <span class="c1">#: Noise parameters</span>
+        <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;noise_level</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Source </span><span class="si">{}</span><span class="s1"> noise level&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;%&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:POWer:LEVel:IMMediate:AMPLitude?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:POWer:LEVel:IMMediate:AMPLitude {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;ref_osc_source&#39;</span><span class="p">,</span>
+               <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Reference clock source&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
+               <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+               <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce:ROSCillator:SOURce?&#39;</span><span class="p">,</span>
+               <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+               <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;SOURce:ROSCillator:SOURce </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+               <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;INTernal&#39;</span><span class="p">,</span> <span class="s1">&#39;INT&#39;</span><span class="p">,</span> <span class="s1">&#39;EXTernal&#39;</span><span class="p">,</span> <span class="s1">&#39;EXT&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1">#: Trigger parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;trigger_slope&#39;</span><span class="p">,</span>
+               <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Trigger slope&#39;</span><span class="p">,</span>
+               <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+               <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;TRIGger:SEQuence:SLOPe?&#39;</span><span class="p">,</span>
+               <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+               <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;TRIGger:SEQuence:SLOPe </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+               <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;POSitive&#39;</span><span class="p">,</span> <span class="s1">&#39;POS&#39;</span><span class="p">,</span> <span class="s1">&#39;NEGative&#39;</span><span class="p">,</span> <span class="s1">&#39;NEG&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;trigger_source&#39;</span><span class="p">,</span>
+               <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Trigger source&#39;</span><span class="p">,</span>
+               <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+               <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;TRIGger:SEQuence:SOURce?&#39;</span><span class="p">,</span>
+               <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+               <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;TRIGger:SEQuence:SOURce </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+               <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;TIMer&#39;</span><span class="p">,</span> <span class="s1">&#39;TIM&#39;</span><span class="p">,</span> <span class="s1">&#39;EXTernal&#39;</span><span class="p">,</span> <span class="s1">&#39;EXT&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;trigger_timer&#39;</span><span class="p">,</span>
+               <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Trigger timer period&#39;</span><span class="p">,</span>
+               <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span>
+               <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;TRIGger:SEQuence:TIMer?&#39;</span><span class="p">,</span>
+               <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+               <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;TRIGger:SEQuence:TIMer </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+               <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connect_message</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">calibrate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;CALibration:ALL&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">self_test</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;DIAGnostic:ALL&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">abort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;ABORt&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Resetting </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*RST&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*WAI&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">location</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;location must be in </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Instrument settings saved to location </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">location</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*SAVE </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">location</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">recall</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">location</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;location must be in </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Recalling instrument settings from location </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">location</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*RCL </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">location</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">synchronize_phase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Synchronizing CH1 and CH2 phase.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;SOURce</span><span class="si">{}</span><span class="s1">:PHASe:INITiate&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src</span><span class="p">))</span>
+
+<div class="viewcode-block" id="AFG3000.clear_instances"><a class="viewcode-back" href="../../pages/components.html#instruments.afg3000.AFG3000.clear_instances">[docs]</a>    <span class="k">def</span> <span class="nf">clear_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clear instances of AFG3000 Instruments.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_instance</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span></div></div>
+
+<span class="k">class</span> <span class="nc">AFG3252</span><span class="p">(</span><span class="n">AFG3000</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Alias for AFG3000.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Stanford-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

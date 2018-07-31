@@ -31,7 +31,7 @@ var/
 *.egg
 
 # Sphinx documentation
-*_build
+#*_build
 docs/_static
 docs/_templates
 docs/_notebooks

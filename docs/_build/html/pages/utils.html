@@ -1,0 +1,614 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Utility Functions &amp; Classes &mdash; scanning-squid  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="scanning-squid  documentation" href="../index.html"/>
+        <link rel="next" title="DataSet Example" href="../examples/DataSetExample.html"/>
+        <link rel="prev" title="Plots" href="plots.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> scanning-squid
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="microscope.html">Microscope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config-files.html">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/PhysicalUnits.html">Physical Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="measurements.html">Measurements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plots.html">Plots</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Utility Functions &amp; Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/DataSetExample.html">DataSet Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Typical Workflow</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">scanning-squid</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Utility Functions &amp; Classes</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/pages/utils.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="utility-functions-classes">
+<h1>Utility Functions &amp; Classes<a class="headerlink" href="#utility-functions-classes" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference internal" href="#module-utils" title="utils"><code class="xref py py-class docutils literal notranslate"><span class="pre">utils</span></code></a> is a module containing useful classes and functions that come up in the course of a scanning SQUID experiment.</p>
+<blockquote>
+<div><span class="target" id="module-utils"></span><dl class="class">
+<dt id="utils.Counter">
+<em class="property">class </em><code class="descclassname">utils.</code><code class="descname">Counter</code><a class="reference internal" href="../_modules/utils.html#Counter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.Counter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple counter used to keep track of progress in a Loop.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.fit_line">
+<code class="descclassname">utils.</code><code class="descname">fit_line</code><span class="sig-paren">(</span><em>x: Union[list, numpy.ndarray], y: Union[list, numpy.ndarray]</em><span class="sig-paren">)</span> &#x2192; Tuple[numpy.ndarray, float]<a class="reference internal" href="../_modules/utils.html#fit_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.fit_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits a line to x, y(x) and returns (polynomial_coeffs, rms_residual).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> – List or np.ndarry, independent variable.</li>
+<li><strong>y</strong> – List or np.ndarry, dependent variable.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>p, rms</dt>
+<dd><p class="first last">Array of best-fit polynomial coefficients, rms of residuals.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Tuple[np.ndarray, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)">float</a>]</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.load_json_ordered">
+<code class="descclassname">utils.</code><code class="descname">load_json_ordered</code><span class="sig-paren">(</span><em>filename: str</em><span class="sig-paren">)</span> &#x2192; collections.OrderedDict<a class="reference internal" href="../_modules/utils.html#load_json_ordered"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.load_json_ordered" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads json file as an ordered dict.
+:param filname: Path to json file to be loaded.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>odict</dt>
+<dd>OrderedDict containing data from json file.</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">OrderedDict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.make_scan_grids">
+<code class="descclassname">utils.</code><code class="descname">make_scan_grids</code><span class="sig-paren">(</span><em>scan_vectors: Dict[str, Sequence[float]], slow_ax: str, fast_ax: str, fast_ax_pts: int, plane: Dict[str, float], height: float</em><span class="sig-paren">)</span> &#x2192; Dict[str, Any]<a class="reference internal" href="../_modules/utils.html#make_scan_grids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.make_scan_grids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes meshgrids of scanner positions to write to DAQ analog outputs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>scan_vectors</strong> – Dict of {axis_name: axis_vector} for x, y axes (from make_scan_vectors).</li>
+<li><strong>slow_ax</strong> – Name of the scan slow axis (‘x’ or ‘y’).</li>
+<li><strong>fast_ax</strong> – Name of the scan fast axis (‘x’ or ‘y’).</li>
+<li><strong>fast_ax_pts</strong> – Number of points to write to DAQ analog outputs to scan fast axis.</li>
+<li><strong>plane</strong> – Dict of x, y, z values defining the plane to scan (provided by scanner.get_plane).</li>
+<li><strong>height</strong> – Height above the sample surface (in DAQ voltage) at which to scan.
+More negative means further from sample; 0 means ‘in contact’.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>scan_grids</dt>
+<dd><p class="first last">{axis_name: axis_scan_grid} for x, y, z, axes.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.make_scan_vectors">
+<code class="descclassname">utils.</code><code class="descname">make_scan_vectors</code><span class="sig-paren">(</span><em>scan_params: Dict[str, Any], ureg: Any</em><span class="sig-paren">)</span> &#x2192; Dict[str, Sequence[float]]<a class="reference internal" href="../_modules/utils.html#make_scan_vectors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.make_scan_vectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates x and y vectors for given scan parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>scan_params</strong> – Scan parameter dict</li>
+<li><strong>ureg</strong> – pint UnitRegistry, manages units.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>scan_vectors</dt>
+<dd><p class="first last">{axis_name: axis_vector} for x, y axes.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.make_xy_grids">
+<code class="descclassname">utils.</code><code class="descname">make_xy_grids</code><span class="sig-paren">(</span><em>scan_vectors: Dict[str, Sequence[float]], slow_ax: str, fast_ax: str</em><span class="sig-paren">)</span> &#x2192; Dict[str, Any]<a class="reference internal" href="../_modules/utils.html#make_xy_grids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.make_xy_grids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes meshgrids from x, y scan_vectors (used for plotting, etc.).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>scan_vectors</strong> – Dict of {axis_name: axis_vector} for x, y axes (from make_scan_vectors).</li>
+<li><strong>slow_ax</strong> – Name of scan slow axis (‘x’ or ‘y’).</li>
+<li><strong>fast_ax</strong> – Name of scan fast axis (‘x’ or ‘y’).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>xy_grids</dt>
+<dd><p class="first last">{axis_name: axis_grid} for x, y axes.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.moving_avg">
+<code class="descclassname">utils.</code><code class="descname">moving_avg</code><span class="sig-paren">(</span><em>x: Union[typing.List, numpy.ndarray], y: Union[typing.List, numpy.ndarray], window_width: int</em><span class="sig-paren">)</span> &#x2192; Tuple[numpy.ndarray]<a class="reference internal" href="../_modules/utils.html#moving_avg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.moving_avg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given 1D arrays x and y, calculates the moving average of y.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> – x data (1D array).</li>
+<li><strong>y</strong> – y data to be averaged (1D array).</li>
+<li><strong>window_width</strong> – Width of window over which to average.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>x, ymvg_avg</dt>
+<dd><p class="first last">x data with ends trimmed according to width_width, moving average of y data</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Tuple[np.ndarray]</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.next_file_name">
+<code class="descclassname">utils.</code><code class="descname">next_file_name</code><span class="sig-paren">(</span><em>fpath: str</em>, <em>extension: str</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/utils.html#next_file_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.next_file_name" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Appends an integer to fpath to create a unique file name:</dt>
+<dd>fpath + {next unused integer} + ‘.’ + extension</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>fpath</strong> – Path to file you want to create (no extension).</li>
+<li><strong>extension</strong> – Extension of file you want to create.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>next_file_name</dt>
+<dd><p class="first last">Unique file name starting with fpath and ending with extension.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.scan_to_arrays">
+<code class="descclassname">utils.</code><code class="descname">scan_to_arrays</code><span class="sig-paren">(</span><em>scan_data: Any</em>, <em>ureg: Union[typing.Any</em>, <em>NoneType] = None</em>, <em>real_units: Union[bool</em>, <em>NoneType] = True</em>, <em>xy_unit: Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; Dict[str, Any]<a class="reference internal" href="../_modules/utils.html#scan_to_arrays"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.scan_to_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts scan data from DataSet and converts to requested units.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>scan_data</strong> – qcodes DataSet created by Microscope.scan_plane</li>
+<li><strong>ureg</strong> – pint UnitRegistry, manages physical units.</li>
+<li><strong>real_units</strong> – If True, converts z-axis data from DAQ voltage into
+units specified in measurement configuration file.</li>
+<li><strong>xy_unit</strong> – String describing quantity with dimensions of length.
+If xy_unit is not None, scanner x, y DAQ ao voltage will be converted to xy_unit
+according to scanner constants defined in microscope configuration file.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>arrays</dt>
+<dd><p class="first last">Dict of x, y vectors and grids, and measured data in requested units.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.scan_to_mat_file">
+<code class="descclassname">utils.</code><code class="descname">scan_to_mat_file</code><span class="sig-paren">(</span><em>scan_data: Any</em>, <em>real_units: Union[bool</em>, <em>NoneType] = True</em>, <em>xy_unit: Union[bool</em>, <em>NoneType] = None</em>, <em>fname: Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/utils.html#scan_to_mat_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.scan_to_mat_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export DataSet created by microscope.scan_plane to .mat file for analysis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>scan_data</strong> – qcodes DataSet created by Microscope.scan_plane</li>
+<li><strong>real_units</strong> – If True, converts z-axis data from DAQ voltage into
+units specified in measurement configuration file.</li>
+<li><strong>xy_unit</strong> – String describing quantity with dimensions of length.
+If xy_unit is not None, scanner x, y DAQ ao voltage will be converted to xy_unit
+according to scanner constants defined in microscope configuration file.</li>
+<li><strong>fname</strong> – File name (without extension) for resulting .mat file.
+If None, uses the file name defined in measurement configuration file.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.td_to_arrays">
+<code class="descclassname">utils.</code><code class="descname">td_to_arrays</code><span class="sig-paren">(</span><em>td_data: Any</em>, <em>ureg: Union[typing.Any</em>, <em>NoneType] = None</em>, <em>real_units: Union[bool</em>, <em>NoneType] = True</em><span class="sig-paren">)</span> &#x2192; Dict[str, Any]<a class="reference internal" href="../_modules/utils.html#td_to_arrays"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.td_to_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts scan data from DataSet and converts to requested units.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>td_data</strong> – qcodes DataSet created by Microscope.td_cap</li>
+<li><strong>ureg</strong> – pint UnitRegistry, manages physical units.</li>
+<li><strong>real_units</strong> – If True, converts data from DAQ voltage into
+units specified in measurement configuration file.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>arrays</dt>
+<dd><p class="first last">Dict of measured data in requested units.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.td_to_mat_file">
+<code class="descclassname">utils.</code><code class="descname">td_to_mat_file</code><span class="sig-paren">(</span><em>td_data: Any</em>, <em>real_units: Union[bool</em>, <em>NoneType] = True</em>, <em>fname: Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/utils.html#td_to_mat_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.td_to_mat_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export DataSet created by microscope.td_cap to .mat file for analysis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>td_data</strong> – qcodes DataSet created by Microscope.td_cap</li>
+<li><strong>real_units</strong> – If True, converts data from DAQ voltage into
+units specified in measurement configuration file.</li>
+<li><strong>fname</strong> – File name (without extension) for resulting .mat file.
+If None, uses the file name defined in measurement configuration file.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.to_real_units">
+<code class="descclassname">utils.</code><code class="descname">to_real_units</code><span class="sig-paren">(</span><em>data_set: Any</em>, <em>ureg: Any = None</em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../_modules/utils.html#to_real_units"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.to_real_units" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Converts DataSet arrays from DAQ voltage to real units using recorded metadata.</dt>
+<dd>Preserves shape of DataSet arrays.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data_set</strong> – qcodes DataSet created by Microscope.scan_plane</li>
+<li><strong>ureg</strong> – Pint UnitRegistry. Default None.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>data</dt>
+<dd><p class="first last">ndarray like the DataSet array, but in real units as prescribed by
+factors in DataSet metadata.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.validate_scan_params">
+<code class="descclassname">utils.</code><code class="descname">validate_scan_params</code><span class="sig-paren">(</span><em>scanner_config: Dict[str, Any], scan_params: Dict[str, Any], scan_grids: Dict[str, Any], temp: str, ureg: Any, logger: Any</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/utils.html#validate_scan_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.validate_scan_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether requested scan parameters are consistent with microscope limits.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>scanner_config</strong> – Scanner configuration dict as defined in microscope configuration file.</li>
+<li><strong>scan_params</strong> – Scan parameter dict as defined in measurements configuration file.</li>
+<li><strong>scan_grids</strong> – Dict of x, y, z scan grids (from make_scan_grids).</li>
+<li><strong>temp</strong> – Temperature mode of the microscope (‘LT’ or ‘RT’).</li>
+<li><strong>ureg</strong> – pint UnitRegistry, manages physical units.</li>
+<li><strong>logger</strong> – Used to log the fact that the scan was validated.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../examples/DataSetExample.html" class="btn btn-neutral float-right" title="DataSet Example" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="plots.html" class="btn btn-neutral" title="Plots" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Stanford-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

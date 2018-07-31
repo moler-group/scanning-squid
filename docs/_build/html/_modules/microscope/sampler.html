@@ -1,0 +1,623 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>microscope.sampler &mdash; scanning-squid  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="scanning-squid  documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> scanning-squid
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/microscope.html">Microscope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/config-files.html">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/PhysicalUnits.html">Physical Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/measurements.html">Measurements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/plots.html">Plots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/utils.html">Utility Functions &amp; Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/DataSetExample.html">DataSet Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/workflow.html">Typical Workflow</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">scanning-squid</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>microscope.sampler</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for microscope.sampler</h1><div class="highlight"><pre>
+<span></span><span class="c1">#: Various Python utilities</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.ticker</span> <span class="k">as</span> <span class="nn">ticker</span>
+<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">colors</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">io</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
+
+<span class="c1">#: Qcodes for running measurements and saving data</span>
+<span class="kn">import</span> <span class="nn">qcodes</span> <span class="k">as</span> <span class="nn">qc</span>
+<span class="kn">from</span> <span class="nn">qcodes.data.io</span> <span class="k">import</span> <span class="n">DiskIO</span>
+
+<span class="c1">#: NI DAQ library</span>
+<span class="kn">import</span> <span class="nn">nidaqmx</span>
+<span class="kn">from</span> <span class="nn">nidaqmx.constants</span> <span class="k">import</span> <span class="n">AcquisitionType</span>
+
+<span class="c1">#: scanning-squid modules</span>
+<span class="kn">from</span> <span class="nn">instruments.daq</span> <span class="k">import</span> <span class="n">DAQAnalogInputs</span>
+<span class="kn">from</span> <span class="nn">instruments.dg645</span> <span class="k">import</span> <span class="n">DG645</span>
+<span class="kn">from</span> <span class="nn">instruments.afg3000</span> <span class="k">import</span> <span class="n">AFG3000</span>
+<span class="kn">from</span> <span class="nn">.microscope</span> <span class="k">import</span> <span class="n">Microscope</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="k">import</span> <span class="n">Counter</span><span class="p">,</span> <span class="n">clear_artists</span>
+
+<span class="c1">#: Pint for manipulating physical units</span>
+<span class="kn">from</span> <span class="nn">pint</span> <span class="k">import</span> <span class="n">UnitRegistry</span>
+<span class="n">ureg</span> <span class="o">=</span> <span class="n">UnitRegistry</span><span class="p">()</span>
+<span class="c1">#: Tell UnitRegistry instance what a Phi0 is, and that Ohm = ohm</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;squid_units.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Phi0 = 2.067833831e-15 * Wb</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Ohm = ohm</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="n">ureg</span><span class="o">.</span><span class="n">load_definitions</span><span class="p">(</span><span class="s1">&#39;./squid_units.txt&#39;</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SamplerMicroscope"><a class="viewcode-back" href="../../pages/microscope.html#microscope.sampler.SamplerMicroscope">[docs]</a><span class="k">class</span> <span class="nc">SamplerMicroscope</span><span class="p">(</span><span class="n">Microscope</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Scanning SQUID sampler microscope class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">temp</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ureg</span><span class="p">:</span> <span class="n">Any</span><span class="o">=</span><span class="n">ureg</span><span class="p">,</span> <span class="n">log_level</span><span class="p">:</span> <span class="n">Any</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                 <span class="n">log_name</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">ureg</span><span class="o">=</span><span class="n">ureg</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span><span class="p">,</span>
+            <span class="n">log_name</span><span class="o">=</span><span class="n">log_name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_delay_generator</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_function_generator</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_add_delay_generator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add SRS DG645 digital delay generator to SamplerMicroscope.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;instruments&#39;</span><span class="p">][</span><span class="s1">&#39;delay_generator&#39;</span><span class="p">]</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;dg&#39;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;clear_instances&#39;</span><span class="p">)()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_component</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">instr</span> <span class="o">=</span> <span class="n">DG645</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;address&#39;</span><span class="p">],</span> <span class="n">metadata</span><span class="o">=</span><span class="n">info</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">instr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_component</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> successfully added to microscope.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_add_function_generator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add Tektronix AFG3000 series function generator to SamplerMicroscope.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;instruments&#39;</span><span class="p">][</span><span class="s1">&#39;function_generator&#39;</span><span class="p">]</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;afg&#39;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;clear_instances&#39;</span><span class="p">)()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_component</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">instr</span> <span class="o">=</span> <span class="n">AFG3000</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;address&#39;</span><span class="p">],</span> <span class="n">metadata</span><span class="o">=</span><span class="n">info</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">instr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_component</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> successfully added to microscope.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+    <span class="c1"># def get_prefactors(self, measurement: Dict[str, Any], update: bool=True) -&gt; Dict[str, Any]:</span>
+    <span class="c1">#     &quot;&quot;&quot;For each channel, calculate prefactors to convert DAQ voltage into real units.</span>
+
+    <span class="c1">#     Args:</span>
+    <span class="c1">#         measurement: Dict of measurement parameters as defined</span>
+    <span class="c1">#             in measurement configuration file.</span>
+    <span class="c1">#         update: Whether to query instrument parameters or simply trust the</span>
+    <span class="c1">#             latest values (should this even be an option)?</span>
+
+    <span class="c1">#     Returns:</span>
+    <span class="c1">#         Dict[str, pint.Quantity]: prefactors</span>
+    <span class="c1">#             Dict of {channel_name: prefactor} where prefactor is a pint Quantity.</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     prefactors = {}</span>
+    <span class="c1">#     for ch in measurement[&#39;channels&#39;]:</span>
+    <span class="c1">#         prefactor = 1</span>
+    <span class="c1">#         if ch == &#39;MAG&#39;:</span>
+    <span class="c1">#             snap = getattr(self, &#39;MAG_lockin&#39;).snapshot(update=update)[&#39;parameters&#39;]</span>
+    <span class="c1">#             mag_sensitivity = snap[&#39;sensitivity&#39;][&#39;value&#39;]</span>
+    <span class="c1">#             #amp = snap[&#39;amplitude&#39;][&#39;value&#39;] * self.ureg(snap[&#39;amplitude&#39;][&#39;unit&#39;])</span>
+    <span class="c1">#             #: The factor of 10 here is because SR830 output gain is 10/sensitivity</span>
+    <span class="c1">#             prefactor /=  self.Q_(10 / mag_sensitivity)</span>
+    <span class="c1">#         elif ch == &#39;CAP&#39;:</span>
+    <span class="c1">#             snap = getattr(self, &#39;CAP_lockin&#39;).snapshot(update=update)[&#39;parameters&#39;]</span>
+    <span class="c1">#             cap_sensitivity = snap[&#39;sensitivity&#39;][&#39;value&#39;]</span>
+    <span class="c1">#             #: The factor of 10 here is because SR830 output gain is 10/sensitivity</span>
+    <span class="c1">#             prefactor /= (self.Q_(self.scanner.metadata[&#39;cantilever&#39;][&#39;calibration&#39;]) * 10 / cap_sensitivity)</span>
+    <span class="c1">#         prefactor /= measurement[&#39;channels&#39;][ch][&#39;gain&#39;]</span>
+    <span class="c1">#         prefactors.update({ch: prefactor})</span>
+    <span class="c1">#     return prefactors</span>
+
+<div class="viewcode-block" id="SamplerMicroscope.iv_mod_tek"><a class="viewcode-back" href="../../pages/microscope.html#microscope.sampler.SamplerMicroscope.iv_mod_tek">[docs]</a>    <span class="k">def</span> <span class="nf">iv_mod_tek</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ivm_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Measures IV characteristic at different mod coil voltages.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ivm_params: Dict of measurement parameters as definted in config_measurements json file.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple[Dict]: data_dict, metadict</span>
+<span class="sd">                Dictionaries containing data arrays and instrument metadata.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">data_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">meta_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">mod_range</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;mod_range&#39;</span><span class="p">]]</span>
+        <span class="n">bias_range</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;bias_range&#39;</span><span class="p">]]</span>
+        <span class="n">mod_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">mod_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mod_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;ntek2&#39;</span><span class="p">])</span>
+        <span class="n">bias_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">bias_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bias_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;ntek1&#39;</span><span class="p">])</span>
+        <span class="n">mod_grid</span><span class="p">,</span> <span class="n">bias_grid</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">mod_vec</span><span class="p">,</span> <span class="n">bias_vec</span><span class="p">)</span>
+        <span class="n">data_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s1">&#39;mod_vec&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;array&#39;</span><span class="p">:</span> <span class="n">mod_vec</span><span class="p">,</span> <span class="s1">&#39;unit&#39;</span><span class="p">:</span> <span class="s1">&#39;V&#39;</span><span class="p">},</span>
+            <span class="s1">&#39;bias_vec&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;array&#39;</span><span class="p">:</span> <span class="n">bias_vec</span><span class="p">,</span> <span class="s1">&#39;unit&#39;</span><span class="p">:</span> <span class="s1">&#39;V&#39;</span><span class="p">},</span>
+            <span class="s1">&#39;mod_grid&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;array&#39;</span><span class="p">:</span> <span class="n">mod_grid</span><span class="p">,</span> <span class="s1">&#39;unit&#39;</span><span class="p">:</span> <span class="s1">&#39;V&#39;</span><span class="p">},</span>
+            <span class="s1">&#39;bias_grid&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;array&#39;</span><span class="p">:</span> <span class="n">bias_grid</span><span class="p">,</span> <span class="s1">&#39;unit&#39;</span><span class="p">:</span> <span class="s1">&#39;V&#39;</span><span class="p">}</span>
+            <span class="p">})</span>
+        <span class="n">ivmX</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">mod_grid</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">)</span>
+        <span class="n">ivmY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">mod_grid</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">)</span>
+        
+        <span class="c1">#: Set AFG output channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="o">.</span><span class="n">voltage_low1</span><span class="p">(</span><span class="s1">&#39;0V&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="o">.</span><span class="n">voltage_high1</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">V&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bias_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="o">.</span><span class="n">voltage_low2</span><span class="p">(</span><span class="s1">&#39;0V&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="o">.</span><span class="n">voltage_high2</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">V&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="o">.</span><span class="n">voltage_offset2</span><span class="p">(</span><span class="s1">&#39;0V&#39;</span><span class="p">)</span>
+
+        <span class="c1">#: Set pulse parameters</span>
+        <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;afg&#39;</span><span class="p">][</span><span class="s1">&#39;ch</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">)]</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="p">,</span> <span class="s1">&#39;pulse_period</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">))(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">us&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;period&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;us&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="p">,</span> <span class="s1">&#39;pulse_width</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">))(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">us&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;us&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="p">,</span> <span class="s1">&#39;pulse_trans_lead</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">))(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">us&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;lead&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;us&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="p">,</span> <span class="s1">&#39;pulse_trans_trail</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">))(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">us&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;trail&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;us&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="p">,</span> <span class="s1">&#39;pulse_delay</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">))(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">us&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;delay&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;us&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+
+        <span class="c1">#: Get instrument metadata and prefactors</span>
+        <span class="n">lockin_snap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAG_lockin</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">lockin_meta</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;time_constant&#39;</span><span class="p">,</span> <span class="s1">&#39;sensitivity&#39;</span><span class="p">,</span> <span class="s1">&#39;phase&#39;</span><span class="p">,</span> <span class="s1">&#39;reserve&#39;</span><span class="p">,</span> <span class="s1">&#39;filter_slope&#39;</span><span class="p">]:</span>
+            <span class="n">lockin_meta</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">param</span><span class="p">:</span> <span class="n">lockin_snap</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">][</span><span class="n">param</span><span class="p">]})</span>
+        <span class="n">meta_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;metadata&#39;</span><span class="p">:</span>
+                            <span class="p">{</span><span class="s1">&#39;lockin&#39;</span><span class="p">:</span> <span class="n">lockin_meta</span><span class="p">,</span>
+                             <span class="s1">&#39;afg&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                             <span class="s1">&#39;ivm_params&#39;</span><span class="p">:</span> <span class="n">ivm_params</span><span class="p">}</span>
+                        <span class="p">})</span>
+        <span class="n">prefactor</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">10</span> <span class="o">/</span> <span class="n">lockin_snap</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">][</span><span class="s1">&#39;sensitivity&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">])</span>
+        <span class="n">prefactor</span> <span class="o">/=</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">][</span><span class="s1">&#39;lockinX&#39;</span><span class="p">][</span><span class="s1">&#39;gain&#39;</span><span class="p">]</span>
+        <span class="n">delay</span> <span class="o">=</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;delay_factor&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">lockin_snap</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">][</span><span class="s1">&#39;time_constant&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">bias_range</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">bias_range</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Bias [V]&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Voltage [V]&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">][</span><span class="s1">&#39;lockinX&#39;</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Starting iv_mod_tek.&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mod_vec</span><span class="p">)):</span>
+                <span class="n">dataX</span><span class="p">,</span> <span class="n">dataY</span><span class="p">,</span> <span class="n">dataX_avg</span><span class="p">,</span> <span class="n">dataY_avg</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mod_vec</span><span class="p">)),</span> <span class="p">)</span> <span class="o">*</span> <span class="mi">4</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="o">.</span><span class="n">voltage_offset2</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">V&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod_vec</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
+                <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;navg&#39;</span><span class="p">]):</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bias_vec</span><span class="p">)):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="o">.</span><span class="n">voltage_high1</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">V&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bias_vec</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+                        <span class="n">dataX</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAG_lockin</span><span class="o">.</span><span class="n">X</span><span class="p">()</span>
+                        <span class="n">dataY</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAG_lockin</span><span class="o">.</span><span class="n">Y</span><span class="p">()</span>
+                    <span class="n">dataX_avg</span> <span class="o">+=</span> <span class="n">dataX</span>
+                    <span class="n">dataY_avg</span> <span class="o">+=</span> <span class="n">dataY</span>
+                <span class="n">dataX_avg</span> <span class="o">/=</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;navg&#39;</span><span class="p">]</span>
+                <span class="n">dataY_avg</span> <span class="o">/=</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;navg&#39;</span><span class="p">]</span>
+                <span class="n">ivmX</span><span class="p">[:,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">prefactor</span> <span class="o">*</span> <span class="n">dataX_avg</span>
+                <span class="n">ivmY</span><span class="p">[:,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">prefactor</span> <span class="o">*</span> <span class="n">dataY_avg</span>
+                <span class="n">clear_artists</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">bias_vec</span><span class="p">,</span> <span class="n">prefactor</span> <span class="o">*</span> <span class="n">dataX_avg</span><span class="p">,</span> <span class="s1">&#39;bo-&#39;</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Measurement aborted by user.&#39;</span><span class="p">)</span>
+
+        <span class="n">figX</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>    
+        <span class="n">plt</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">mod_grid</span><span class="p">,</span> <span class="n">bias_grid</span><span class="p">,</span> <span class="n">ivmX</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Modulation [V]&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Bias [V]&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">][</span><span class="s1">&#39;lockinX&#39;</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+        <span class="n">figX</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">rect</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">])</span>
+        <span class="n">cbarX</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+        <span class="n">cbarX</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s1">&#39;Voltage [V]&#39;</span><span class="p">)</span>
+
+        <span class="n">figY</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>    
+        <span class="n">plt</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">mod_grid</span><span class="p">,</span> <span class="n">bias_grid</span><span class="p">,</span> <span class="n">ivmY</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Modulation [V]&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Bias [V]&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">][</span><span class="s1">&#39;lockinY&#39;</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+        <span class="n">figY</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">rect</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">])</span>
+        <span class="n">cbarY</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+        <span class="n">cbarY</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s1">&#39;Voltage [V]&#39;</span><span class="p">)</span>
+
+        <span class="n">data_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s1">&#39;lockinX&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;array&#39;</span><span class="p">:</span> <span class="n">ivmX</span><span class="p">,</span> <span class="s1">&#39;unit&#39;</span><span class="p">:</span> <span class="s1">&#39;V&#39;</span><span class="p">},</span>
+             <span class="s1">&#39;lockinY&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;array&#39;</span><span class="p">:</span> <span class="n">ivmY</span><span class="p">,</span> <span class="s1">&#39;unit&#39;</span><span class="p">:</span> <span class="s1">&#39;V&#39;</span><span class="p">}</span>
+            <span class="p">})</span>
+
+        <span class="k">if</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;save&#39;</span><span class="p">]:</span>
+            <span class="c1">#: Get/create data location</span>
+            <span class="n">loc_provider</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">FormatLocation</span><span class="p">(</span><span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{date}</span><span class="s1">/#</span><span class="si">{counter}</span><span class="s1">_</span><span class="si">{name}</span><span class="s1">_</span><span class="si">{time}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="n">loc_provider</span><span class="p">(</span><span class="n">DiskIO</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">),</span> <span class="n">record</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;fname&#39;</span><span class="p">]})</span>
+            <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="c1">#: Save arrays to mat</span>
+            <span class="n">io</span><span class="o">.</span><span class="n">savemat</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;fname&#39;</span><span class="p">]),</span> <span class="n">data_dict</span><span class="p">)</span>
+            <span class="c1">#: Save metadata to json</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">loc</span> <span class="o">+</span> <span class="s1">&#39;/metadata.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">meta_dict</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">skipkeys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+            <span class="c1">#: Save figures to png</span>
+            <span class="n">figX</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span>
+            <span class="n">figX</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">X.png&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;fname&#39;</span><span class="p">]))</span>
+            <span class="n">figY</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span>
+            <span class="n">figY</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">Y.png&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;fname&#39;</span><span class="p">]))</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Data saved to </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">loc</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">data_dict</span><span class="p">,</span> <span class="n">meta_dict</span></div>
+
+<div class="viewcode-block" id="SamplerMicroscope.iv_tek_mod_daq"><a class="viewcode-back" href="../../pages/microscope.html#microscope.sampler.SamplerMicroscope.iv_tek_mod_daq">[docs]</a>    <span class="k">def</span> <span class="nf">iv_tek_mod_daq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ivm_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Performs digital feedback on mod coil to measure flux vs. delay.</span>
+
+<span class="sd">        AFG ch1 is used for pulse generator bias.</span>
+<span class="sd">        AFG ch2 is used for comparator bias.</span>
+<span class="sd">        DG ch1 is used for pulse generator trigger.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ivm_params: Dict of measurement parameters as definted in config_measurements json file.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple[Dict]: data_dict, metadict</span>
+<span class="sd">                Dictionaries containing data arrays and instrument metadata.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">data_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">meta_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">daq_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;instruments&#39;</span><span class="p">][</span><span class="s1">&#39;daq&#39;</span><span class="p">]</span>
+        <span class="n">ai_channels</span> <span class="o">=</span> <span class="n">daq_config</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">][</span><span class="s1">&#39;analog_inputs&#39;</span><span class="p">]</span>
+        <span class="n">meas_channels</span> <span class="o">=</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]</span>
+        <span class="n">channels</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">meas_channels</span><span class="p">:</span>
+            <span class="n">channels</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ch</span><span class="p">:</span> <span class="n">ai_channels</span><span class="p">[</span><span class="n">ch</span><span class="p">]})</span>
+
+        <span class="n">vmod</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;vmod_initial&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+        <span class="n">vcomp_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;vcomp_set&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+        <span class="n">vmod_low</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;vmod_low&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+        <span class="n">vmod_high</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;vmod_high&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+
+        <span class="n">tsettle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;tsettle&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+        <span class="n">tavg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;tavg&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+        <span class="n">time_constant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;time_constant&#39;</span><span class="p">])</span>
+        
+        <span class="n">period</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;afg&#39;</span><span class="p">][</span><span class="s1">&#39;ch1&#39;</span><span class="p">][</span><span class="s1">&#39;period&#39;</span><span class="p">])</span>
+        <span class="n">delay0</span><span class="p">,</span> <span class="n">delay1</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;dg&#39;</span><span class="p">][</span><span class="s1">&#39;range&#39;</span><span class="p">]]</span>
+        <span class="n">delay_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">delay0</span><span class="p">,</span> <span class="n">delay1</span><span class="p">,</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;dg&#39;</span><span class="p">][</span><span class="s1">&#39;nsteps&#39;</span><span class="p">])</span>
+        <span class="n">vmod_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">delay_vec</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">)</span>
+
+        <span class="c1">#: Set AFG pulse parameters</span>
+        <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;afg&#39;</span><span class="p">][</span><span class="s1">&#39;ch</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">)]</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="p">,</span> <span class="s1">&#39;voltage_high</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">))(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">V&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;high&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="p">,</span> <span class="s1">&#39;voltage_low</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">))(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">V&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;low&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="p">,</span> <span class="s1">&#39;pulse_period</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">))(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">us&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;period&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;us&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="p">,</span> <span class="s1">&#39;pulse_width</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">))(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">us&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;us&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="p">,</span> <span class="s1">&#39;pulse_trans_lead</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">))(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">us&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;lead&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;us&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="p">,</span> <span class="s1">&#39;pulse_trans_trail</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">))(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">us&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;trail&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;us&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="p">,</span> <span class="s1">&#39;pulse_delay</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">))(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">us&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;delay&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;us&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+
+        <span class="c1">#: Set delay generator parameters</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;dg&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dg</span><span class="o">.</span><span class="n">delay_B</span><span class="p">(</span><span class="s1">&#39;A, </span><span class="si">{:e}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">delay0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dg</span><span class="o">.</span><span class="n">delay_C</span><span class="p">(</span><span class="s1">&#39;T0, </span><span class="si">{:e}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;ch2&#39;</span><span class="p">][</span><span class="s1">&#39;delay&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dg</span><span class="o">.</span><span class="n">delay_D</span><span class="p">(</span><span class="s1">&#39;C, </span><span class="si">{:e}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;ch2&#39;</span><span class="p">][</span><span class="s1">&#39;width&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dg</span><span class="o">.</span><span class="n">amp_out_AB</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;ch1&#39;</span><span class="p">][</span><span class="s1">&#39;voltage&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dg</span><span class="o">.</span><span class="n">offset_out_AB</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;ch1&#39;</span><span class="p">][</span><span class="s1">&#39;offset&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dg</span><span class="o">.</span><span class="n">amp_out_CD</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;ch2&#39;</span><span class="p">][</span><span class="s1">&#39;voltage&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dg</span><span class="o">.</span><span class="n">offset_out_CD</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;ch2&#39;</span><span class="p">][</span><span class="s1">&#39;offset&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">MAG_lockin</span><span class="o">.</span><span class="n">time_constant</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;time_constant&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+
+        <span class="c1">#: Get instrument metadata and prefactors</span>
+        <span class="n">lockin_snap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAG_lockin</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">lockin_meta</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;time_constant&#39;</span><span class="p">,</span> <span class="s1">&#39;sensitivity&#39;</span><span class="p">,</span> <span class="s1">&#39;phase&#39;</span><span class="p">,</span> <span class="s1">&#39;reserve&#39;</span><span class="p">,</span> <span class="s1">&#39;filter_slope&#39;</span><span class="p">]:</span>
+            <span class="n">lockin_meta</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">param</span><span class="p">:</span> <span class="n">lockin_snap</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">][</span><span class="n">param</span><span class="p">]})</span>
+        <span class="n">meta_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;metadata&#39;</span><span class="p">:</span>
+                            <span class="p">{</span><span class="s1">&#39;lockin&#39;</span><span class="p">:</span> <span class="n">lockin_meta</span><span class="p">,</span>
+                             <span class="s1">&#39;afg&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">afg</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                             <span class="s1">&#39;dg&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dg</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                             <span class="s1">&#39;ivm_params&#39;</span><span class="p">:</span> <span class="n">ivm_params</span><span class="p">}</span>
+                        <span class="p">})</span>
+        <span class="c1">#prefactor = 1 / (10 / lockin_snap[&#39;parameters&#39;][&#39;sensitivity&#39;][&#39;value&#39;])</span>
+        <span class="c1">#prefactor /= ivm_params[&#39;channels&#39;][&#39;lockinX&#39;][&#39;gain&#39;]</span>
+
+        <span class="k">with</span> <span class="n">nidaqmx</span><span class="o">.</span><span class="n">Task</span><span class="p">(</span><span class="s1">&#39;ai_task&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ai_task</span><span class="p">,</span> <span class="n">nidaqmx</span><span class="o">.</span><span class="n">Task</span><span class="p">(</span><span class="s1">&#39;ao_task&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ao_task</span><span class="p">:</span>
+            <span class="n">ao</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/ao</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">daq_config</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">daq_config</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">][</span><span class="s1">&#39;analog_outputs&#39;</span><span class="p">][</span><span class="s1">&#39;mod&#39;</span><span class="p">])</span>
+            <span class="n">ao_task</span><span class="o">.</span><span class="n">ao_channels</span><span class="o">.</span><span class="n">add_ao_voltage_chan</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span> <span class="s1">&#39;mod&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ch</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">channels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">channel</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/ai</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">daq_config</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">idx</span><span class="p">)</span>
+                <span class="n">ai_task</span><span class="o">.</span><span class="n">ai_channels</span><span class="o">.</span><span class="n">add_ai_voltage_chan</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">ch</span><span class="p">)</span>
+
+            <span class="n">figM</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+            <span class="n">axM</span>  <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">delay_vec</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">delay_vec</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Delay time [$\mu$s]&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Modulation Voltage [V]&#39;</span><span class="p">)</span>
+
+            <span class="n">figT</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+            <span class="n">axT</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Iteration number&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Modulation Voltage [V]&#39;</span><span class="p">)</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Starting iv_tek_mod_daq.&#39;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1">#: Sweep delay time</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">delay_vec</span><span class="p">)):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dg</span><span class="o">.</span><span class="n">delay_A</span><span class="p">(</span><span class="s1">&#39;T0, </span><span class="si">{:e}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">delay_vec</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dg</span><span class="o">.</span><span class="n">delay_B</span><span class="p">(</span><span class="s1">&#39;A, </span><span class="si">{:e}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">period</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">-</span> <span class="n">delay_vec</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
+                    <span class="n">elapsed_time</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">nsamples</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">vmod_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+                    <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
+                    <span class="c1">#: Do digital PID control</span>
+                    <span class="k">while</span> <span class="n">elapsed_time</span> <span class="o">&lt;</span> <span class="n">tsettle</span> <span class="o">+</span> <span class="n">tavg</span><span class="p">:</span>
+                        <span class="n">ai_data</span> <span class="o">=</span> <span class="n">ai_task</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+                        <span class="n">vcomp</span> <span class="o">=</span> <span class="n">ai_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">err</span> <span class="o">=</span> <span class="n">vcomp</span> <span class="o">-</span> <span class="n">vcomp_set</span>
+                        <span class="n">vmod</span> <span class="o">+=</span> <span class="n">P</span> <span class="o">*</span> <span class="n">err</span>
+                        <span class="n">vmod</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">vmod</span><span class="p">,</span> <span class="n">vmod_high</span><span class="p">)</span>
+                        <span class="c1">#vmod = max(vmod, vmod_low) if vmod &lt; 0 else min(vmod, vmod_high)</span>
+                        <span class="n">ao_task</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">vmod</span><span class="p">)</span>
+                        <span class="n">elapsed_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
+                        <span class="n">nsamples</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">vmod_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vmod_time</span><span class="p">,</span> <span class="n">vmod</span><span class="p">)</span>
+                    <span class="n">avg_start_pt</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">nsamples</span> <span class="o">*</span> <span class="n">tavg</span> <span class="o">//</span> <span class="p">(</span><span class="n">tsettle</span> <span class="o">+</span> <span class="n">tavg</span><span class="p">))</span>
+                    <span class="n">vmod_vec</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">vmod_time</span><span class="p">[</span><span class="n">avg_start_pt</span><span class="p">:])</span>
+
+                    <span class="n">clear_artists</span><span class="p">(</span><span class="n">axM</span><span class="p">)</span>
+                    <span class="n">axM</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">delay_vec</span><span class="p">,</span> <span class="n">vmod_vec</span><span class="p">,</span> <span class="s1">&#39;bo-&#39;</span><span class="p">)</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+                    <span class="n">figM</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+
+                    <span class="n">clear_artists</span><span class="p">(</span><span class="n">axT</span><span class="p">)</span>
+                    <span class="n">axT</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">vmod_time</span><span class="p">,</span> <span class="s1">&#39;bo&#39;</span><span class="p">)</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+                    <span class="n">figT</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Measurement aborted by user.&#39;</span><span class="p">)</span>
+
+        <span class="n">data_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s1">&#39;delay_vec&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;array&#39;</span><span class="p">:</span> <span class="n">delay_vec</span><span class="p">,</span> <span class="s1">&#39;unit&#39;</span><span class="p">:</span> <span class="s1">&#39;s&#39;</span><span class="p">},</span>
+            <span class="s1">&#39;vmod_vec&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;array&#39;</span><span class="p">:</span> <span class="n">vmod_vec</span><span class="p">,</span> <span class="s1">&#39;unit&#39;</span><span class="p">:</span> <span class="s1">&#39;V&#39;</span><span class="p">}</span>
+            <span class="p">})</span>
+        <span class="k">if</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;save&#39;</span><span class="p">]:</span>
+            <span class="c1">#: Get/create data location</span>
+            <span class="n">loc_provider</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">FormatLocation</span><span class="p">(</span><span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{date}</span><span class="s1">/#</span><span class="si">{counter}</span><span class="s1">_</span><span class="si">{name}</span><span class="s1">_</span><span class="si">{time}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="n">loc_provider</span><span class="p">(</span><span class="n">DiskIO</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">),</span> <span class="n">record</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;fname&#39;</span><span class="p">]})</span>
+            <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="c1">#: Save arrays to mat</span>
+            <span class="n">io</span><span class="o">.</span><span class="n">savemat</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;fname&#39;</span><span class="p">]),</span> <span class="n">data_dict</span><span class="p">)</span>
+            <span class="c1">#: Save metadata to json</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">loc</span> <span class="o">+</span> <span class="s1">&#39;/metadata.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">meta_dict</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">skipkeys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+            <span class="c1">#: Save figures to png</span>
+            <span class="n">figM</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span>
+            <span class="n">figM</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">rect</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">])</span>
+            <span class="n">figM</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">mod_d.png&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;fname&#39;</span><span class="p">]))</span>
+            <span class="n">figT</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span>
+            <span class="n">figT</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">rect</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">])</span>
+            <span class="n">figT</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">mod_t.png&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">ivm_params</span><span class="p">[</span><span class="s1">&#39;fname&#39;</span><span class="p">]))</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Data saved to </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">loc</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">data_dict</span><span class="p">,</span> <span class="n">meta_dict</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Stanford-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

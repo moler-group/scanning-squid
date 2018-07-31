@@ -1,0 +1,543 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>instruments.atto &mdash; scanning-squid  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="scanning-squid  documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> scanning-squid
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/microscope.html">Microscope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/config-files.html">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/PhysicalUnits.html">Physical Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/measurements.html">Measurements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/plots.html">Plots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/utils.html">Utility Functions &amp; Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/DataSetExample.html">DataSet Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/workflow.html">Typical Workflow</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">scanning-squid</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>instruments.atto</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for instruments.atto</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">qcodes.instrument.visa</span> <span class="k">import</span> <span class="n">VisaInstrument</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span> <span class="nn">qcodes.utils.validators</span> <span class="k">as</span> <span class="nn">vals</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">visa</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AttocubeController"><a class="viewcode-back" href="../../pages/components.html#instruments.atto.AttocubeController">[docs]</a><span class="k">class</span> <span class="nc">AttocubeController</span><span class="p">(</span><span class="n">VisaInstrument</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for Attocube controller instrument.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atto_config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">temp</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ureg</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+                 <span class="n">timestamp_fmt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            atto_config: Configuration dict loaded from microscope configuration json file.</span>
+<span class="sd">            temp: &#39;LT&#39; or &#39;RT&#39;, depending on whether the attocubes are at room temp. or low temp.</span>
+<span class="sd">            ureg: pint UnitRegistry instance, used for managing physical units.</span>
+<span class="sd">            timestamp_fmt: Timestamp format to be used for logging.</span>
+<span class="sd">            **kwargs: Keyword arguments to be passed to VisaInstrument constructor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">atto_config</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">atto_config</span><span class="p">[</span><span class="s1">&#39;address&#39;</span><span class="p">],</span> <span class="n">atto_config</span><span class="p">[</span><span class="s1">&#39;timeout&#39;</span><span class="p">],</span>
+                         <span class="n">atto_config</span><span class="p">[</span><span class="s1">&#39;terminator&#39;</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">atto_config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visa_handle</span><span class="o">.</span><span class="n">baud_rate</span> <span class="o">=</span> <span class="n">atto_config</span><span class="p">[</span><span class="s1">&#39;baud_rate&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visa_handle</span><span class="o">.</span><span class="n">stop_bits</span> <span class="o">=</span> <span class="n">visa</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">StopBits</span><span class="o">.</span><span class="n">one</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visa_handle</span><span class="o">.</span><span class="n">parity</span> <span class="o">=</span> <span class="n">visa</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">Parity</span><span class="o">.</span><span class="n">none</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;IDN&#39;</span><span class="p">)</span> <span class="c1"># Get rid of this parameter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ureg</span> <span class="o">=</span> <span class="n">ureg</span>
+        <span class="c1"># Callable for converting a string into a quantity with units</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span> <span class="o">=</span> <span class="n">ureg</span><span class="o">.</span><span class="n">Quantity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp</span> <span class="o">=</span> <span class="n">temp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timestamp_fmt</span> <span class="o">=</span> <span class="n">timestamp_fmt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plane_is_current</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">axes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;axes&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">voltage_limits</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;version&#39;</span><span class="p">,</span>
+                            <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Version&#39;</span><span class="p">,</span>
+                            <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;ver&#39;</span><span class="p">,</span>
+                            <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                            <span class="n">snapshot_get</span><span class="o">=</span><span class="kc">False</span>
+                            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">voltage_limits</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span><span class="n">axis</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;voltage_limits&#39;</span><span class="p">][</span><span class="n">temp</span><span class="p">][</span><span class="n">axis</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">})</span>
+            <span class="c1">#: axis mode (gettable and settable)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;mode_ax</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span>
+                                <span class="n">label</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> axis mode&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">),</span>
+                                <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                                <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;getm </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span>
+                                <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;setm </span><span class="si">{}</span><span class="s1"> {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span>
+                                <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;gnd&#39;</span><span class="p">,</span> <span class="s1">&#39;inp&#39;</span><span class="p">,</span> <span class="s1">&#39;cap&#39;</span><span class="p">,</span> <span class="s1">&#39;stp&#39;</span><span class="p">,</span> <span class="s1">&#39;off&#39;</span><span class="p">,</span> <span class="s1">&#39;stp+&#39;</span><span class="p">,</span> <span class="s1">&#39;stp-&#39;</span><span class="p">),</span>
+                                <span class="n">get_parser</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_mode_parser</span><span class="p">,</span>
+                                <span class="n">snapshot_get</span><span class="o">=</span><span class="kc">False</span>
+                                <span class="p">)</span>
+            <span class="c1">#: axis voltage, with limits set according to temperature mode (gettable and settable)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;voltage_ax</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span>
+                                <span class="n">label</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> axis voltage&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">),</span>
+                                <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;V&#39;</span><span class="p">,</span>
+                                <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;getv </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span>
+                                <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;setv </span><span class="si">{}</span><span class="s1"> {{:.3f}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span>
+                                <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Numbers</span><span class="p">(</span><span class="n">min_value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">voltage_limits</span><span class="p">[</span><span class="n">axis</span><span class="p">]),</span>
+                                <span class="n">get_parser</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_voltage_parser</span><span class="p">,</span>
+                                <span class="n">snapshot_get</span><span class="o">=</span><span class="kc">False</span>
+                                <span class="p">)</span>
+            <span class="c1">#: axis frequency (gettable and settable)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;freq_ax</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span>
+                                <span class="n">label</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> axis frequency&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">),</span>
+                                <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Hz&#39;</span><span class="p">,</span>
+                                <span class="n">get_cmd</span><span class="o">=</span><span class="p">(</span><span class="k">lambda</span> <span class="n">idx</span><span class="o">=</span><span class="n">idx</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_freq</span><span class="p">(</span><span class="n">idx</span><span class="p">)),</span>
+                                <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;setf </span><span class="si">{}</span><span class="s1"> {{:.0f}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span>
+                                <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Numbers</span><span class="p">(</span><span class="n">min_value</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">10000</span><span class="p">),</span>
+                                <span class="n">get_parser</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_freq_parser</span><span class="p">,</span>
+                                <span class="n">snapshot_get</span><span class="o">=</span><span class="kc">False</span>
+                                <span class="p">)</span>
+            <span class="c1">#: axis capacitance (gettable, will fail if Attocubes are grounded with e.g. a GND cap)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;cap_ax</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span>
+                               <span class="n">label</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> axis capacitance&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">),</span>
+                               <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;nF&#39;</span><span class="p">,</span>
+                               <span class="n">get_cmd</span><span class="o">=</span><span class="p">(</span><span class="k">lambda</span> <span class="n">idx</span><span class="o">=</span><span class="n">idx</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_cap</span><span class="p">(</span><span class="n">idx</span><span class="p">)),</span>
+                               <span class="n">get_parser</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cap_parser</span><span class="p">,</span>
+                               <span class="n">snapshot_get</span><span class="o">=</span><span class="kc">False</span>
+                              <span class="p">)</span>
+    
+<div class="viewcode-block" id="AttocubeController.ask_raw"><a class="viewcode-back" href="../../pages/components.html#instruments.atto.AttocubeController.ask_raw">[docs]</a>    <span class="k">def</span> <span class="nf">ask_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Query instrument with cmd and return response.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            cmd: Command to write to controller.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: response</span>
+<span class="sd">                Response of Attocube controller to the query `cmd`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device_clear</span><span class="p">()</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">ask_raw</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+        
+<div class="viewcode-block" id="AttocubeController.write_raw"><a class="viewcode-back" href="../../pages/components.html#instruments.atto.AttocubeController.write_raw">[docs]</a>    <span class="k">def</span> <span class="nf">write_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Write cmd and don&#39;t wait for response.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            cmd: Command to write to controller.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visa_handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="AttocubeController.check_response"><a class="viewcode-back" href="../../pages/components.html#instruments.atto.AttocubeController.check_response">[docs]</a>    <span class="k">def</span> <span class="nf">check_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Raise an exception if controller responds with &#39;ERROR&#39;.</span>
+<span class="sd">                </span>
+<span class="sd">        Args:</span>
+<span class="sd">            response: Response from controller.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;ERROR&#39;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span> <span class="c1">#: I&#39;m not sure this actually works!</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="AttocubeController.stop"><a class="viewcode-back" href="../../pages/components.html#instruments.atto.AttocubeController.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Stops all motion along axis and then grounds the output.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            axis: Either axis label (str, e.g. &#39;y&#39;) or index (int, e.g. 2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>  
+        <span class="n">ax</span><span class="p">,</span> <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_axis</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Stopping </span><span class="si">{}</span><span class="s1"> axis motion.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ax</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;stop </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mode_ax</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">))(</span><span class="s1">&#39;gnd&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AttocubeController.step"><a class="viewcode-back" href="../../pages/components.html#instruments.atto.AttocubeController.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Performs a given number of Attocube steps. steps &gt; 0 corresponds to stepu (up),</span>
+<span class="sd">        steps &lt; 0 corresponds to stepd (down).</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            axis: Either axis label (str, e.g. &#39;y&#39;) or index (int, e.g. 2)</span>
+<span class="sd">            steps: Number of steps to perform (&gt;0 for &#39;u&#39;, &lt;0 for &#39;d&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">axis</span><span class="p">,</span> <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_axis</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">steps</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;steps must be an integer.&#39;</span><span class="p">)</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;freq_ax</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">))()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Performing </span><span class="si">{}</span><span class="s1"> steps along axis </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">steps</span><span class="p">,</span> <span class="n">axis</span><span class="p">))</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mode_ax</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">))(</span><span class="s1">&#39;stp&#39;</span><span class="p">)</span>
+        <span class="n">direc</span> <span class="o">=</span> <span class="s1">&#39;u&#39;</span> <span class="k">if</span> <span class="n">steps</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;d&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="s1">&#39;step</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">direc</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">steps</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;stepw </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+        <span class="c1">#: do nothing while stepping</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span> <span class="o">/</span> <span class="n">freq</span> <span class="o">*</span> <span class="mf">1.25</span><span class="p">)</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mode_ax</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">))(</span><span class="s1">&#39;gnd&#39;</span><span class="p">)</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_fmt</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Moved </span><span class="si">{}</span><span class="s1"> steps along </span><span class="si">{}</span><span class="s1"> axis.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">steps</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;history&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ts</span><span class="p">:</span> <span class="n">msg</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plane_is_current</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="AttocubeController.clear_instances"><a class="viewcode-back" href="../../pages/components.html#instruments.atto.AttocubeController.clear_instances">[docs]</a>    <span class="k">def</span> <span class="nf">clear_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove instrument instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_instance</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_parse_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Returns axis label and index given either one.</span>
+<span class="sd">        e.g. self._parse_axis(&#39;y&#39;) == self._parse_axis(2) == (&#39;y&#39;, 2)</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            axis: Either axis label (str, e.g. &#39;y&#39;) or index (int, e.g. 2)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple[str, int]: axis, idx</span>
+<span class="sd">                Axis label, axis index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">idxs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">axis</span>
+            <span class="n">axis</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="n">idxs</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">:</span>
+                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;axis must be in </span><span class="si">{}</span><span class="s1"> or </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">idxs</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">axis</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;axis must be in </span><span class="si">{}</span><span class="s1"> or </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">idxs</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;axis of type str or int.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">axis</span><span class="p">,</span> <span class="n">idx</span>
+    
+    <span class="k">def</span> <span class="nf">_mode_parser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">response</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Parse controller response like &#39;mode = gnd&#39;.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            response: Response from controller.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: parsed_response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">_freq_parser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Parse controller response like &#39;frequency = 100 Hz&#39;.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            response: Response from controller.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: parsed_response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    
+    <span class="k">def</span> <span class="nf">_voltage_parser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Parse controller response like &#39;voltage = 20 V&#39;.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            response: Response from controller.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: parsed_response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    
+    <span class="k">def</span> <span class="nf">_cap_parser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Parse capacitance like &#39;capacitance = 1000 nF&#39;.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            response: Response from controller.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: parsed_response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;nF&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+    
+    <span class="k">def</span> <span class="nf">_get_freq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Query frequency of axis given by idx.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            idx: axis index (1, 2, or 3)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_terminator</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="c1">#: Bug in ANC300! Response is terminated with &#39;\n&#39;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="s1">&#39;getf </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_terminator</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="c1">#: Set terminator back to &#39;\r\n&#39;, works for other paramaters</span>
+        <span class="k">return</span> <span class="n">response</span>
+    
+    <span class="k">def</span> <span class="nf">_get_cap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Query capacitance of axis given by idx.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            idx: axis index (1, 2, or 3)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;mode_ax</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">)]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;cap&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;capw </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+        <span class="c1">#: There&#39;s some delay for cap, so query three times and return the last response.</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="s1">&#39;getc </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+<div class="viewcode-block" id="ANC300"><a class="viewcode-back" href="../../pages/components.html#instruments.atto.ANC300">[docs]</a><span class="k">class</span> <span class="nc">ANC300</span><span class="p">(</span><span class="n">AttocubeController</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;ANC300 Attocube controller instrument.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atto_config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">temp</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ureg</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+                 <span class="n">timestamp_format</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">atto_config</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">ureg</span><span class="p">,</span> <span class="n">timestamp_format</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;serialnum&#39;</span><span class="p">,</span>
+                    <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Controller serial number&#39;</span><span class="p">,</span>
+                    <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;getcser&#39;</span><span class="p">,</span>
+                    <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                    <span class="n">snapshot_get</span><span class="o">=</span><span class="kc">False</span>
+                    <span class="p">)</span>
+        <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1">#: serial number for axis controller module (gettable only)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;serialnum_ax</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span>
+                                <span class="n">label</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> axis serial number&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">),</span>
+                                <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;getser </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span>
+                                <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                                <span class="n">snapshot_get</span><span class="o">=</span><span class="kc">False</span>
+                                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ANC300.initialize"><a class="viewcode-back" href="../../pages/components.html#instruments.atto.ANC300.initialize">[docs]</a>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Initialize instrument with parameters from self.metadata.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Initializing ANC300 controller.&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">freq_in_Hz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;default_frequency&#39;</span><span class="p">][</span><span class="n">axis</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;Hz&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+            <span class="n">voltage_lim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">voltage_limits</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;freq_ax</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">)]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">freq_in_Hz</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;voltage_ax</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">)]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">voltage_lim</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;mode_ax</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">)]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;gnd&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">()</span> <span class="c1">#: sometimes returns &#39;OK&#39; instead of version info on the first try</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">serialnum</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">serialnum_ax1</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">serialnum_ax2</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">serialnum_ax3</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Connected to: </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">()))</span></div></div>
+        
+<span class="c1"># class ANC150(AttocubeController):</span>
+<span class="c1">#    &quot;&quot;&quot;ANC150 Attocube controller instrument.</span>
+<span class="c1">#    &quot;&quot;&quot;</span>
+<span class="c1">#    def __init__(self, atto_config: Dict, temp: str, ureg: Any,</span>
+<span class="c1">#                 timestamp_format: str, **kwargs) -&gt; None:</span>
+<span class="c1">#         super().__init__(atto_config, temp, ureg, timestamp_format, **kwargs)</span>
+<span class="c1">#         self.initialize()</span>
+
+<span class="c1">#     def initialize(self) -&gt; None:</span>
+<span class="c1">#         &quot;&quot;&quot;Initialize instrument with parameters from self.metadata.</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         log.info(&#39;Initializing ANC150 controller.&#39;)</span>
+<span class="c1">#         for axis, idx in self.axes.items():</span>
+<span class="c1">#             freq_in_Hz = self.Q_(self.metadata[&#39;default_frequency&#39;][axis]).to(&#39;Hz&#39;).magnitude</span>
+<span class="c1">#             voltage_lim = self.voltage_limits[axis]</span>
+<span class="c1">#             self.parameters[&#39;freq_ax{}&#39;.format(idx)].set(freq_in_Hz)</span>
+<span class="c1">#             self.parameters[&#39;voltage_ax{}&#39;.format(idx)].set(voltage_lim)</span>
+<span class="c1">#             self.parameters[&#39;mode_ax{}&#39;.format(idx)].set(&#39;gnd&#39;)</span>
+<span class="c1">#         self.version() #: sometimes returns &#39;OK&#39; instead of version info on the first try</span>
+<span class="c1">#         print(&#39;Connected to: {}.&#39;.format(self.version()))</span>
+        
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Stanford-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

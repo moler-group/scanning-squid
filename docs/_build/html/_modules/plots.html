@@ -1,0 +1,447 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>plots &mdash; scanning-squid  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="scanning-squid  documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> scanning-squid
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../pages/getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pages/microscope.html">Microscope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pages/config-files.html">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/PhysicalUnits.html">Physical Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pages/measurements.html">Measurements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pages/plots.html">Plots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pages/utils.html">Utility Functions &amp; Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/DataSetExample.html">DataSet Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pages/workflow.html">Typical Workflow</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">scanning-squid</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>plots</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for plots</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.ticker</span> <span class="k">as</span> <span class="nn">ticker</span>
+<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">colors</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="k">import</span> <span class="n">make_scan_vectors</span><span class="p">,</span> <span class="n">make_scan_grids</span><span class="p">,</span> <span class="n">moving_avg</span><span class="p">,</span> <span class="n">to_real_units</span><span class="p">,</span> <span class="n">clear_artists</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<div class="viewcode-block" id="ScanPlot"><a class="viewcode-back" href="../pages/plots.html#plots.ScanPlot">[docs]</a><span class="k">class</span> <span class="nc">ScanPlot</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Plot displaying acquired images in all measurement channels, updated live during a scan.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">scan_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">ureg</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            scan_params: Scan parameters as defined in measurement configuration file.</span>
+<span class="sd">            prefactors: Dict of pint quantities defining conversion factor from</span>
+<span class="sd">                DAQ voltage to real units for each measurement channel.</span>
+<span class="sd">            ureg: pint UnitRegistry, manages units.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scan_params</span> <span class="o">=</span> <span class="n">scan_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ureg</span> <span class="o">=</span> <span class="n">ureg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span> <span class="o">=</span> <span class="n">ureg</span><span class="o">.</span><span class="n">Quantity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channels</span> <span class="o">=</span> <span class="n">scan_params</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fast_ax</span> <span class="o">=</span> <span class="n">scan_params</span><span class="p">[</span><span class="s1">&#39;fast_ax&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">slow_ax</span> <span class="o">=</span> <span class="s1">&#39;y&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast_ax</span> <span class="o">==</span> <span class="s1">&#39;x&#39;</span> <span class="k">else</span> <span class="s1">&#39;x&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">line_colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;#d80202&#39;</span> <span class="p">,</span><span class="s1">&#39;#545454&#39;</span> <span class="p">,</span><span class="s1">&#39;#777777&#39;</span> <span class="p">,</span><span class="s1">&#39;#a8a8a8&#39;</span><span class="p">,</span> <span class="s1">&#39;#d1d1d1&#39;</span><span class="p">]</span>
+        <span class="n">MAXN_COLS</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="n">N</span> <span class="k">if</span> <span class="n">N</span> <span class="o">&lt;</span> <span class="n">MAXN_COLS</span> <span class="k">else</span> <span class="n">MAXN_COLS</span>
+        <span class="n">plot_rows</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="n">cols</span><span class="p">))</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">plot_rows</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mf">4.5</span> <span class="o">*</span> <span class="n">plot_rows</span><span class="p">),</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                         <span class="n">gridspec_kw</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;height_ratios&quot;</span><span class="p">:[</span><span class="mf">0.075</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]</span><span class="o">*</span><span class="n">plot_rows</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">patch</span><span class="o">.</span><span class="n">set_alpha</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plots</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;colorbars&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="s1">&#39;lines&#39;</span><span class="p">:</span> <span class="p">{}}</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ch</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;colorbars&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ch</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;cax&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]}})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;images&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ch</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;ax&#39;</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">]}})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;lines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ch</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="n">i</span><span class="p">]})</span>
+        <span class="k">for</span> <span class="n">ch</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;images&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">ax</span><span class="p">[</span><span class="s1">&#39;ax&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="s1">&#39;ax&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;x position [V]&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="s1">&#39;ax&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;y position [V]&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ch</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;lines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> position [V]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fast_ax</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_empty</span><span class="p">()</span>
+            
+<div class="viewcode-block" id="ScanPlot.init_empty"><a class="viewcode-back" href="../pages/plots.html#plots.ScanPlot.init_empty">[docs]</a>    <span class="k">def</span> <span class="nf">init_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize the plot with all images empty. They will be filled during the scan.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scan_vectors</span> <span class="o">=</span> <span class="n">make_scan_vectors</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scan_params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ureg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scan_vectors</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan_vectors</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">])</span>
+        <span class="n">empty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">:</span>
+            <span class="n">im</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;images&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;ax&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">,</span> <span class="n">empty</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;images&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;quad&#39;</span><span class="p">:</span> <span class="n">im</span><span class="p">})</span>
+            <span class="n">cbar</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;colorbars&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;cax&#39;</span><span class="p">],</span> <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;colorbars&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;cax&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;unit_latex&#39;</span><span class="p">]))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;colorbars&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;cbar&#39;</span><span class="p">:</span> <span class="n">cbar</span><span class="p">})</span>
+        <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ch</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">])</span></div>
+            
+<div class="viewcode-block" id="ScanPlot.update"><a class="viewcode-back" href="../pages/plots.html#plots.ScanPlot.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_set</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">loop_counter</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">num_lines</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+               <span class="n">offline</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Update the plot with updated DataSet. Called after each line of the scan.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            DataSet: active data set, with a new line of data added with each loop iteration.</span>
+<span class="sd">            loop_counter: utils.Counter instance, lets us know where we are in the scan.</span>
+<span class="sd">            num_lines: Number of previous linecuts to plot, including the line just scanned.</span>
+<span class="sd">                Currently can only handle num_lines &lt;= 5.</span>
+<span class="sd">            offline: False if this is being called during a scan.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">data_set</span><span class="o">.</span><span class="n">location</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">location</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> 
+        <span class="n">data</span> <span class="o">=</span> <span class="n">to_real_units</span><span class="p">(</span><span class="n">data_set</span><span class="p">)</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">data_set</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;loop&#39;</span><span class="p">][</span><span class="s1">&#39;metadata&#39;</span><span class="p">]</span>
+        <span class="n">slow_ax</span> <span class="o">=</span> <span class="s1">&#39;x&#39;</span> <span class="k">if</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;fast_ax&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span> <span class="k">else</span> <span class="s1">&#39;y&#39;</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">loop_counter</span><span class="o">.</span><span class="n">count</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">offline</span> <span class="k">else</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;scan_size&#39;</span><span class="p">][</span><span class="n">slow_ax</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">ch</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">):</span>
+            <span class="n">data_ch</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span><span class="n">idx</span><span class="p">,:]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast_ax</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span>
+                <span class="n">data_ch</span> <span class="o">=</span> <span class="n">data_ch</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">clear_artists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;images&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;ax&#39;</span><span class="p">])</span>
+            <span class="n">clear_artists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;lines&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">])</span>
+            <span class="n">norm</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">()</span><span class="o">.</span><span class="n">autoscale</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">(</span><span class="n">data_ch</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;images&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;quad&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;images&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;ax&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">(</span><span class="n">data_ch</span><span class="p">),</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;colorbars&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;cbar&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;images&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;quad&#39;</span><span class="p">],</span>
+                                                                    <span class="n">cax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;colorbars&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;cax&#39;</span><span class="p">],</span>
+                                                                    <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;colorbars&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;cbar&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">locator</span> <span class="o">=</span> <span class="n">ticker</span><span class="o">.</span><span class="n">MaxNLocator</span><span class="p">(</span><span class="n">nbins</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;colorbars&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;cbar&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update_ticks</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;colorbars&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;cbar&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;unit_latex&#39;</span><span class="p">]))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;colorbars&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;cbar&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update_normal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;images&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;quad&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;images&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;ax&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">relim</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;lines&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">]</span><span class="o">.</span><span class="n">relim</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;colorbars&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;cax&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">minorticks_on</span><span class="p">()</span>
+            <span class="c1">#: Update linecuts</span>
+            <span class="n">xdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan_vectors</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">fast_ax</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">line</span> <span class="o">&lt;</span> <span class="n">num_lines</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">line</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">ydata</span> <span class="o">=</span> <span class="n">data_ch</span><span class="p">[:,</span><span class="n">l</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast_ax</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span> <span class="k">else</span> <span class="n">data_ch</span><span class="p">[</span><span class="n">l</span><span class="p">,:]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;lines&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">line_colors</span><span class="p">[</span><span class="n">line</span><span class="o">-</span><span class="n">l</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_lines</span><span class="p">):</span>
+                    <span class="n">ydata</span> <span class="o">=</span> <span class="n">data_ch</span><span class="p">[:,</span><span class="n">line</span><span class="o">-</span><span class="n">num_lines</span><span class="o">+</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast_ax</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span> <span class="k">else</span> <span class="n">data_ch</span><span class="p">[</span><span class="n">line</span><span class="o">-</span><span class="n">num_lines</span><span class="o">+</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="p">,:]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="s1">&#39;lines&#39;</span><span class="p">][</span><span class="n">ch</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">line_colors</span><span class="p">[</span><span class="n">num_lines</span><span class="o">-</span><span class="n">l</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span></div>
+        <span class="c1">#self.fig.show()</span>
+        
+<div class="viewcode-block" id="ScanPlot.save"><a class="viewcode-back" href="../pages/plots.html#plots.ScanPlot.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save plot to png file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            fname: File to which to save the plot.</span>
+<span class="sd">                If fname is None, saves to data location as {scan_params[&#39;fname&#39;]}.png</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">fname</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan_params</span><span class="p">[</span><span class="s1">&#39;fname&#39;</span><span class="p">]</span> <span class="o">+</span><span class="s1">&#39;.png&#39;</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span></div></div>
+            
+<span class="k">class</span> <span class="nc">ScanPlotFromDataSet</span><span class="p">(</span><span class="n">ScanPlot</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate ScanPlot instance from a completed DataSet rather than during a Loop.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scan_data</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ureg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            scan_data: DataSet to plot, as created by microscope.scan_plane</span>
+<span class="sd">            ureg: pint UnitRegistry, manages units.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ureg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">pint</span> <span class="k">import</span> <span class="n">UnitRegistry</span>
+            <span class="n">ureg</span> <span class="o">=</span> <span class="n">UnitRegistry</span><span class="p">()</span>
+            <span class="c1">#: Tell the UnitRegistry what a Phi0 is, and that ohm = Ohm</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;squid_units.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Phi0 = 2.067833831e-15 * Wb</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Ohm = ohm</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">ureg</span><span class="o">.</span><span class="n">load_definitions</span><span class="p">(</span><span class="s1">&#39;./squid_units.txt&#39;</span><span class="p">)</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">scan_data</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;loop&#39;</span><span class="p">][</span><span class="s1">&#39;metadata&#39;</span><span class="p">]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;prefactors&#39;</span><span class="p">],</span> <span class="n">ureg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">scan_data</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">offline</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TDCPlot"><a class="viewcode-back" href="../pages/plots.html#plots.TDCPlot">[docs]</a><span class="k">class</span> <span class="nc">TDCPlot</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Plot displaying capacitance as a function of z voltage, updated live during a scan.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tdc_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">ureg</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            tdc_params: Touchdown parameters as defined in measurement configuration file.</span>
+<span class="sd">            ureg: pint UnitRegistry, manages units.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tdc_params</span> <span class="o">=</span> <span class="n">tdc_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">constants</span> <span class="o">=</span> <span class="n">tdc_params</span><span class="p">[</span><span class="s1">&#39;constants&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channels</span> <span class="o">=</span> <span class="n">tdc_params</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ureg</span> <span class="o">=</span> <span class="n">ureg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span> <span class="o">=</span> <span class="n">ureg</span><span class="o">.</span><span class="n">Quantity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">),</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">),</span><span class="mi">3</span><span class="p">),</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">patch</span><span class="o">.</span><span class="n">set_alpha</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_empty</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TDCPlot.init_empty"><a class="viewcode-back" href="../pages/plots.html#plots.TDCPlot.init_empty">[docs]</a>    <span class="k">def</span> <span class="nf">init_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize the plot with no data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dV</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tdc_params</span><span class="p">[</span><span class="s1">&#39;dV&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+        <span class="n">startV</span><span class="p">,</span> <span class="n">endV</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_</span><span class="p">(</span><span class="n">lim</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="k">for</span> <span class="n">lim</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tdc_params</span><span class="p">[</span><span class="s1">&#39;range&#39;</span><span class="p">]])</span>
+        <span class="n">npnts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">endV</span> <span class="o">-</span> <span class="n">startV</span><span class="p">)</span> <span class="o">/</span> <span class="n">dV</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">startV</span><span class="p">,</span> <span class="n">endV</span><span class="p">,</span> <span class="n">npnts</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ch</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;z position [V]&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> [</span><span class="si">{}</span><span class="s1">]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;unit_latex&#39;</span><span class="p">]))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="n">ch</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span></div>
+        <span class="c1">#self.fig.show()</span>
+
+<div class="viewcode-block" id="TDCPlot.update"><a class="viewcode-back" href="../pages/plots.html#plots.TDCPlot.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_set</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Update plot with data from data_set.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_set: DataSet generated by Loop in Microscope.td_cap().</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">data_set</span><span class="o">.</span><span class="n">location</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">location</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefactors</span> <span class="o">=</span> <span class="n">data_set</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;loop&#39;</span><span class="p">][</span><span class="s1">&#39;metadata&#39;</span><span class="p">][</span><span class="s1">&#39;prefactors&#39;</span><span class="p">]</span>
+        <span class="n">all_data</span> <span class="o">=</span> <span class="n">to_real_units</span><span class="p">(</span><span class="n">data_set</span><span class="p">)</span>
+        <span class="n">npnts</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">][</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">all_data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[:</span><span class="n">npnts</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ch</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">):</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">all_data</span><span class="p">[:,</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">][</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">all_data</span><span class="p">[:,</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">])]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdata</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+                <span class="n">clear_artists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdata</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="s1">&#39;b.&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdata</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;r.&#39;</span><span class="p">)</span>
+                <span class="c1">#self.ax[i].relim()</span>
+            <span class="k">if</span> <span class="n">ch</span> <span class="o">==</span> <span class="s1">&#39;CAP&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cdata</span> <span class="o">=</span> <span class="n">data</span>
+            <span class="k">elif</span> <span class="n">ch</span> <span class="o">==</span> <span class="s1">&#39;SUSCX&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sxdata</span> <span class="o">=</span> <span class="n">data</span>
+            <span class="k">elif</span> <span class="n">ch</span> <span class="o">==</span> <span class="s1">&#39;SUSCY&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sydata</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span></div>
+        <span class="c1">#self.fig.show()</span>
+
+<div class="viewcode-block" id="TDCPlot.save"><a class="viewcode-back" href="../pages/plots.html#plots.TDCPlot.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save plot to png file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            fname: File to which to save the plot.</span>
+<span class="sd">                If fname is None, saves to data location as {tdc_params[&#39;fname&#39;]}.png</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">fname</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">tdc_params</span><span class="p">[</span><span class="s1">&#39;fname&#39;</span><span class="p">]</span> <span class="o">+</span><span class="s1">&#39;.png&#39;</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span></div></div>
+
+    <span class="c1"># def _clear_artists(self, ax):</span>
+    <span class="c1">#     &quot;&quot;&quot;Clears lines and collections of lines from given matplotlib axis.</span>
+
+    <span class="c1">#     Args:</span>
+    <span class="c1">#         ax: axis to clear.</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     for artist in ax.lines + ax.collections:</span>
+    <span class="c1">#         artist.remove()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Stanford-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

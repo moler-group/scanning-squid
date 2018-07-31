@@ -1,0 +1,516 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>instruments.dg645 &mdash; scanning-squid  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="scanning-squid  documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> scanning-squid
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/microscope.html">Microscope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/config-files.html">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/PhysicalUnits.html">Physical Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/measurements.html">Measurements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/plots.html">Plots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/utils.html">Utility Functions &amp; Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/DataSetExample.html">DataSet Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pages/workflow.html">Typical Workflow</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">scanning-squid</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>instruments.dg645</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for instruments.dg645</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">qcodes</span> <span class="k">import</span> <span class="n">VisaInstrument</span>
+<span class="kn">import</span> <span class="nn">qcodes.utils.validators</span> <span class="k">as</span> <span class="nn">vals</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DG645"><a class="viewcode-back" href="../../pages/components.html#instruments.dg645.DG645">[docs]</a><span class="k">class</span> <span class="nc">DG645</span><span class="p">(</span><span class="n">VisaInstrument</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Qcodes driver for SRS DG645 digital delay generator.</span>
+
+<span class="sd">    Not all instrument functionality is included here.</span>
+<span class="sd">    Logan Bishop-Van Horn (2018)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">terminator</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channel_mapping</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;T0&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;T1&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="s1">&#39;D&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;E&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span> <span class="s1">&#39;G&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">:</span> <span class="mi">9</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_mapping</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;T0&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;AB&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;CD&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;EF&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;GH&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
+        <span class="c1"># self.display_mapping = {</span>
+        <span class="c1">#     &#39;trig_rate&#39;: 0,</span>
+        <span class="c1">#     &#39;trig_thresh&#39;: 1,</span>
+        <span class="c1">#     &#39;trig_single_shot&#39;: 2,</span>
+        <span class="c1">#     &#39;trig_line&#39;: 3,</span>
+        <span class="c1">#     &#39;advanced_trig_enable&#39;: 4,</span>
+        <span class="c1">#     &#39;trig_holdoff&#39;: 5,</span>
+        <span class="c1">#     &#39;prescale_config&#39;: 6,</span>
+        <span class="c1">#     &#39;burst_mode&#39;: 7,</span>
+        <span class="c1">#     &#39;burst_delay&#39;: 8,</span>
+        <span class="c1">#     &#39;burst_count&#39;: 9,</span>
+        <span class="c1">#     &#39;burst_period&#39;: 10,</span>
+        <span class="c1">#     &#39;channel_delay&#39;: 11,</span>
+        <span class="c1">#     &#39;channel_output_levels&#39;: 12,</span>
+        <span class="c1">#     &#39;channel_output_polarity&#39;: 13,</span>
+        <span class="c1">#     &#39;burst_T0_config&#39;: 14</span>
+        <span class="c1"># }</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prescale_mapping</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;trig&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;AB&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;CD&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;EF&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;GH&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trig_mapping</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;internal&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="s1">&#39;ext_rising&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s1">&#39;ext_falling&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s1">&#39;single_ext_rising&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+                <span class="s1">&#39;single_ext_falling&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+                <span class="s1">&#39;single&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+                <span class="s1">&#39;line&#39;</span><span class="p">:</span> <span class="mi">6</span>
+        <span class="p">}</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">polarity_mapping</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;-&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;trig_holdoff&#39;</span><span class="p">,</span>
+               <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Trigger holdoff&#39;</span><span class="p">,</span>
+               <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span>
+               <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;HOLD?&#39;</span><span class="p">,</span>
+               <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+               <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;HOLD </span><span class="si">{}</span><span class="s1">&#39;</span>
+        <span class="p">)</span>
+
+        <span class="c1">#: Prescale parameters</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prescale_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;phase_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">),</span>
+                       <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Prescale phase factor </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">),</span>
+                       <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                       <span class="n">get_cmd</span><span class="o">=</span><span class="k">lambda</span> <span class="n">ch</span><span class="o">=</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_phase_prescale</span><span class="p">(</span><span class="n">ch</span><span class="p">),</span>
+                       <span class="n">get_parser</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+                       <span class="n">set_cmd</span><span class="o">=</span><span class="k">lambda</span> <span class="n">val</span><span class="p">,</span> <span class="n">ch</span><span class="o">=</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_phase_prescale</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="n">ch</span><span class="p">),</span>
+                       <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Ints</span><span class="p">(</span><span class="n">min_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;prescale_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Prescale factor </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="k">lambda</span> <span class="n">ch</span><span class="o">=</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_prescale</span><span class="p">(</span><span class="n">ch</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="k">lambda</span> <span class="n">val</span><span class="p">,</span> <span class="n">ch</span><span class="o">=</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_prescale</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="n">ch</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Ints</span><span class="p">(</span><span class="n">min_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1">#: Trigger parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;trig_level&#39;</span><span class="p">,</span>
+               <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Trigger level&#39;</span><span class="p">,</span>
+               <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;V&#39;</span><span class="p">,</span>
+               <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;TLVL?&#39;</span><span class="p">,</span>
+               <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+               <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;TLVL </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+               <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Numbers</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;trig_rate&#39;</span><span class="p">,</span>
+               <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Trigger rate&#39;</span><span class="p">,</span>
+               <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Hz&#39;</span><span class="p">,</span>
+               <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;TRAT?&#39;</span><span class="p">,</span>
+               <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+               <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;TRAT </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+               <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Numbers</span><span class="p">(</span><span class="n">min_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;trig_source&#39;</span><span class="p">,</span>
+               <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Trigger source&#39;</span><span class="p">,</span>
+               <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+               <span class="n">get_cmd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_trig_source</span><span class="p">,</span>
+               <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+               <span class="n">set_cmd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_trig_source</span><span class="p">,</span>
+               <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trig_mapping</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="p">)</span>
+
+        <span class="c1">#: Burst parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;burst_count&#39;</span><span class="p">,</span>
+               <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Burst count&#39;</span><span class="p">,</span>
+               <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+               <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;BURC?&#39;</span><span class="p">,</span>
+               <span class="n">get_parser</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+               <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;BURC </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+               <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Ints</span><span class="p">(</span><span class="n">min_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;burst_delay&#39;</span><span class="p">,</span>
+               <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Burst delay&#39;</span><span class="p">,</span>
+               <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span>
+               <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;BURD?&#39;</span><span class="p">,</span>
+               <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+               <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;BURD </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+               <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Numbers</span><span class="p">(</span><span class="n">min_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;burst_period&#39;</span><span class="p">,</span>
+               <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Burst period&#39;</span><span class="p">,</span>
+               <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span>
+               <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;BURP?&#39;</span><span class="p">,</span>
+               <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+               <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;BURC </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+               <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Numbers</span><span class="p">(</span><span class="n">min_value</span><span class="o">=</span><span class="mf">100e-9</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">2000</span><span class="o">-</span><span class="mf">10e-9</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;burst_T0_config&#39;</span><span class="p">,</span>
+               <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Burst T0 configuration&#39;</span><span class="p">,</span>
+               <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+               <span class="n">get_cmd</span><span class="o">=</span><span class="s1">&#39;BURT?&#39;</span><span class="p">,</span>
+               <span class="n">get_parser</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+               <span class="n">set_cmd</span><span class="o">=</span><span class="s1">&#39;BURT </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+               <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1">#: Channel parameters</span>
+        <span class="k">for</span> <span class="n">ch</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;delay_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">),</span>
+                       <span class="n">label</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> delay&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">),</span>
+                       <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span>
+                       <span class="n">get_cmd</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="o">=</span><span class="n">ch</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_delay</span><span class="p">(</span><span class="n">channel</span><span class="o">=</span><span class="n">c</span><span class="p">),</span>
+                       <span class="n">get_parser</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                       <span class="n">set_cmd</span><span class="o">=</span><span class="k">lambda</span> <span class="n">src_delay</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">ch</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_delay</span><span class="p">(</span><span class="n">src_delay</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">c</span><span class="p">),</span>
+                       <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Strings</span><span class="p">()</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;channel_link_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">),</span>
+                       <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Channel linked to </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ch</span><span class="p">),</span>
+                       <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                       <span class="n">get_cmd</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="o">=</span><span class="n">ch</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_link</span><span class="p">(</span><span class="n">channel</span><span class="o">=</span><span class="n">c</span><span class="p">),</span>
+                       <span class="n">get_parser</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+                       <span class="n">set_cmd</span><span class="o">=</span><span class="k">lambda</span> <span class="n">d</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">ch</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_link</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="n">c</span><span class="p">),</span>
+                       <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_mapping</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s1">&#39;T1&#39;</span><span class="p">))</span>
+                <span class="p">)</span>
+
+        <span class="c1">#: Output parameters</span>
+        <span class="k">for</span> <span class="n">out</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;amp_out_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Output </span><span class="si">{}</span><span class="s1"> amplitude&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;V&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="k">lambda</span> <span class="n">o</span><span class="o">=</span><span class="n">out</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_amp</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="n">o</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="k">lambda</span> <span class="n">lvl</span><span class="p">,</span> <span class="n">o</span><span class="o">=</span><span class="n">out</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_amp</span><span class="p">(</span><span class="n">lvl</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">o</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Numbers</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;offset_out_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Output </span><span class="si">{}</span><span class="s1"> offset&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;V&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="k">lambda</span> <span class="n">o</span><span class="o">=</span><span class="n">out</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_offset</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="n">o</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="k">lambda</span> <span class="n">lvl</span><span class="p">,</span> <span class="n">o</span><span class="o">=</span><span class="n">out</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_offset</span><span class="p">(</span><span class="n">lvl</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">o</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Numbers</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s1">&#39;polarity_out_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out</span><span class="p">),</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Output </span><span class="si">{}</span><span class="s1"> polarity&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out</span><span class="p">),</span>
+                   <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="n">get_cmd</span><span class="o">=</span><span class="k">lambda</span> <span class="n">o</span><span class="o">=</span><span class="n">out</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_polarity</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="n">o</span><span class="p">),</span>
+                   <span class="n">get_parser</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+                   <span class="n">set_cmd</span><span class="o">=</span><span class="k">lambda</span> <span class="n">lvl</span><span class="p">,</span> <span class="n">o</span><span class="o">=</span><span class="n">out</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_offset</span><span class="p">(</span><span class="n">lvl</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">o</span><span class="p">),</span>
+                   <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">Enum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connect_message</span><span class="p">()</span>
+
+<div class="viewcode-block" id="DG645.calibrate"><a class="viewcode-back" href="../../pages/components.html#instruments.dg645.DG645.calibrate">[docs]</a>    <span class="k">def</span> <span class="nf">calibrate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Run auto-calibration routine.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*CAL?&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DG645.self_test"><a class="viewcode-back" href="../../pages/components.html#instruments.dg645.DG645.self_test">[docs]</a>    <span class="k">def</span> <span class="nf">self_test</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Run self-test routine.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*TST?&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DG645.reset"><a class="viewcode-back" href="../../pages/components.html#instruments.dg645.DG645.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reset instrument.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Resetting </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*RST&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DG645.save_settings"><a class="viewcode-back" href="../../pages/components.html#instruments.dg645.DG645.save_settings">[docs]</a>    <span class="k">def</span> <span class="nf">save_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Save instrument settings to given location.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            location: Location to which to save the settings (in [1..9]).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Saving instrument settings to location </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">location</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*SAV </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">location</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="DG645.trigger"><a class="viewcode-back" href="../../pages/components.html#instruments.dg645.DG645.trigger">[docs]</a>    <span class="k">def</span> <span class="nf">trigger</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Initiates a single trigger if instrument is in single shot mode.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*TRG&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DG645.wait"><a class="viewcode-back" href="../../pages/components.html#instruments.dg645.DG645.wait">[docs]</a>    <span class="k">def</span> <span class="nf">wait</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Wait for all prior commands to execute before continuing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*WAI&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DG645.local"><a class="viewcode-back" href="../../pages/components.html#instruments.dg645.DG645.local">[docs]</a>    <span class="k">def</span> <span class="nf">local</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Go to local.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;LCAL&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DG645.remote"><a class="viewcode-back" href="../../pages/components.html#instruments.dg645.DG645.remote">[docs]</a>    <span class="k">def</span> <span class="nf">remote</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Go to remote.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;REMT&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_phase_prescale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="s1">&#39;PHAS?</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prescale_mapping</span><span class="p">[</span><span class="n">channel</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">_set_phase_prescale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;PHAS </span><span class="si">{}</span><span class="s1">,</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prescale_mapping</span><span class="p">[</span><span class="n">channel</span><span class="p">],</span> <span class="n">value</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_get_prescale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="s1">&#39;PRES?</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prescale_mapping</span><span class="p">[</span><span class="n">channel</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">_set_prescale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;PRES </span><span class="si">{}</span><span class="s1">,</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prescale_mapping</span><span class="p">[</span><span class="n">channel</span><span class="p">],</span> <span class="n">value</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_set_trig_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;TSRC </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trig_mapping</span><span class="p">[</span><span class="n">src</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">_get_trig_source</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="s1">&#39;TSRC?&#39;</span><span class="p">)</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trig_mapping</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trig_mapping</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">keys</span><span class="p">)[</span><span class="nb">list</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">response</span><span class="p">))]</span>
+
+    <span class="k">def</span> <span class="nf">_get_delay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="s1">&#39;DLAY?</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channel_mapping</span><span class="p">[</span><span class="n">channel</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">_set_delay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src_delay</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">source</span><span class="p">,</span> <span class="n">delay</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">src_delay</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;DLAY </span><span class="si">{}</span><span class="s1">,</span><span class="si">{}</span><span class="s1">,</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channel_mapping</span><span class="p">[</span><span class="n">target</span><span class="p">],</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">channel_mapping</span><span class="p">[</span><span class="n">source</span><span class="p">],</span>
+                                          <span class="n">delay</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_get_amp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="s1">&#39;LAMP?</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_mapping</span><span class="p">[</span><span class="n">output</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">_set_amp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lvl</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;LAMP </span><span class="si">{}</span><span class="s1">,</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lvl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mapping</span><span class="p">[</span><span class="n">output</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">_get_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="s1">&#39;LINK?</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channel_mapping</span><span class="p">[</span><span class="n">channel</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">_set_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;LINK </span><span class="si">{}</span><span class="s1">,</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channel_mapping</span><span class="p">[</span><span class="n">source</span><span class="p">],</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">channel_mapping</span><span class="p">[</span><span class="n">target</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">_get_offset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="s1">&#39;LOFF?</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_mapping</span><span class="p">[</span><span class="n">output</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">_set_offset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">off</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;LOFF </span><span class="si">{}</span><span class="s1">,</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">off</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mapping</span><span class="p">[</span><span class="n">output</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">_get_polarity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="s1">&#39;LPOL?</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_mapping</span><span class="p">[</span><span class="n">output</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">_set_polarity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pol</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;LPOL </span><span class="si">{}</span><span class="s1">,</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mapping</span><span class="p">[</span><span class="n">output</span><span class="p">]))</span>
+
+<div class="viewcode-block" id="DG645.clear_instances"><a class="viewcode-back" href="../../pages/components.html#instruments.dg645.DG645.clear_instances">[docs]</a>    <span class="k">def</span> <span class="nf">clear_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clear instances of DG645 Instruments.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_instance</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Stanford-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

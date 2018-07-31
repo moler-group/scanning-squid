@@ -1,0 +1,527 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Microscope &mdash; scanning-squid  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="scanning-squid  documentation" href="../index.html"/>
+        <link rel="next" title="Microscope Components" href="components.html"/>
+        <link rel="prev" title="Getting Started" href="getting-started.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> scanning-squid
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Microscope</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="components.html">Microscope Components</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="config-files.html">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/PhysicalUnits.html">Physical Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="measurements.html">Measurements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plots.html">Plots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utility Functions &amp; Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/DataSetExample.html">DataSet Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Typical Workflow</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">scanning-squid</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Microscope</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/pages/microscope.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="microscope">
+<h1>Microscope<a class="headerlink" href="#microscope" title="Permalink to this headline">¶</a></h1>
+<p>A physical scanning SQUID microscope is represented by an instance of the <a class="reference internal" href="#microscope.microscope.Microscope" title="microscope.microscope.Microscope"><code class="xref py py-class docutils literal notranslate"><span class="pre">microscope.microscope.Microscope</span></code></a> class (or liklely one of its subclasses, like <a class="reference internal" href="#microscope.susceptometer.SusceptometerMicroscope" title="microscope.susceptometer.SusceptometerMicroscope"><code class="xref py py-class docutils literal notranslate"><span class="pre">microscope.susceptometer.SusceptometerMicroscope</span></code></a>). A <code class="xref py py-class docutils literal notranslate"><span class="pre">Microscope</span></code> is a <a class="reference external" href="http://qcodes.github.io/Qcodes/api/generated/qcodes.station.Station.html#qcodes.station.Station" title="(in QCoDeS v0.1.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">qcodes.station.Station</span></code></a>, to which we can attach components (instances of <a class="reference external" href="http://qcodes.github.io/Qcodes/api/generated/qcodes.Instrument.html#qcodes.Instrument" title="(in QCoDeS v0.1.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">qcodes.Instrument</span></code></a> or its subclasses) whose metadata we would like to save during a measurement.</p>
+<blockquote>
+<div><div class="figure">
+<a class="reference internal image-reference" href="../_images/microscope.jpg"><img alt="../_images/microscope.jpg" src="../_images/microscope.jpg" style="width: 593.5999999999999px; height: 457.79999999999995px;" /></a>
+</div>
+</div></blockquote>
+<p>See <a class="reference internal" href="../examples/ScanPlaneExample.html"><span class="std std-ref">Scan Plane Example</span></a> for a demonstration of scanning a plane with a <a class="reference internal" href="#microscope.susceptometer.SusceptometerMicroscope" title="microscope.susceptometer.SusceptometerMicroscope"><code class="xref py py-class docutils literal notranslate"><span class="pre">microscope.susceptometer.SusceptometerMicroscope</span></code></a>.</p>
+<blockquote>
+<div><div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Microscope Components</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="components.html#attocubes">Attocubes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="components.html#scanner">Scanner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="components.html#squid">SQUID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="components.html#daq">DAQ</a></li>
+<li class="toctree-l2"><a class="reference internal" href="components.html#others-instruments">Others Instruments</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<span class="target" id="module-microscope.microscope"></span><dl class="class">
+<dt id="microscope.microscope.Microscope">
+<em class="property">class </em><code class="descclassname">microscope.microscope.</code><code class="descname">Microscope</code><span class="sig-paren">(</span><em>config_file: str</em>, <em>temp: str</em>, <em>ureg: Any = &lt;pint.registry.UnitRegistry object&gt;</em>, <em>log_level: Any = 20</em>, <em>log_name: str = None</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/microscope/microscope.html#Microscope"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.microscope.Microscope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for scanning SQUID microscope.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>config_file</strong> – Path to microscope configuration JSON file.</li>
+<li><strong>temp</strong> – ‘LT’ or ‘RT’, depending on whether the microscope is cold or not.
+Sets the voltage limits for the scanner and Attocubes.</li>
+<li><strong>ureg</strong> – pint UnitRegistry for managing physical units.</li>
+<li><strong>log_level</strong> – e.g. logging.DEBUG or logging.INFO</li>
+<li><strong>log_name</strong> – Log file will be saved as logs/{log_name}.log.
+Default is the name of the microscope configuration file.</li>
+<li><strong>**kwargs</strong> – Keyword arguments to be passed to Station constructor.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="microscope.microscope.Microscope.approach">
+<code class="descname">approach</code><span class="sig-paren">(</span><em>tdc_params: Dict[str, Any], attosteps: int = 100</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/microscope/microscope.html#Microscope.approach"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.microscope.Microscope.approach" title="Permalink to this definition">¶</a></dt>
+<dd><p>Approach the sample by iteratively stepping z Attocube and performing td_cap().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>tdc_params</strong> – Dict of capacitive touchdown parameters as defined
+in measurement configuration file.</li>
+<li><strong>attosteps</strong> – Number of z atto steps to perform per iteration. Default 100.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="microscope.microscope.Microscope.get_plane">
+<code class="descname">get_plane</code><span class="sig-paren">(</span><em>x_vec: numpy.ndarray, y_vec: numpy.ndarray, tdc_params: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; Tuple[Union[numpy.ndarray, NoneType]]<a class="reference internal" href="../_modules/microscope/microscope.html#Microscope.get_plane"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.microscope.Microscope.get_plane" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs touchdowns on a grid and fits a plane to the resulting surface.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x_vec</strong> – 1D array of x positions (must be same length as y_vec).</li>
+<li><strong>y_vec</strong> – 1D array of y positions (must be same length as x_vec).</li>
+<li><strong>tdc_params</strong> – Dict of capacitive touchdown parameters as defined
+in measurement configuration file.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>x_grid, y_grid, td_grid, plane</dt>
+<dd><p class="first last">x, y, td grids and plane coefficients such that td_grid is
+fit by x_grid * plane[0] + ygrid * plane[1] + plane[2].</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Tuple[Union[np.ndarray, None]]</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="microscope.microscope.Microscope.remove_component">
+<code class="descname">remove_component</code><span class="sig-paren">(</span><em>name: str</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/microscope/microscope.html#Microscope.remove_component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.microscope.Microscope.remove_component" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a component (instrument) from the microscope.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> – Name of component to remove.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="microscope.microscope.Microscope.set_lockins">
+<code class="descname">set_lockins</code><span class="sig-paren">(</span><em>measurement: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/microscope/microscope.html#Microscope.set_lockins"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.microscope.Microscope.set_lockins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize lockins for given measurement.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>measurement</strong> – Dict of measurement parameters as defined
+in measurement configuration file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="microscope.microscope.Microscope.td_cap">
+<code class="descname">td_cap</code><span class="sig-paren">(</span><em>tdc_params: Dict[str, Any], update_snap: bool = True</em><span class="sig-paren">)</span> &#x2192; Tuple[Any]<a class="reference internal" href="../_modules/microscope/microscope.html#Microscope.td_cap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.microscope.Microscope.td_cap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs a capacitive touchdown.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>tdc_params</strong> – Dict of capacitive touchdown parameters as defined
+in measurement configuration file.</li>
+<li><strong>update_snap</strong> – Whether to update the microscope snapshot. Default True.
+(You may want this to be False when getting a plane or approaching.)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>data, tdc_plot</dt>
+<dd><p class="first last">DataSet and plot generated by the touchdown Loop.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Tuple[<a class="reference external" href="http://qcodes.github.io/Qcodes/api/generated/qcodes.DataSet.html#qcodes.DataSet" title="(in QCoDeS v0.1.11)">qcodes.DataSet</a>, <a class="reference internal" href="plots.html#plots.TDCPlot" title="plots.TDCPlot">plots.TDCPlot</a>]</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-microscope.susceptometer"></span><dl class="class">
+<dt id="microscope.susceptometer.SusceptometerMicroscope">
+<em class="property">class </em><code class="descclassname">microscope.susceptometer.</code><code class="descname">SusceptometerMicroscope</code><span class="sig-paren">(</span><em>config_file: str</em>, <em>temp: str</em>, <em>ureg: Any = &lt;pint.registry.UnitRegistry object&gt;</em>, <em>log_level: Any = 20</em>, <em>log_name: str = None</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/microscope/susceptometer.html#SusceptometerMicroscope"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.susceptometer.SusceptometerMicroscope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scanning SQUID susceptometer microscope class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>config_file</strong> – Path to microscope configuration JSON file.</li>
+<li><strong>temp</strong> – ‘LT’ or ‘RT’, depending on whether the microscope is cold or not.
+Sets the voltage limits for the scanner and Attocubes.</li>
+<li><strong>ureg</strong> – pint UnitRegistry for managing physical units.</li>
+<li><strong>log_level</strong> – e.g. logging.DEBUG or logging.INFO</li>
+<li><strong>log_name</strong> – Log file will be saved as logs/{log_name}.log.
+Default is the name of the microscope configuration file.</li>
+<li><strong>**kwargs</strong> – Keyword arguments to be passed to Station constructor.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="microscope.susceptometer.SusceptometerMicroscope.get_prefactors">
+<code class="descname">get_prefactors</code><span class="sig-paren">(</span><em>measurement: Dict[str, Any], update: bool = True</em><span class="sig-paren">)</span> &#x2192; Dict[str, Any]<a class="reference internal" href="../_modules/microscope/susceptometer.html#SusceptometerMicroscope.get_prefactors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.susceptometer.SusceptometerMicroscope.get_prefactors" title="Permalink to this definition">¶</a></dt>
+<dd><p>For each channel, calculate prefactors to convert DAQ voltage into real units.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>measurement</strong> – Dict of measurement parameters as defined
+in measurement configuration file.</li>
+<li><strong>update</strong> – Whether to query instrument parameters or simply trust the
+latest values. Default: True.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>prefactors</dt>
+<dd><p class="first last">Dict of {channel_name: prefactor} where prefactor is a pint Quantity.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>, pint.Quantity]</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="microscope.susceptometer.SusceptometerMicroscope.scan_plane">
+<code class="descname">scan_plane</code><span class="sig-paren">(</span><em>scan_params: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../_modules/microscope/susceptometer.html#SusceptometerMicroscope.scan_plane"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.susceptometer.SusceptometerMicroscope.scan_plane" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scan the current plane while acquiring data in the channels defined in
+measurement configuration file (e.g. MAG, SUSCX, SUSCY, CAP).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>scan_params</strong> – Dict of scan parameters as defined
+in measuremnt configuration file.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>data, plot</dt>
+<dd>qcodes DataSet containing acquired arrays and metdata,
+and ScanPlot instance populated with acquired data.</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">Tuple[<a class="reference external" href="http://qcodes.github.io/Qcodes/api/generated/qcodes.DataSet.html#qcodes.DataSet" title="(in QCoDeS v0.1.11)">qcodes.DataSet</a>, <a class="reference internal" href="plots.html#plots.ScanPlot" title="plots.ScanPlot">plots.ScanPlot</a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-microscope.sampler"></span><dl class="class">
+<dt id="microscope.sampler.SamplerMicroscope">
+<em class="property">class </em><code class="descclassname">microscope.sampler.</code><code class="descname">SamplerMicroscope</code><span class="sig-paren">(</span><em>config_file: str</em>, <em>temp: str</em>, <em>ureg: Any = &lt;pint.registry.UnitRegistry object&gt;</em>, <em>log_level: Any = 20</em>, <em>log_name: str = None</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/microscope/sampler.html#SamplerMicroscope"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.sampler.SamplerMicroscope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scanning SQUID sampler microscope class.</p>
+<dl class="method">
+<dt id="microscope.sampler.SamplerMicroscope.iv_mod_tek">
+<code class="descname">iv_mod_tek</code><span class="sig-paren">(</span><em>ivm_params: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; Tuple[Dict[str, Any]]<a class="reference internal" href="../_modules/microscope/sampler.html#SamplerMicroscope.iv_mod_tek"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.sampler.SamplerMicroscope.iv_mod_tek" title="Permalink to this definition">¶</a></dt>
+<dd><p>Measures IV characteristic at different mod coil voltages.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ivm_params</strong> – Dict of measurement parameters as definted in config_measurements json file.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>data_dict, metadict</dt>
+<dd>Dictionaries containing data arrays and instrument metadata.</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">Tuple[Dict]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="microscope.sampler.SamplerMicroscope.iv_tek_mod_daq">
+<code class="descname">iv_tek_mod_daq</code><span class="sig-paren">(</span><em>ivm_params: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/microscope/sampler.html#SamplerMicroscope.iv_tek_mod_daq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#microscope.sampler.SamplerMicroscope.iv_tek_mod_daq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs digital feedback on mod coil to measure flux vs. delay.</p>
+<p>AFG ch1 is used for pulse generator bias.
+AFG ch2 is used for comparator bias.
+DG ch1 is used for pulse generator trigger.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ivm_params</strong> – Dict of measurement parameters as definted in config_measurements json file.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>data_dict, metadict</dt>
+<dd>Dictionaries containing data arrays and instrument metadata.</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">Tuple[Dict]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="components.html" class="btn btn-neutral float-right" title="Microscope Components" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="getting-started.html" class="btn btn-neutral" title="Getting Started" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Stanford-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
