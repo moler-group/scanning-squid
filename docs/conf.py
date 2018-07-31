@@ -90,6 +90,7 @@ html_show_copyright = False
 #html_theme = 'alabaster'
 html_theme = "sphinx_rtd_theme"
 
+
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
@@ -186,9 +187,14 @@ intersphinx_mapping = {
 
 # -- Options for todo extension ----------------------------------------------
 
-import sphinx_rtd_theme
-html_theme = "sphinx_rtd_theme"
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+# import sphinx_rtd_theme
+# html_theme = "sphinx_rtd_theme"
+# html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
+import stanford_theme
+html_theme = "stanford_theme"
+html_theme_path = [stanford_theme.get_html_theme_path()]
+
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
