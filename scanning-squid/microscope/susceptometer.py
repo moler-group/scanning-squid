@@ -79,7 +79,7 @@ class SusceptometerMicroscope(Microscope):
             prefactors.update({ch: prefactor.to('{}/V'.format(measurement['channels'][ch]['unit']))})
         return prefactors
 
-    def scan_plane(self, scan_params: Dict[str, Any]) -> Any:
+    def scan_plane(self, scan_params: Dict[str, Any]) -> None:
         """
         Scan the current plane while acquiring data in the channels defined in
         measurement configuration file (e.g. MAG, SUSCX, SUSCY, CAP).
@@ -212,5 +212,5 @@ class SusceptometerMicroscope(Microscope):
             log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
         self.remove_component('daq_ai')
         utils.scan_to_mat_file(data, real_units=True)
-        return data, scan_plot
-
+        #return data, scan_plot
+        
