@@ -27,7 +27,7 @@ class DAQAnalogInputVoltages(ArrayParameter):
         """Averages data to get `self.target_points` points per channel.
         If `self.target_points` == `self.samples_to_read`, no averaging is done.
         """
-        data_raw = np.array(self.task.read(number_of_samples_per_channel=self.samples_to_read))
+        data_raw = np.array(self.task.read(number_of_samples_per_channel=self.samples_to_read, timeout=60))
         return np.mean(np.reshape(data_raw, (self.nchannels, self.target_points, -1)), 2)
     
 class DAQAnalogInputs(Instrument):
