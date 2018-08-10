@@ -48,7 +48,8 @@ class AttocubeController(VisaInstrument):
             self.add_parameter('mode_ax{}'.format(idx),
                                 label='{} axis mode'.format(axis),
                                 unit='',
-                                get_cmd='getm {}'.format(idx),
+                                get_cmd=(lambda idx=idx: self._get_mode(idx)),
+                                #get_cmd='getm {}'.format(idx),
                                 set_cmd='setm {} {{}}'.format(idx),
                                 vals=vals.Enum('gnd', 'inp', 'cap', 'stp', 'off', 'stp+', 'stp-'),
                                 get_parser=self._mode_parser,
@@ -58,7 +59,8 @@ class AttocubeController(VisaInstrument):
             self.add_parameter('voltage_ax{}'.format(idx),
                                 label='{} axis voltage'.format(axis),
                                 unit='V',
-                                get_cmd='getv {}'.format(idx),
+                                get_cmd=(lambda idx=idx: self._get_voltage(idx)),
+                                #get_cmd='getv {}'.format(idx),
                                 set_cmd='setv {} {{:.3f}}'.format(idx),
                                 vals=vals.Numbers(min_value=0, max_value=self.voltage_limits[axis]),
                                 get_parser=self._voltage_parser,
@@ -146,6 +148,7 @@ class AttocubeController(VisaInstrument):
         self.write('stepw {}'.format(idx))
         #: do nothing while stepping
         time.sleep(abs(steps) / freq * 1.25)
+        #time.sleep(5)
         getattr(self, 'mode_ax{}'.format(idx))('gnd')
         ts = time.strftime(self.timestamp_fmt)
         msg = 'Moved {} steps along {} axis.'.format(steps, axis)
@@ -227,7 +230,38 @@ class AttocubeController(VisaInstrument):
             float: parsed_response
         """
         return float(response.split('=')[1].split('nF')[0].strip())
-    
+
+
+    def _get_mode(self, idx: int) -> str:
+        """Query mode of axis given by idx.
+        
+        Args:
+            idx: axis index (1, 2, or 3)
+
+        Returns:
+            str: response
+        """
+        self.device_clear()
+        for _ in range(2):
+            time.sleep(0.1)
+            response = self.visa_handle.query('getm {}'.format(idx))
+        return response
+
+    def _get_voltage(self, idx: int) -> str:
+        """Query voltage of axis given by idx.
+        
+        Args:
+            idx: axis index (1, 2, or 3)
+
+        Returns:
+            str: response
+        """
+        self.device_clear()
+        for _ in range(2):
+            time.sleep(0.1)
+            response = self.visa_handle.query('getv {}'.format(idx))
+        return response
+
     def _get_freq(self, idx: int) -> str:
         """Query frequency of axis given by idx.
         
@@ -238,7 +272,10 @@ class AttocubeController(VisaInstrument):
             str: response
         """
         self.set_terminator('\n') #: Bug in ANC300! Response is terminated with '\n'
-        response = self.ask('getf {}'.format(idx))
+        self.device_clear()
+        for _ in range(2):
+            time.sleep(0.1)
+            response = self.visa_handle.query('getf {}'.format(idx))
         self.set_terminator('\r\n') #: Set terminator back to '\r\n', works for other paramaters
         return response
     
@@ -251,10 +288,13 @@ class AttocubeController(VisaInstrument):
         Returns:
             str: response
         """
-        self.parameters['mode_ax{}'.format(idx)].set('cap')
-        self.write('capw {}'.format(idx))
-        #: There's some delay for cap, so query three times and return the last response.
-        for _ in range(3):
+        self.device_clear()
+        #self.parameters['mode_ax{}'.format(idx)].set('cap')
+        self.visa_handle.write('setm {} cap'.format(idx))
+        #self.visa_handle.write('capw {}'.format(idx))
+        #: There's some delay for cap, so query seven times and return the last response.
+        for _ in range(7):
+            time.sleep(0.3)
             response = self.ask('getc {}'.format(idx))
         return response
 
@@ -296,7 +336,7 @@ class ANC300(AttocubeController):
         self.serialnum_ax2()
         self.serialnum_ax3()
         print('Connected to: {}.'.format(self.version()))
-        
+
 # class ANC150(AttocubeController):
 #    """ANC150 Attocube controller instrument.
 #    """

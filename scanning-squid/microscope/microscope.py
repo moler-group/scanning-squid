@@ -88,8 +88,8 @@ class Microscope(Station):
         self.temp = temp
 
         self._add_atto()
-        self._add_ls372()
-        self._add_ls331()
+        #self._add_ls372()
+        #self._add_ls331()
         #self._add_keithley()
         self._add_scanner()
         self._add_SQUID()
