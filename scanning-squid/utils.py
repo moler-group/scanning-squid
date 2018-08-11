@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from typing import Dict, List, Optional, Sequence, Any, Union, Tuple
+from typing import Dict, List, Optional, Sequence, Any, Union, Tuple, Callable
 import qcodes as qc
 from qcodes.instrument.parameter import ArrayParameter
 from scipy import io
@@ -101,6 +101,41 @@ def make_scan_grids(scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
         X, Y = np.meshgrid(fast_ax_vec, slow_ax_vec, indexing='xy')
     Z = X * plane['x'] + Y * plane['y'] + plane['z'] + height
     return {'x': X, 'y': Y, 'z': Z}
+
+def make_scan_surface(surface_type: str, scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
+                    fast_ax: str, fast_ax_pts: int, plane: Dict[str, float], height: float,
+                    interpolator: Optional[Callable]=None):
+    """Makes meshgrids of scanner positions to write to DAQ analog outputs.
+
+    Args:
+        surface_type: Either 'plane' or 'surface'.
+        scan_vectors: Dict of {axis_name: axis_vector} for x, y axes (from make_scan_vectors).
+        slow_ax: Name of the scan slow axis ('x' or 'y').
+        fast_ax: Name of the scan fast axis ('x' or 'y').
+        fast_ax_pts: Number of points to write to DAQ analog outputs to scan fast axis.
+        plane: Dict of x, y, z values defining the plane to scan (provided by scanner.get_plane).
+        height: Height above the sample surface (in DAQ voltage) at which to scan.
+            More negative means further from sample; 0 means 'in contact'.
+        interpolator: Instance of scipy.interpolate.Rbf used to interpolate touchdown points.
+            Only required if surface_type == 'surface'. Default: None.
+
+    Returns:
+        Dict: scan_grids
+            {axis_name: axis_scan_grid} for x, y, z, axes.
+    """
+    if surface_type.lower() not in ['plane', 'surface']:
+        raise ValueError('surface_type must be "plane" or "surface".')
+    plane_grids = make_scan_grids(scan_vectors, slow_ax, fast_ax, fast_ax_pts, plane, height)
+    if surface_type.lower() == 'plane':
+        return plane_grids
+    else:
+        if interpolator is None:
+            msg = 'surface_type == "surface", so you must specify an instance of scipy.interpolate.Rbf'
+            msg += '(namely microscope.scanner.surface_interp).'
+            raise ValueError(msg)
+        Z = interpolator(plane_grids['x'], plane_grids['y'])
+        surface_grids = {'x': plane_grids['x'], 'y': plane_grids['y'], 'z': Z + height}
+        return surface_grids
 
 def make_xy_grids(scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
                   fast_ax: str) -> Dict[str, Any]:
@@ -255,9 +290,9 @@ def td_to_arrays(td_data: Any, ureg: Optional[Any]=None, real_units: Optional[bo
             arrays.update({ch: array})
     return arrays
 
-def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True,
-                     xy_unit: Optional[bool]=None, fname: Optional[str]=None) -> None:
-    """Export DataSet created by microscope.scan_plane to .mat file for analysis.
+def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True, xy_unit: Optional[bool]=None,
+    fname: Optional[str]=None, interpolator: Optional[Callable]=None) -> None:
+    """Export DataSet created by microscope.scan_surface to .mat file for analysis.
 
     Args:
         scan_data: qcodes DataSet created by Microscope.scan_plane
@@ -268,6 +303,8 @@ def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True,
             according to scanner constants defined in microscope configuration file.
         fname: File name (without extension) for resulting .mat file.
             If None, uses the file name defined in measurement configuration file.
+        interpolator: Instance of scipy.interpolate.Rbf, used to interpolate touchdown points.
+            Default: None.
     """
     from pint import UnitRegistry
     ureg = UnitRegistry()
@@ -285,6 +322,8 @@ def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True,
         else:
             unit = 'V'
         mdict.update({name: {'array': arr.to(unit).magnitude, 'unit': unit}})
+    if interpolator is not None:
+        mdict.update({'surface': {'array': interpolator(arrays['X'], arrays['Y']), 'unit': 'V'}})
     mdict.update({'prefactors': meta['prefactors'], 'location': scan_data.location})
     if fname is None:
         fname = meta['fname']

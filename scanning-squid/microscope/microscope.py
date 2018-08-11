@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import json
+import pathlib
 from typing import Dict, List, Sequence, Any, Union, Tuple
 from collections import OrderedDict
 
@@ -12,12 +13,15 @@ import mpl_toolkits.mplot3d.axes3d as axes3d
 import matplotlib.colors as colors
 import numpy as np
 from scipy.linalg import lstsq
+from scipy.interpolate import Rbf
+from scipy import io
 from IPython.display import clear_output
 
 #: Qcodes for running measurements and saving data
 import qcodes as qc
 from qcodes.station import Station
 from qcodes.instrument_drivers.stanford_research.SR830 import SR830
+from qcodes.data.io import DiskIO
 
 #: NI DAQ library
 import nidaqmx
@@ -309,8 +313,8 @@ class Microscope(Station):
             else:
                 log.info('Touchdown confirmed.')
 
-    def get_plane(self, x_vec: np.ndarray, y_vec: np.ndarray,
-                  tdc_params: Dict[str, Any]) -> None:
+    def get_surface(self, x_vec: np.ndarray, y_vec: np.ndarray,
+                    tdc_params: Dict[str, Any]) -> None:
         """Performs touchdowns on a grid and fits a plane to the resulting surface.
 
         Args:
@@ -337,12 +341,15 @@ class Microscope(Station):
         td_grid = np.full((len(x_vec), len(y_vec)), np.nan, dtype=np.double)
         log.info('Aqcuiring a plane.')
         v_retract = self.scanner.voltage_retract[self.temp].to('V').magnitude
-        fig = plt.figure(figsize=(4,3))
-        ax = fig.add_subplot(111, projection='3d')
-        ax.set_xlabel('x position [V]')
-        ax.set_ylabel('y position [V]')
-        ax.set_zlabel('z position [V]')
-        ax.set_title('Sample Plane')  
+        fig = plt.figure(figsize=(8,3))
+        ax0 = fig.add_subplot(121, projection='3d')
+        ax1 = fig.add_subplot(122, projection='3d')
+        for ax in [ax0, ax1]:
+            ax.set_xlabel('x position [V]')
+            ax.set_ylabel('y position [V]')
+            ax.set_zlabel('z position [V]')
+        ax0.set_title('Sample Plane')
+        ax1.set_title('Sample Surface') 
         fig.canvas.draw()  
         fig.show()
         for i in range(len(x_vec)):
@@ -365,14 +372,17 @@ class Microscope(Station):
                         self.scanner.goto(old_pos)
                         break #: goes to outer break statement
                     plt.close(fig)
-                    fig = plt.figure(figsize=(4,3))
-                    ax = fig.add_subplot(111, projection='3d')
-                    ax.scatter(x_grid[np.isfinite(td_grid)], y_grid[np.isfinite(td_grid)],
-                        td_grid[np.isfinite(td_grid)], cmap='viridis')
-                    ax.set_xlabel('x position [V]')
-                    ax.set_ylabel('y position [V]')
-                    ax.set_zlabel('z position [V]')
-                    ax.set_title('Sample Plane')  
+                    fig = plt.figure(figsize=(8,3))
+                    ax0 = fig.add_subplot(121, projection='3d')
+                    ax1 = fig.add_subplot(122, projection='3d')
+                    for ax in [ax0, ax1]:
+                        ax.scatter(x_grid[np.isfinite(td_grid)], y_grid[np.isfinite(td_grid)],
+                            td_grid[np.isfinite(td_grid)], cmap='viridis')
+                        ax.set_xlabel('x position [V]')
+                        ax.set_ylabel('y position [V]')
+                        ax.set_zlabel('z position [V]')
+                    ax0.set_title('Sample Plane')
+                    ax1.set_title('Sample Surface') 
                     fig.canvas.draw()  
                     fig.show()
                     plt.close(tdc_plot.fig)
@@ -380,22 +390,31 @@ class Microscope(Station):
                 break #: occurs only if out_of_range or loop is broken
         self.scanner.goto(old_pos)
         if not out_of_range and not premature_exit:
+            self.scanner.metadata.update({'td_grid': {'x': x_grid, 'y': y_grid, 'z': td_grid}})
+            # Create spline function to interpolate over surface:
+            self.scanner.surface_interp = Rbf(x_grid, y_grid, td_grid, function='cubic')
             #: Fit a plane to the td_grid
             x = np.reshape(x_grid, (-1, 1))
             y = np.reshape(y_grid, (-1, 1))
             td = np.reshape(td_grid, (-1, 1))
             z = np.column_stack((x, y, np.ones_like(x)))
-            plane, _, _, _ = lstsq(z, td)
+            plane, res, _, _ = lstsq(z, td)
             log.info('New plane : {}.'.format([plane[i][0] for i in range(3)]))
-            ax.plot_surface(x_grid, y_grid, plane[0] * x_grid + plane[1] * y_grid + plane[2],
+            ax0.plot_surface(x_grid, y_grid, plane[0] * x_grid + plane[1] * y_grid + plane[2],
                 cmap='viridis', alpha=0.5)
-            ax.set_title(data.location)
-            fig.canvas.draw()
-            fig.show()
-            plt.savefig(data.location + '/plane.png')
+            ax1.plot_surface(x_grid, y_grid, self.scanner.surface_interp(x_grid, y_grid),  cmap='viridis', alpha=0.5)
             for i, axis in enumerate(['x', 'y', 'z']):
                 self.scanner.metadata['plane'].update({axis: plane[i][0]})
-            self.atto.plane_is_current = True
+            self.atto.surface_is_current = True
+            loc_provider = qc.FormatLocation(fmt='./data/{date}/#{counter}_{name}_{time}')
+            loc = loc_provider(DiskIO('.'), record={'name': 'surface'})
+            pathlib.Path(loc).mkdir(parents=True, exist_ok=True)
+            fig.suptitle(loc)
+            fig.canvas.draw()
+            fig.show()
+            plt.savefig(loc + '/plane.png')
+            mdict = {'plane': self.scanner.metadata['plane'], 'td_grid': self.scanner.metadata['td_grid']}
+            io.savemat(loc + '/surface.mat', mdict)
             #return x_grid, y_grid, td_grid, plane
         #: If the loop didn't finish, return (None, None, None, None)
         #return (None,) * 4

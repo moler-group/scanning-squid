@@ -79,9 +79,9 @@ class SusceptometerMicroscope(Microscope):
             prefactors.update({ch: prefactor.to('{}/V'.format(measurement['channels'][ch]['unit']))})
         return prefactors
 
-    def scan_plane(self, scan_params: Dict[str, Any]) -> None:
+    def scan_surface(self, scan_params: Dict[str, Any]) -> None:
         """
-        Scan the current plane while acquiring data in the channels defined in
+        Scan the current surface while acquiring data in the channels defined in
         measurement configuration file (e.g. MAG, SUSCX, SUSCY, CAP).
 
         Args:
@@ -93,8 +93,12 @@ class SusceptometerMicroscope(Microscope):
                 qcodes DataSet containing acquired arrays and metdata,
                 and ScanPlot instance populated with acquired data.
         """
-        if not self.atto.plane_is_current:
-            raise RuntimeError('Plane is not current. Aborting scan.')
+        if not self.atto.surface_is_current:
+            raise RuntimeError('Surface is not current. Aborting scan.')
+        surface_type = scan_params['surface_type'].lower()
+        if surface_type not in ['plane', 'surface']:
+            raise ValueError('surface_type must be "plane" or "surface".')
+
         old_pos = self.scanner.position()
         
         daq_config = self.config['instruments']['daq']
@@ -117,12 +121,18 @@ class SusceptometerMicroscope(Microscope):
         line_duration = pix_per_line * self.ureg('pixels') / self.Q_(scan_params['scan_rate'])
         pts_per_line = int(daq_rate * line_duration.to('s').magnitude)
         
-        plane = self.scanner.metadata['plane']
         height = self.Q_(scan_params['height']).to('V').magnitude
         
         scan_vectors = utils.make_scan_vectors(scan_params, self.ureg)
-        scan_grids = utils.make_scan_grids(scan_vectors, slow_ax, fast_ax,
-                                           pts_per_line, plane, height)
+        #scan_grids = utils.make_scan_grids(scan_vectors, slow_ax, fast_ax,
+        #                                   pts_per_line, plane, height)
+        plane = self.scanner.metadata['plane']
+        if surface_type == 'plane':
+            scan_grids = utils.make_scan_surface(surface_type, scan_vectors, slow_ax, fast_ax,
+                                                pts_per_line, plane, height)
+        else:
+            scan_grids = utils.make_scan_surface(surface_type, scan_vectors, slow_ax, fast_ax,
+                                                pts_per_line, plane, height, interpolator=self.scanner.surface_interp)
         utils.validate_scan_params(self.scanner.metadata, scan_params,
                                    scan_grids, self.temp, self.ureg, log)
         self.scanner.goto([scan_grids[axis][0][0] for axis in ['x', 'y', 'z']])
@@ -211,6 +221,6 @@ class SusceptometerMicroscope(Microscope):
             #self.SUSC_lockin.amplitude(0.004)
             log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
         self.remove_component('daq_ai')
-        utils.scan_to_mat_file(data, real_units=True)
+        utils.scan_to_mat_file(data, real_units=True, interpolator=self.scanner.surface_interp)
         #return data, scan_plot
         
