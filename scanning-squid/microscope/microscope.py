@@ -267,6 +267,7 @@ class Microscope(Station):
             loop.run()
             if abs(old_pos[0]) < 0.002 and abs(old_pos[1]) < 0.002 and self.scanner.td_height is not None:
                 self.scanner.metadata['plane'].update({'z': self.scanner.td_height})
+            data.metadata['loop']['metadata'].update({'td_height': self.scanner.td_height})
         except KeyboardInterrupt:
             log.warning('Touchdown interrupted by user. Retracting scanner.')
             #: Set break_loop = True so that get_plane() and approach() will be aborted
