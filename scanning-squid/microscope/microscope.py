@@ -357,7 +357,7 @@ class Microscope(Station):
                 #: If any of the safety limits in td_cap() are exceeded,
                 #: or the loop is interrupted by the user.
                 if self.scanner.break_loop and not self.scanner.td_has_occurred:
-                    log.warning('Aborting get_plane().')
+                    log.warning('Aborting get_surface().')
                     premature_exit = True
                     break #: goes to outer break statement
                 else:
@@ -368,7 +368,7 @@ class Microscope(Station):
                     if self.scanner.td_height is None:
                         out_of_range = True
                         premature_exit = True
-                        log.warning('Touchdown out of range. Stopping get_plane().')
+                        log.warning('Touchdown out of range. Stopping get_surface().')
                         self.scanner.goto(old_pos)
                         break #: goes to outer break statement
                     plt.close(fig)

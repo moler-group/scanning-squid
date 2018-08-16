@@ -30,7 +30,7 @@ def fft_noise(dev_name, channel, prefactor, samplerate, sampleduration, navg, fm
     with nidaqmx.Task('fft_noise_ai_task') as ai_task:
         for inst in DAQAnalogInputs.instances():
             inst.close()
-        daq_ai = DAQAnalogInputs('daq_ai', 'Dev1', samplerate, channel, ai_task, samples_to_read=nsamples)
+        daq_ai = DAQAnalogInputs('daq_ai', dev_name, samplerate, channel, ai_task, samples_to_read=nsamples)
         for i in range(navg):
             data_v = daq_ai.voltage()[0].T
             Fs = nsamples / sampleduration

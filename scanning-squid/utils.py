@@ -321,9 +321,13 @@ def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True, xy_unit: O
                 unit = meta['channels'][name]['unit'] if name.lower() not in ['x', 'y'] else 'V'
         else:
             unit = 'V'
+        if meta['fast_ax'] == 'y':
+            arr = arr.T
         mdict.update({name: {'array': arr.to(unit).magnitude, 'unit': unit}})
     if interpolator is not None:
-        mdict.update({'surface': {'array': interpolator(arrays['X'], arrays['Y']), 'unit': 'V'}})
+        surf =  interpolator(arrays['X'], arrays['Y'])
+        surf = surf if meta['fast_ax'] == 'x' else surf.T
+        mdict.update({'surface': {'array': surf, 'unit': 'V'}})
     mdict.update({'prefactors': meta['prefactors'], 'location': scan_data.location})
     if fname is None:
         fname = meta['fname']
@@ -351,7 +355,7 @@ def td_to_mat_file(td_data: Any, real_units: Optional[bool]=True, fname: Optiona
         if name is not 'height':
             unit = meta['channels'][name]['unit'] if real_units else 'V'
             mdict.update({name: {'array': arr.to(unit).magnitude, 'unit': unit}})
-    mdict.update({'height': {'array': arrays['height'], 'unit': 'V'}})
+    mdict.update({'height': {'array': arrays['height'].to('V').magnitude, 'unit': 'V'}})
     mdict.update({'prefactors': meta['prefactors'], 'location': td_data.location})
     if fname is None:
         fname = meta['fname']
