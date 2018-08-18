@@ -228,7 +228,7 @@ class Microscope(Station):
         dV = self.Q_(tdc_params['dV']).to('V').magnitude
         #: Start and end z position voltages
         startV, endV = sorted([self.Q_(lim).to('V').magnitude for lim in tdc_params['range']])
-        delay = constants['wait_factor'] * self.CAP_lockin.time_constant()
+        delay = constants['wait_factor'] * max(self.CAP_lockin.time_constant(), self.SUSC_lockin.time_constant())
         prefactors = self.get_prefactors(tdc_params)
         #: get channel prefactors in string form so they can be saved in metadata
         prefactor_strs = {}
