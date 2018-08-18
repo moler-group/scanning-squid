@@ -345,7 +345,6 @@ class Scanner(Instrument):
                 log.warning(msg)
             log.info('Pre-touchdown slope: {}.'.format(tdc_plot.pre_td_slope))
             log.info('Post-touchdown slope: {}.'.format(tdc_plot.post_td_slope))
-            self.metadata['plane'].update({'z': self.td_height})
         if not task:
             return self.td_height
     

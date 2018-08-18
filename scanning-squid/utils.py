@@ -356,7 +356,11 @@ def td_to_mat_file(td_data: Any, real_units: Optional[bool]=True, fname: Optiona
             unit = meta['channels'][name]['unit'] if real_units else 'V'
             mdict.update({name: {'array': arr.to(unit).magnitude, 'unit': unit}})
     mdict.update({'height': {'array': arrays['height'].to('V').magnitude, 'unit': 'V'}})
-    mdict.update({'prefactors': meta['prefactors'], 'location': td_data.location})
+    mdict.update({
+        'prefactors': meta['prefactors'],
+        'location': td_data.location,
+        'td_height': td_data.metadata['loop']['metadata']['td_height']
+        })
     if fname is None:
         fname = meta['fname']
     fpath = td_data.location + '/'
