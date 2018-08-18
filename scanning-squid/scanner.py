@@ -2,6 +2,8 @@ import qcodes as qc
 from qcodes.instrument.base import Instrument
 import qcodes.utils.validators as vals
 import utils
+from scipy import io
+from scipy.interpolate import Rbf
 from typing import Dict, List, Optional, Sequence, Any, Union
 import numpy as np
 import nidaqmx
@@ -347,7 +349,38 @@ class Scanner(Instrument):
             log.info('Post-touchdown slope: {}.'.format(tdc_plot.post_td_slope))
         if not task:
             return self.td_height
-    
+
+    def load_surface(self, fname: str, function: Optional[str]='multiquadric', smooth: Optional[float]=0) -> None:
+        """Loads a previously acquired sample surface, updates self.metadata['plane'], self.metadata['td_grid'],
+            and self.surface_interp().
+
+        Args:
+            fname: Full file path for .mat file containing measured surface.
+            function: String defining the radial basis function for scipy.interpolate.Rbf (e.g. 'cubic' or 'linear').
+                Default: 'multiquadric', the scipy default value.
+            smooth: Smoothing factor for scipy.interpolate.Rbf. smooth=0 means exact interpolation. Only uses smoothing
+                if function='linear'. Default: 0
+        """
+        surf = io.loadmat(fname)
+        log.info('Updated surface from {}.'.format(fname))
+        self.metadata.update({
+            'td_grid': {
+                'x': surf['td_grid'][0][0][0],
+                'y': surf['td_grid'][0][0][1],
+                'z': surf['td_grid'][0][0][2]
+                }
+            })
+        self.metadata.update({
+            'plane': {
+                'x': surf['plane'][0][0][0][0][0],
+                'y': surf['plane'][0][0][1][0][0],
+                'z': surf['plane'][0][0][2][0][0]
+                }
+            })
+        if function != 'linear':
+            smooth = 0
+        self.surface_interp = Rbf(surf['td_grid'][0][0][0], surf['td_grid'][0][0][1], surf['td_grid'][0][0][2], function=function, smooth=smooth)
+
     def clear_instances(self):
         """Clear scanner instances.
         """
