@@ -7,16 +7,17 @@ from scipy import io
 import nidaqmx
 import matplotlib.pyplot as plt
 
-def fft_noise(dev_name, channel, prefactor, samplerate, sampleduration, navg, fmax):
+def fft_noise(dev_name, channel, unit, prefactor, samplerate, sampleduration, navg, fmax):
     loc_provider = qc.FormatLocation(fmt='./data/{date}/#{counter}_{name}_{time}')
     loc = loc_provider(DiskIO('.'), record={'name': 'fft_noise'})
     pathlib.Path(loc).mkdir(parents=True, exist_ok=True)
     prefactor_str = {}
-    prefactor.ito('Phi0/V')
+    prefactor.ito('{}/V'.format(unit))
     prefactor_str.update({list(channel.keys())[0]: '{} {}'.format(prefactor.magnitude, prefactor.units)})
     mdict = {
         'metadata': {
             'channel': channel,
+            'unit': unit,
             'prefactor': prefactor_str,
             'samplerate': samplerate,
             'sampleduration': sampleduration,
@@ -40,16 +41,16 @@ def fft_noise(dev_name, channel, prefactor, samplerate, sampleduration, navg, fm
             v_fft_avg += v_fft_abs
         daq_ai.close()
         v_fft_avg = v_fft_avg / navg
-        phi_fft_avg = prefactor.magnitude * v_fft_avg
+        sig_fft_avg = prefactor.magnitude * v_fft_avg
         mdict.update({
             'v_fft_avg': v_fft_avg[freqs < fmax],
-            'phi_fft_avg': phi_fft_avg[freqs < fmax],
+            'sig_fft_avg': sig_fft_avg[freqs < fmax],
             'freqs': freqs[freqs < fmax]})
         fig, ax = plt.subplots(1,2, figsize=(8,4), tight_layout=True)
         ax[0].loglog(freqs, v_fft_avg, lw=1)
-        ax[0].set_ylabel(r'V/$\sqrt{Hz}$')
-        ax[1].loglog(freqs, phi_fft_avg, lw=1)
-        ax[1].set_ylabel(r'$\Phi_0/\sqrt{Hz}$')
+        ax[0].set_ylabel('V/$\\sqrt{Hz}$')
+        ax[1].loglog(freqs, sig_fft_avg, lw=1)
+        ax[1].set_ylabel('{}/$\\sqrt{Hz}$'.format(unit))
         fig.suptitle(loc, x=0.5, y=1)
         for i in [0,1]:
             ax[i].set_xlabel('Frequency [Hz]')
