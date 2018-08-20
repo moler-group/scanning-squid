@@ -25,7 +25,7 @@ def load_json_ordered(filename: str) -> OrderedDict:
     """Loads json file as an ordered dict.
 
     Args:
-        filname: Path to json file to be loaded.
+        filename: Path to json file to be loaded.
 
     Returns:
         OrderedDict: odict
