@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from typing import Dict, List, Optional, Sequence, Any, Union, Tuple
+from typing import Dict, List, Optional, Sequence, Any, Union, Tuple, Callable
 import qcodes as qc
 from qcodes.instrument.parameter import ArrayParameter
 from scipy import io
@@ -24,7 +24,7 @@ class Counter(object):
 def load_json_ordered(filename: str) -> OrderedDict:
     """Loads json file as an ordered dict.
     Args:
-        filname: Path to json file to be loaded.
+        filename: Path to json file to be loaded.
     Returns:
         OrderedDict: odict
             OrderedDict containing data from json file.
@@ -36,11 +36,9 @@ def load_json_ordered(filename: str) -> OrderedDict:
 def next_file_name(fpath: str, extension: str) -> str:
     """Appends an integer to fpath to create a unique file name:
         fpath + {next unused integer} + '.' + extension
-
     Args:
         fpath: Path to file you want to create (no extension).
         extension: Extension of file you want to create.
-
     Returns:
         str: next_file_name
             Unique file name starting with fpath and ending with extension.
@@ -52,11 +50,9 @@ def next_file_name(fpath: str, extension: str) -> str:
 
 def make_scan_vectors(scan_params: Dict[str, Any], ureg: Any) -> Dict[str, Sequence[float]]:
     """Creates x and y vectors for given scan parameters.
-
     Args:
         scan_params: Scan parameter dict
         ureg: pint UnitRegistry, manages units.
-
     Returns:
         Dict: scan_vectors
             {axis_name: axis_vector} for x, y axes.
@@ -77,7 +73,6 @@ def make_scan_grids(scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
                     fast_ax: str, fast_ax_pts: int, plane: Dict[str, float],
                     height: float) -> Dict[str, Any]:
     """Makes meshgrids of scanner positions to write to DAQ analog outputs.
-
     Args:
         scan_vectors: Dict of {axis_name: axis_vector} for x, y axes (from make_scan_vectors).
         slow_ax: Name of the scan slow axis ('x' or 'y').
@@ -86,7 +81,6 @@ def make_scan_grids(scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
         plane: Dict of x, y, z values defining the plane to scan (provided by scanner.get_plane).
         height: Height above the sample surface (in DAQ voltage) at which to scan.
             More negative means further from sample; 0 means 'in contact'.
-
     Returns:
         Dict: scan_grids
             {axis_name: axis_scan_grid} for x, y, z, axes.
@@ -102,15 +96,46 @@ def make_scan_grids(scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
     Z = X * plane['x'] + Y * plane['y'] + plane['z'] + height
     return {'x': X, 'y': Y, 'z': Z}
 
+def make_scan_surface(surface_type: str, scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
+                    fast_ax: str, fast_ax_pts: int, plane: Dict[str, float], height: float,
+                    interpolator: Optional[Callable]=None):
+    """Makes meshgrids of scanner positions to write to DAQ analog outputs.
+    Args:
+        surface_type: Either 'plane' or 'surface'.
+        scan_vectors: Dict of {axis_name: axis_vector} for x, y axes (from make_scan_vectors).
+        slow_ax: Name of the scan slow axis ('x' or 'y').
+        fast_ax: Name of the scan fast axis ('x' or 'y').
+        fast_ax_pts: Number of points to write to DAQ analog outputs to scan fast axis.
+        plane: Dict of x, y, z values defining the plane to scan (provided by scanner.get_plane).
+        height: Height above the sample surface (in DAQ voltage) at which to scan.
+            More negative means further from sample; 0 means 'in contact'.
+        interpolator: Instance of scipy.interpolate.Rbf used to interpolate touchdown points.
+            Only required if surface_type == 'surface'. Default: None.
+    Returns:
+        Dict: scan_grids
+            {axis_name: axis_scan_grid} for x, y, z, axes.
+    """
+    if surface_type.lower() not in ['plane', 'surface']:
+        raise ValueError('surface_type must be "plane" or "surface".')
+    plane_grids = make_scan_grids(scan_vectors, slow_ax, fast_ax, fast_ax_pts, plane, height)
+    if surface_type.lower() == 'plane':
+        return plane_grids
+    else:
+        if interpolator is None:
+            msg = 'surface_type == "surface", so you must specify an instance of scipy.interpolate.Rbf'
+            msg += '(namely microscope.scanner.surface_interp).'
+            raise ValueError(msg)
+        Z = interpolator(plane_grids['x'], plane_grids['y'])
+        surface_grids = {'x': plane_grids['x'], 'y': plane_grids['y'], 'z': Z + height}
+        return surface_grids
+
 def make_xy_grids(scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
                   fast_ax: str) -> Dict[str, Any]:
     """Makes meshgrids from x, y scan_vectors (used for plotting, etc.).
-
     Args:
         scan_vectors: Dict of {axis_name: axis_vector} for x, y axes (from make_scan_vectors).
         slow_ax: Name of scan slow axis ('x' or 'y').
         fast_ax: Name of scan fast axis ('x' or 'y').
-
     Returns:
         Dict: xy_grids
             {axis_name: axis_grid} for x, y axes.
@@ -127,7 +152,6 @@ def validate_scan_params(scanner_config: Dict[str, Any], scan_params: Dict[str, 
                          scan_grids: Dict[str, Any], temp: str, ureg: Any,
                          logger: Any) -> None:
     """Checks whether requested scan parameters are consistent with microscope limits.
-
     Args:
         scanner_config: Scanner configuration dict as defined in microscope configuration file.
         scan_params: Scan parameter dict as defined in measurements configuration file.
@@ -151,7 +175,6 @@ def validate_scan_params(scanner_config: Dict[str, Any], scan_params: Dict[str, 
 def to_real_units(data_set: Any, ureg: Any=None) -> Any:
     """Converts DataSet arrays from DAQ voltage to real units using recorded metadata.
         Preserves shape of DataSet arrays.
-
     Args:
         data_set: qcodes DataSet created by Microscope.scan_plane
         ureg: Pint UnitRegistry. Default None.
@@ -176,7 +199,6 @@ def to_real_units(data_set: Any, ureg: Any=None) -> Any:
 def scan_to_arrays(scan_data: Any, ureg: Optional[Any]=None, real_units: Optional[bool]=True,
                    xy_unit: Optional[str]=None) -> Dict[str, Any]:
     """Extracts scan data from DataSet and converts to requested units.
-
     Args:
         scan_data: qcodes DataSet created by Microscope.scan_plane
         ureg: pint UnitRegistry, manages physical units.
@@ -185,7 +207,6 @@ def scan_to_arrays(scan_data: Any, ureg: Optional[Any]=None, real_units: Optiona
         xy_unit: String describing quantity with dimensions of length.
             If xy_unit is not None, scanner x, y DAQ ao voltage will be converted to xy_unit
             according to scanner constants defined in microscope configuration file.
-
     Returns:
         Dict: arrays
             Dict of x, y vectors and grids, and measured data in requested units.
@@ -222,7 +243,6 @@ def scan_to_arrays(scan_data: Any, ureg: Optional[Any]=None, real_units: Optiona
 
 def td_to_arrays(td_data: Any, ureg: Optional[Any]=None, real_units: Optional[bool]=True) -> Dict[str, Any]:
     """Extracts scan data from DataSet and converts to requested units.
-
     Args:
         td_data: qcodes DataSet created by Microscope.td_cap
         ureg: pint UnitRegistry, manages physical units.
@@ -255,10 +275,9 @@ def td_to_arrays(td_data: Any, ureg: Optional[Any]=None, real_units: Optional[bo
             arrays.update({ch: array})
     return arrays
 
-def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True,
-                     xy_unit: Optional[bool]=None, fname: Optional[str]=None) -> None:
-    """Export DataSet created by microscope.scan_plane to .mat file for analysis.
-
+def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True, xy_unit: Optional[bool]=None,
+    fname: Optional[str]=None, interpolator: Optional[Callable]=None) -> None:
+    """Export DataSet created by microscope.scan_surface to .mat file for analysis.
     Args:
         scan_data: qcodes DataSet created by Microscope.scan_plane
         real_units: If True, converts z-axis data from DAQ voltage into
@@ -268,6 +287,8 @@ def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True,
             according to scanner constants defined in microscope configuration file.
         fname: File name (without extension) for resulting .mat file.
             If None, uses the file name defined in measurement configuration file.
+        interpolator: Instance of scipy.interpolate.Rbf, used to interpolate touchdown points.
+            Default: None.
     """
     from pint import UnitRegistry
     ureg = UnitRegistry()
@@ -284,7 +305,13 @@ def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True,
                 unit = meta['channels'][name]['unit'] if name.lower() not in ['x', 'y'] else 'V'
         else:
             unit = 'V'
+        if meta['fast_ax'] == 'y':
+            arr = arr.T
         mdict.update({name: {'array': arr.to(unit).magnitude, 'unit': unit}})
+    if interpolator is not None:
+        surf =  interpolator(arrays['X'], arrays['Y'])
+        surf = surf if meta['fast_ax'] == 'x' else surf.T
+        mdict.update({'surface': {'array': surf, 'unit': 'V'}})
     mdict.update({'prefactors': meta['prefactors'], 'location': scan_data.location})
     if fname is None:
         fname = meta['fname']
@@ -293,7 +320,6 @@ def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True,
 
 def td_to_mat_file(td_data: Any, real_units: Optional[bool]=True, fname: Optional[str]=None) -> None:
     """Export DataSet created by microscope.td_cap to .mat file for analysis.
-
     Args:
         td_data: qcodes DataSet created by Microscope.td_cap
         real_units: If True, converts data from DAQ voltage into
@@ -329,7 +355,6 @@ def td_to_mat_file(td_data: Any, real_units: Optional[bool]=True, fname: Optiona
 def moving_avg(x: Union[List, np.ndarray], y: Union[List, np.ndarray],
     window_width: int) -> Tuple[np.ndarray]:
     """Given 1D arrays x and y, calculates the moving average of y.
-
     Args:
         x: x data (1D array).
         y: y data to be averaged (1D array).
@@ -347,11 +372,9 @@ def moving_avg(x: Union[List, np.ndarray], y: Union[List, np.ndarray],
 
 def fit_line(x: Union[list, np.ndarray], y: Union[list, np.ndarray]) -> Tuple[np.ndarray, float]:
     """Fits a line to x, y(x) and returns (polynomial_coeffs, rms_residual).
-
     Args:
         x: List or np.ndarry, independent variable.
         y: List or np.ndarry, dependent variable.
-
     Returns:
         Tuple[np.ndarray, float]: p, rms
             Array of best-fit polynomial coefficients, rms of residuals.
