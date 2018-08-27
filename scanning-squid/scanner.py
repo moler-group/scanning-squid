@@ -2,6 +2,8 @@ import qcodes as qc
 from qcodes.instrument.base import Instrument
 import qcodes.utils.validators as vals
 import utils
+from scipy import io
+from scipy.interpolate import Rbf
 from typing import Dict, List, Optional, Sequence, Any, Union
 import numpy as np
 import nidaqmx
@@ -84,7 +86,6 @@ class Scanner(Instrument):
         
     def get_pos(self) -> np.ndarray:
         """Get current scanner [x, y, z] position.
-
         Returns:
             numpy.ndarray: pos
                 Array of current [x, y, z] scanner voltage.
@@ -110,7 +111,6 @@ class Scanner(Instrument):
              speed: Optional[str]=None, quiet: Optional[bool]=False) -> None:
         """Move scanner to given position.
         By default moves all three axes simultaneously, if necessary.
-
         Args:
             new_pos: List of [x, y, z] scanner voltage to go to.
             retract_first: If True, scanner retracts to value determined by self.temp,
@@ -157,7 +157,6 @@ class Scanner(Instrument):
             
     def retract(self, speed: Optional[str]=None, quiet: Optional[bool]=False) -> None:
         """Retracts z-bender fully based on whether temp is LT or RT.
-
         Args:
                 speed: Speed at which to move the scanner (e.g. '2 V/s') in DAQ voltage units.
                     Default set in microscope configuration JSON file.
@@ -174,7 +173,6 @@ class Scanner(Instrument):
     def scan_line(self, scan_grids: Dict[str, np.ndarray], ao_channels: Dict[str, int],
                   daq_rate: Union[int, float], counter: Any, reverse=False) -> None:
         """Scan a single line of a plane.
-
         Args:
             scan_grids: Dict of {axis_name: axis_meshgrid} from utils.make_scan_grids().
             ao_channels: Dict of {axis_name: ao_index} for the scanner ao channels.
@@ -203,7 +201,6 @@ class Scanner(Instrument):
         
     def goto_start_of_next_line(self, scan_grids: Dict[str, np.ndarray], counter: Any) -> None:
         """Moves scanner to the start of the next line to scan.
-
         Args:
             scan_grids: Dict of {axis_name: axis_meshgrid} from utils.make_scan_grids().
             counter: utils.Counter instance, determines current line of the grid.
@@ -218,7 +215,6 @@ class Scanner(Instrument):
 
     def check_for_td(self, tdc_plot: Any, data_set: Any, counter: Any) -> None:
         """Check whether touchdown has occurred during a capacitive touchdown.
-
         Args:
             tdc_plot: plots.TDCPlot instance, which contains current data and parameters
                 of the touchdown Loop.
@@ -298,7 +294,6 @@ class Scanner(Instrument):
 
     def get_td_height(self, tdc_plot: Any, task: bool=True) -> None:
         """If a touchdown has occurred, finds the z voltage at which it occurred.
-
         Args:
             tdc_plot: plots.TDCPlot instance containing data from touchdown.
             task: True if get_td_height is being called as a qcodes Task (no return value allowed).
@@ -347,7 +342,37 @@ class Scanner(Instrument):
             log.info('Post-touchdown slope: {}.'.format(tdc_plot.post_td_slope))
         if not task:
             return self.td_height
-    
+
+    def load_surface(self, fname: str, function: Optional[str]='multiquadric', smooth: Optional[float]=0) -> None:
+        """Loads a previously acquired sample surface, updates self.metadata['plane'], self.metadata['td_grid'],
+            and self.surface_interp().
+        Args:
+            fname: Full file path for .mat file containing measured surface.
+            function: String defining the radial basis function for scipy.interpolate.Rbf (e.g. 'cubic' or 'linear').
+                Default: 'multiquadric', the scipy default value.
+            smooth: Smoothing factor for scipy.interpolate.Rbf. smooth=0 means exact interpolation. Only uses smoothing
+                if function='linear'. Default: 0
+        """
+        surf = io.loadmat(fname)
+        log.info('Updated surface from {}.'.format(fname))
+        self.metadata.update({
+            'td_grid': {
+                'x': surf['td_grid'][0][0][0],
+                'y': surf['td_grid'][0][0][1],
+                'z': surf['td_grid'][0][0][2]
+                }
+            })
+        self.metadata.update({
+            'plane': {
+                'x': surf['plane'][0][0][0][0][0],
+                'y': surf['plane'][0][0][1][0][0],
+                'z': surf['plane'][0][0][2][0][0]
+                }
+            })
+        if function != 'linear':
+            smooth = 0
+        self.surface_interp = Rbf(surf['td_grid'][0][0][0], surf['td_grid'][0][0][1], surf['td_grid'][0][0][2], function=function, smooth=smooth)
+
     def clear_instances(self):
         """Clear scanner instances.
         """
@@ -356,7 +381,6 @@ class Scanner(Instrument):
             
     def control_ao_task(self, cmd: str) -> None:
         """Write commands to the DAQ AO Task. Used during qc.Loops.
-
         Args:
             cmd: What you want the Task to do. For example,
                 self.control_ao_task('stop') is equivalent to self.ao_task.stop()
@@ -366,12 +390,10 @@ class Scanner(Instrument):
 
     def make_ramp(self, pos0: List, pos1: List, speed: Union[int, float]) -> np.ndarray:
         """Generates a ramp in x,y,z scanner voltage from point pos0 to point pos1 at given speed.
-
         Args:
             pos0: List of initial [x, y, z] scanner voltages.
             pos1: List of final [x, y, z] scanner votlages.
             speed: Speed at which to go to pos0 to pos1, in DAQ voltage/second.
-
         Returns:
             numpy.ndarray: ramp
                 Array of x, y, z values to write to DAQ AOs to move
@@ -392,7 +414,6 @@ class Scanner(Instrument):
     
     def _goto_x(self, xpos: float) -> None:
         """Go to given x position.
-
         Args:
             xpos: x position to go to, in DAQ voltage.
         """
@@ -401,7 +422,6 @@ class Scanner(Instrument):
         
     def _goto_y(self, ypos: float) -> None:
         """Go to given y position.
-
         Args:
             ypos: y position to go to, in DAQ voltage.
         """
@@ -410,7 +430,6 @@ class Scanner(Instrument):
     
     def _goto_z(self, zpos: float) -> None:
         """Go to given z position.
-
         Args:
             zpos: z position to go to, in DAQ voltage.
         """
