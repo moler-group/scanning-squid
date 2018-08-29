@@ -407,7 +407,7 @@ class Microscope(Station):
             fig.suptitle(loc)
             fig.canvas.draw()
             fig.show()
-            plt.savefig(loc + '/plane.png')
+            plt.savefig(loc + '/surface.png')
             mdict = {
                 'plane': {ax: self.scanner.metadata['plane'][ax] for ax in ['x', 'y', 'z']},
                 'td_grid': {ax: self.scanner.metadata['td_grid'][ax] for ax in ['x', 'y', 'z']}
