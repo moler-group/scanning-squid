@@ -9,25 +9,27 @@ class DAQAnalogInputVoltages(ArrayParameter):
     """Acquires data from one or several DAQ analog inputs.
     """
     def __init__(self, name: str, task: Any, samples_to_read: int,
-                 shape: Sequence[int], **kwargs) -> None:
+                 shape: Sequence[int], timeout: Union[float, int], **kwargs) -> None:
         """
         Args:
             name: Name of parameter (usually 'voltage').
             task: nidaqmx.Task with appropriate analog inputs channels.
             samples_to_read: Number of samples to read. Will be averaged based on shape.
             shape: Desired shape of averaged array, i.e. (nchannels, target_points).
+            timeout: Acquisition timeout in seconds.
             **kwargs: Keyword arguments to be passed to ArrayParameter constructor.
         """
         super().__init__(name, shape, **kwargs)
         self.task = task
         self.nchannels, self.target_points = shape
         self.samples_to_read = samples_to_read
+        self.timeout = timeout
         
     def get_raw(self):
         """Averages data to get `self.target_points` points per channel.
         If `self.target_points` == `self.samples_to_read`, no averaging is done.
         """
-        data_raw = np.array(self.task.read(number_of_samples_per_channel=self.samples_to_read, timeout=60))
+        data_raw = np.array(self.task.read(number_of_samples_per_channel=self.samples_to_read, timeout=self.timeout))
         return np.mean(np.reshape(data_raw, (self.nchannels, self.target_points, -1)), 2)
     
 class DAQAnalogInputs(Instrument):
@@ -36,7 +38,7 @@ class DAQAnalogInputs(Instrument):
     def __init__(self, name: str, dev_name: str, rate: Union[int, float], channels: Dict[str, int],
                  task: Any, min_val: Optional[float]=-5, max_val: Optional[float]=5,
                  clock_src: Optional[str]=None, samples_to_read: Optional[int]=2,
-                 target_points: Optional[int]=None, **kwargs) -> None:
+                 target_points: Optional[int]=None, timeout: Optional[Union[float, int]]=60, **kwargs) -> None:
         """
         Args:
             name: Name of instrument (usually 'daq_ai').
@@ -52,6 +54,7 @@ class DAQAnalogInputs(Instrument):
                 Default: 2 (minimum number of samples DAQ will acquire in this timing mode).
             target_points: Number of points per channel we want in our final array.
                 samples_to_read will be averaged down to target_points.
+            timeout: Acquisition timeout in seconds. Default: 60.
             **kwargs: Keyword arguments to be passed to Instrument constructor.
         """
         super().__init__(name, **kwargs)
@@ -91,6 +94,7 @@ class DAQAnalogInputs(Instrument):
             parameter_class=DAQAnalogInputVoltages,
             task=self.task,
             samples_to_read=samples_to_read,
+            timeout=timeout,
             shape=(nchannels, target_points),
             label='Voltage',
             unit='V'

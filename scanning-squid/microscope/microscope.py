@@ -408,7 +408,10 @@ class Microscope(Station):
             fig.canvas.draw()
             fig.show()
             plt.savefig(loc + '/plane.png')
-            mdict = {'plane': self.scanner.metadata['plane'], 'td_grid': self.scanner.metadata['td_grid']}
+            mdict = {
+                'plane': {ax: self.scanner.metadata['plane'][ax] for ax in ['x', 'y', 'z']},
+                'td_grid': {ax: self.scanner.metadata['td_grid'][ax] for ax in ['x', 'y', 'z']}
+            }
             io.savemat(loc + '/surface.mat', mdict)
             #return x_grid, y_grid, td_grid, plane
         #: If the loop didn't finish, return (None, None, None, None)
