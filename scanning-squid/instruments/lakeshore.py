@@ -222,3 +222,108 @@ class Model_372(VisaInstrument):
         #            unit='K/min')
         ##############
         self.connect_message()
+
+class SensorChannel34x(InstrumentChannel):
+    """
+    A single sensor channel of a temperature controller
+    """
+    valid_channels = ('A', 'B', 'C', 'D')
+    _CHANNEL_VAL = Enum(*valid_channels)
+
+    def __init__(self, parent, name, channel, sensor_name):
+        super().__init__(parent, name)
+
+        # Validate the channel value
+        self._CHANNEL_VAL.validate(channel)
+        self._channel = channel  # Channel on the temperature controller. Can be 1-16
+
+        # Add the various channel parameters
+        self.add_parameter('temperature', get_cmd='KRDG? {}'.format(self._channel),
+                           get_parser=float,
+                           label='Temerature',
+                           unit='K')
+        self.add_parameter('sensor_raw', get_cmd='SRDG? {}'.format(self._channel),
+                           get_parser=float,
+                           label='Raw_Reading',
+                           unit='Ohms')  # TODO: This will vary based on sensor type
+        self.add_parameter('sensor_status', get_cmd='RDGST? {}'.format(self._channel), get_parser=int,
+                           val_mapping={'OK': 0, 'Invalid Reading': 1, 'Old Reading': 2, 'Temp Underrange': 16,
+                           'Temp Overrange': 32, 'Units Zero': 64, 'Units Overrange': 128}, label='Sensor_Status')
+        # self.add_parameter('sensor_name', get_cmd='INNAME? {}'.format(self._channel),
+        #                    get_parser=self._sensor_name_parser, set_cmd='INNAME {},\"{{}}\"'.format(self._channel),
+        #                    vals=Strings(), label='Sensor_Name')
+        # self.sensor_name(sensor_name)
+
+    def _sensor_name_parser(self, msg):
+        return str(msg).strip()
+
+class Model_340(VisaInstrument):
+    """
+    Lakeshore Model 340 Temperature Controller Driver
+    Controlled via sockets
+    Adapted from QCoDeS Lakeshore 336 driver
+    """
+
+    def __init__(self, name, address, active_channels={'D': 'sample'}, **kwargs):
+        super().__init__(name, address, terminator="\r\n", **kwargs)
+
+        # Allow access to channels either by referring to the channel name
+        # or through a channel list.
+        # i.e. Model_340.A.temperature() and Model_340.channels[0].temperature()
+        # refer to the same parameter.
+
+        # Serial parameters if instrument is connected via RS-232:
+        # self.visa_handle.baud_rate = 57600
+        # self.visa_handle.stop_bits = visa.constants.StopBits.one
+        # self.visa_handle.parity = visa.constants.Parity.odd
+        # self.visa_handle.data_bits = 7
+        channels = ChannelList(self, "TempSensors", SensorChannel34x, snapshotable=False)
+        for chan_name, sensor_name in active_channels.items():
+            channel = SensorChannel34x(self, chan_name, chan_name, sensor_name)
+            channels.append(channel)
+            self.add_submodule(chan_name, channel)
+        channels.lock()
+        self.add_submodule("channels", channels)
+        ###############
+        self.add_parameter(
+                name='set_temperature',
+                get_cmd='SETP?',
+                get_parser=float,
+                set_cmd='SETP 1,{}',
+                label='Set Temerature',
+                vals=Numbers(0.3, 300),
+                unit='K'
+            )
+        self.add_parameter(
+                name='heater_range',
+                get_cmd='RANGE?',
+                get_parser=int,
+                set_cmd='RANGE 1,{}',
+                label='Heater range',
+                vals=Enum(0, 1, 2, 3, 4, 5),
+                unit=''
+            )
+        self.add_parameter(
+                name='ramp_rate',
+                get_cmd='RAMP? 1',
+                get_parser=str,
+                set_cmd='RAMP 1,1,{}',
+                label='Heater range',
+                vals=Numbers(min_value=0),
+                unit='K/min'
+            )
+        self.add_parameter(
+                name='analog_out_config',
+                get_cmd='ANALOG? 1',
+                get_parser=str,
+                label='Analog output configuration.',
+                unit=''
+            )
+        #############
+        self.connect_message()
+
+    def configure_analog_output(self, input_name, low_value, high_value, maunal_value=0,
+        output=1, bipolar=0, source=1, mode=1):
+        msg = 'ANALOG {},{},{},{},{},{},{},{}'.format(
+            output, bipolar, mode, input_name, source, high_value, low_value, maunal_value)
+        self.write(msg)
