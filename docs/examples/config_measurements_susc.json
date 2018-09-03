@@ -95,6 +95,8 @@
         "constants": {
             "max_slope": "0.8 fF/V",
             "max_delta_cap": "5 fF",
+            "max_slope": "3 fF/V",
+            "max_delta_cap": "15 fF",
             "initial_cap":"0 pF",
             "nfitmin":10,
             "nwindow":30,
