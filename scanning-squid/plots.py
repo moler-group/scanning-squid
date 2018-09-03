@@ -213,12 +213,3 @@ class TDCPlot(object):
         if fname is None:
             fname = self.location + '/' + self.tdc_params['fname'] +'.png'
         plt.savefig(fname)
-
-    # def _clear_artists(self, ax):
-    #     """Clears lines and collections of lines from given matplotlib axis.
-
-    #     Args:
-    #         ax: axis to clear.
-    #     """
-    #     for artist in ax.lines + ax.collections:
-    #         artist.remove()

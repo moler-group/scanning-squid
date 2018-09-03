@@ -52,5 +52,5 @@ Move Around the Sample
 ----------------------
 
 - Use the :class:`instruments.atto.AttocubeController` to move around the sample, keeping in mind the angle between SQUID and sample so as not to accidentally crash.
-- If the sample is not very flat or the SQUID alignment is not good, it might be necessary to acquire a new plane after moving the Attocubes.
-- If you still trust the old plane after moving the Attocubes, you can perform a single :ref:`capacitivetouchdown` at the origin and manually set :code:`atto.plane_is_current = True` to update the plane.
+- Unless the sample is very flat, it will be necessary to acquire a new plane after moving the Attocubes.
+- If the sample is very flat and you still trust the old plane after moving the Attocubes, you can perform a single :ref:`capacitivetouchdown` at the origin and manually set :code:`atto.surface_is_current = True` to update the plane.

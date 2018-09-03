@@ -1,6 +1,7 @@
 {
     "scan": {
         "fname": "scan",
+        "surface_type": "plane",
         "fast_ax": "x",
         "range": {"x": "5 V", "y": "5 V"},
         "center": {"x": "0 V", "y": "0 V"},

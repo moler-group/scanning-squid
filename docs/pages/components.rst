@@ -54,7 +54,7 @@ Temperature Controllers
 Lakeshore temperature controllers.
 
     .. automodule:: instruments.lakeshore
-        :members: Model_331, Model_335, Model_372
+        :members: Model_331, Model_335, Model_340, Model_372
 
 SourceMeters
 ~~~~~~~~~~~~

@@ -46,6 +46,7 @@ class SusceptometerMicroscope(Microscope):
 
     def get_prefactors(self, measurement: Dict[str, Any], update: bool=True) -> Dict[str, Any]:
         """For each channel, calculate prefactors to convert DAQ voltage into real units.
+
         Args:
             measurement: Dict of measurement parameters as defined
                 in measurement configuration file.
@@ -81,6 +82,7 @@ class SusceptometerMicroscope(Microscope):
         """
         Scan the current surface while acquiring data in the channels defined in
         measurement configuration file (e.g. MAG, SUSCX, SUSCY, CAP).
+        
         Args:
             scan_params: Dict of scan parameters as defined
                 in measuremnt configuration file.

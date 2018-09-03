@@ -94,7 +94,6 @@ class Microscope(Station):
         self._add_atto()
         self._add_ls372()
         self._add_ls331()
-        #self._add_keithley()
         self._add_scanner()
         self._add_SQUID()
         self._add_lockins()
@@ -179,6 +178,7 @@ class Microscope(Station):
             
     def set_lockins(self, measurement: Dict[str, Any]) -> None:
         """Initialize lockins for given measurement.
+
         Args:
             measurement: Dict of measurement parameters as defined
                 in measurement configuration file.
@@ -198,6 +198,7 @@ class Microscope(Station):
 
     def td_cap(self, tdc_params: Dict[str, Any], update_snap: bool=True) -> Tuple[Any]:
         """Performs a capacitive touchdown.
+
         Args:
             tdc_params: Dict of capacitive touchdown parameters as defined
                 in measurement configuration file.
@@ -287,6 +288,7 @@ class Microscope(Station):
 
     def approach(self, tdc_params: Dict[str, Any], attosteps: int=100) -> None:
         """Approach the sample by iteratively stepping z Attocube and performing td_cap().
+
         Args:
             tdc_params: Dict of capacitive touchdown parameters as defined
                 in measurement configuration file.
@@ -314,15 +316,12 @@ class Microscope(Station):
     def get_surface(self, x_vec: np.ndarray, y_vec: np.ndarray,
                     tdc_params: Dict[str, Any]) -> None:
         """Performs touchdowns on a grid and fits a plane to the resulting surface.
+
         Args:
             x_vec: 1D array of x positions (must be same length as y_vec).
             y_vec: 1D array of y positions (must be same length as x_vec).
             tdc_params: Dict of capacitive touchdown parameters as defined
                 in measurement configuration file.
-        Returns:
-            Tuple[Union[np.ndarray, None]]: x_grid, y_grid, td_grid, plane
-                x, y, td grids and plane coefficients such that td_grid is
-                fit by x_grid * plane[0] + ygrid * plane[1] + plane[2].
         """
         old_pos = self.scanner.position()
         #: True if touchdown doesn't occur for any point in the grid
@@ -419,6 +418,7 @@ class Microscope(Station):
  
     def remove_component(self, name: str) -> None:
         """Remove a component (instrument) from the microscope.
+
         Args:
             name: Name of component to remove.
         """

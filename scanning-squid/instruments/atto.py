@@ -9,6 +9,8 @@ log = logging.getLogger(__name__)
 
 class AttocubeController(VisaInstrument):
     """Base class for Attocube controller instrument.
+    Warning: Each individual Attocube controller seems to have its own quirks...
+    This may not work for your controller.
     """
     def __init__(self, atto_config: Dict, temp: str, ureg: Any,
                  timestamp_fmt: str, **kwargs) -> None:
