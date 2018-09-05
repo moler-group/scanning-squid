@@ -32,7 +32,7 @@ class AttocubeController(VisaInstrument):
         self.Q_ = ureg.Quantity
         self.temp = temp
         self.timestamp_fmt = timestamp_fmt
-        self.plane_is_current = False
+        self.surface_is_current = False
         self.axes = self.metadata['axes']
         self.voltage_limits = {}
         self.add_parameter('version',
@@ -153,7 +153,7 @@ class AttocubeController(VisaInstrument):
         ts = time.strftime(self.timestamp_fmt)
         msg = 'Moved {} steps along {} axis.'.format(steps, axis)
         self.metadata['history'].update({ts: msg})
-        self.plane_is_current = False
+        self.surface_is_current = False
 
     def clear_instances(self):
         """Remove instrument instance.

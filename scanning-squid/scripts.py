@@ -49,9 +49,9 @@ def fft_noise(dev_name, channel, unit, prefactor, samplerate, sampleduration, na
             'freqs': freqs[freqs < fmax]})
         fig, ax = plt.subplots(1,2, figsize=(8,4), tight_layout=True)
         ax[0].loglog(freqs, v_fft_avg, lw=1)
-        ax[0].set_ylabel('V/$\\sqrt{Hz}$')
+        ax[0].set_ylabel('V/sqrt(Hz)')
         ax[1].loglog(freqs, sig_fft_avg, lw=1)
-        ax[1].set_ylabel('{}/$\\sqrt{Hz}$'.format(unit))
+        ax[1].set_ylabel('{}/sqrt(Hz)'.format(unit))
         fig.suptitle(loc, x=0.5, y=1)
         for i in [0,1]:
             ax[i].set_xlabel('Frequency [Hz]')
