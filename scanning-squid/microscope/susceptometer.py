@@ -86,10 +86,6 @@ class SusceptometerMicroscope(Microscope):
         Args:
             scan_params: Dict of scan parameters as defined
                 in measuremnt configuration file.
-        Returns:
-            Tuple[qcodes.DataSet, plots.ScanPlot]: data, plot
-                qcodes DataSet containing acquired arrays and metdata,
-                and ScanPlot instance populated with acquired data.
         """
         if not self.atto.surface_is_current:
             raise RuntimeError('Surface is not current. Aborting scan.')
