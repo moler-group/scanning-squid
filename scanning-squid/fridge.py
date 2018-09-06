@@ -70,6 +70,7 @@ def BF4K_cooldown(fname=None, gpib372=13, sample_thermometer=True, gpib331=30,
         print('stop_temp reached at {}.'.format(time.strftime(ts_fmt)))
         plt.show()
     except KeyboardInterrupt:
+        plt.show()
         print('Script interrupted by user at {}.'.format(time.strftime(ts_fmt)))
     qc.Instrument.close_all()
     print('Current temperature')
@@ -173,10 +174,12 @@ def BF4K_warmup(fname=None, t_heater_off=290, t_stop_logging=295, heater_i=2, he
             plt.title('BF4K Warmup {}'.format(t0))
             plt.gcf().canvas.draw()
             plt.savefig(fname[:-3] + 'png')
+        plt.show()
         print('t_stop_logging reached at {}.'.format(time.strftime(ts_fmt)))
     except KeyboardInterrupt:
         warmup_heater.output('OFF')
         io.savemat(fname, mdict)
+        plt.show()
         print('Script interrupted by user at {}. Turning heater off.'.format(time.strftime(ts_fmt)))
     warmup_heater.output('OFF')
     for inst in Model_331.instances():
