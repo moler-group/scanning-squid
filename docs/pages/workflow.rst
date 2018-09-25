@@ -37,10 +37,10 @@ Approach the Sample
   .. warning::
       This is the most dangerous/uncertain part of most measurements. If the capacitance is very noisy or the cantilever is not well-constructed, you risk not detecting the touchdown and crashing the SQUID into the sample using the Attocubes.
 
-Acquire a Plane
----------------
+Acquire a Surface
+-----------------
 
-- See: :ref:`getplane`
+- See: :ref:`getsurface`
 
 Scan Over the Plane
 -------------------
