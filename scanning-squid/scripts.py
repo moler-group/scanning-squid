@@ -88,7 +88,10 @@ def time_trace(dev_name: str, channels: Dict[str,int], units: Dict[str,str],
         unit: Physical unit of the channel (e.g. {'MAG': 'Phi0', 'SUSCX': 'Phi0/A'}).
         prefactor: Dict of {channel_name: Pint Quantity} from microscope.get_prefactors().
         samplerate: DAQ sampling rate (for each channel) in Hz.
-        sampleduration: Sampling time in seconds.    
+        sampleduration: Sampling time in seconds.
+        
+    Returns:
+        Dict: mdict
     """
     loc_provider = qc.FormatLocation(fmt='./data/{date}/#{counter}_{name}_{time}')
     loc = loc_provider(DiskIO('.'), record={'name': 'time_trace'})
