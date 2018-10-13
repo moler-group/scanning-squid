@@ -52,7 +52,15 @@ class HF2LI(Instrument):
                                #set_cmd=lambda gain, ch=ch: self._set_offset(offset, channel=ch)
                                #vals=vals.Ints(-1,3)
                                )
-
+            
+        self.add_parameter(name='phase',
+                           label='Phase',
+                           unit='deg',
+                           get_cmd=self._get_phase,
+                           get_parser=float,
+                           set_cmd=self._set_phase,
+                           vals=vals.Numbers(-180,180)
+                           )
         self.add_parameter(name='time_constant',
                            label='Time constant',
                            unit='s',
@@ -94,7 +102,15 @@ class HF2LI(Instrument):
                            vals=vals.Numbers(-1, 1),
                            snapshot_get=False
                            )
-                                     
+    def _get_phase(self):
+        path = '/{}/demods/{}/phaseshift/'.format(self.dev_id, self.demod)
+        phase = self.daq.getDouble(path)
+        return phase
+
+    def _set_phase(self, phase):
+        path = '/{}/demods/{}/phaseshift/'.format(self.dev_id, self.demod)
+        self.daq.setDouble(path, phase)
+        
     def _get_gain(self, channel=None):
         path = '/{}/auxouts/{}/scale/'.format(self.dev_id, self.auxouts[channel])
         gain = self.daq.getDouble(path)
