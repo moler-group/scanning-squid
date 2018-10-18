@@ -9,7 +9,7 @@ Attocubes
 The :class:`instruments.atto.AttocubeController` interfaces via GPIB with the Attocube hardware (e.g. an `ANC300 controller <http://www.attocube.com/attocontrol/motion-controllers/anc300/>`_). It enforces stepping voltage limits based on the current temperature mode (either :code:`'LT'` or :code:`'RT'`).
 
 	.. automodule:: instruments.atto
-		:members: AttocubeController, ANC300
+		:members: AttocubeController, ANC300, ANC150
 
 Scanner
 -------
