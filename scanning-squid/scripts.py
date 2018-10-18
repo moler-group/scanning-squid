@@ -6,8 +6,26 @@ import numpy as np
 from scipy import io
 import nidaqmx
 import matplotlib.pyplot as plt
+from typing import Dict, List, Optional, Sequence, Any, Union, Tuple
 
-def fft_noise(dev_name, channel, unit, prefactor, samplerate, sampleduration, navg, fmax):
+def fft_noise(dev_name: str, channel: Dict[str, int], unit: str,
+              prefactor: Any, samplerate: int, sampleduration: Union[float,int],
+              navg: int, fmax: Union[float,int]):
+    """Noise measurement of a single channel.
+    
+    Args:
+        dev_name: DAQ device name (e.g. 'Dev1').
+        channel: Dict of {channel_name: analog_input} (e.g. {'MAG': 0}).
+        unit: Physical unit of the channel (e.g. 'Phi0').
+        prefactor: Pint Quantity with dimenions of unit/V, from microscope.get_prefactors().
+        samplerate: DAQ sampling rate in Hz.
+        sampleduration: Sampling time in seconds.
+        navg: Number of times to average the spectrum.
+        fmax: Maximum frequency up to which the spectrum will be saved.
+        
+    Returns:
+        Dict: mdict
+    """
     loc_provider = qc.FormatLocation(fmt='./data/{date}/#{counter}_{name}_{time}')
     loc = loc_provider(DiskIO('.'), record={'name': 'fft_noise'})
     pathlib.Path(loc).mkdir(parents=True, exist_ok=True)
@@ -60,7 +78,21 @@ def fft_noise(dev_name, channel, unit, prefactor, samplerate, sampleduration, na
         io.savemat(loc + '/fft_noise.mat', mdict)
         return mdict
 
-def time_trace(dev_name, channels, units, prefactors, samplerate, sampleduration):
+def time_trace(dev_name: str, channels: Dict[str,int], units: Dict[str,str],
+               prefactors: Dict[str, Any], samplerate: int, sampleduration: Union[float,int]):
+    """Records a time trace of data from DAQ analog input channels, converts data to desired units.
+    
+    Args:
+        dev_name: DAQ device name (e.g. 'Dev1').
+        channel: Dict of {channel_name: analog_input} (e.g. {'MAG': 0, 'SUSCX': 1}).
+        unit: Physical unit of the channel (e.g. {'MAG': 'Phi0', 'SUSCX': 'Phi0/A'}).
+        prefactor: Dict of {channel_name: Pint Quantity} from microscope.get_prefactors().
+        samplerate: DAQ sampling rate (for each channel) in Hz.
+        sampleduration: Sampling time in seconds.
+        
+    Returns:
+        Dict: mdict
+    """
     loc_provider = qc.FormatLocation(fmt='./data/{date}/#{counter}_{name}_{time}')
     loc = loc_provider(DiskIO('.'), record={'name': 'time_trace'})
     pathlib.Path(loc).mkdir(parents=True, exist_ok=True)
