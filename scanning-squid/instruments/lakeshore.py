@@ -264,7 +264,7 @@ class Model_340(VisaInstrument):
     Adapted from QCoDeS Lakeshore 336 driver
     """
 
-    def __init__(self, name, address, active_channels={'D': 'sample'}, **kwargs):
+    def __init__(self, name, address, active_channels={'A': 'cernox', 'B': 'diode'}, **kwargs):
         super().__init__(name, address, terminator="\r\n", **kwargs)
 
         # Allow access to channels either by referring to the channel name
@@ -290,7 +290,7 @@ class Model_340(VisaInstrument):
                 get_cmd='SETP?',
                 get_parser=float,
                 set_cmd='SETP 1,{}',
-                label='Set Temerature',
+                label='Set Temperature',
                 vals=Numbers(0.3, 300),
                 unit='K'
             )
@@ -298,7 +298,7 @@ class Model_340(VisaInstrument):
                 name='heater_range',
                 get_cmd='RANGE?',
                 get_parser=int,
-                set_cmd='RANGE 1,{}',
+                set_cmd='RANGE {}',
                 label='Heater range',
                 vals=Enum(0, 1, 2, 3, 4, 5),
                 unit=''

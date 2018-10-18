@@ -1,10 +1,5 @@
 #: Various Python utilities
 from typing import Dict, List, Sequence, Any, Union, Tuple
-import numpy as np
-import time
-from IPython.display import clear_output
-import matplotlib.pyplot as plt
-
 
 #: Qcodes for running measurements and saving data
 import qcodes as qc
@@ -15,8 +10,8 @@ from nidaqmx.constants import AcquisitionType
 
 #: scanning-squid modules
 from instruments.daq import DAQAnalogInputs
-from plots import ScanPlot, TDCPlot
-from microscope.microscope import Microscope
+from plots import ScanPlot
+from .microscope import Microscope
 import utils
 
 #: Pint for manipulating physical units
@@ -57,7 +52,6 @@ class SusceptometerMicroscope(Microscope):
                 in measurement configuration file.
             update: Whether to query instrument parameters or simply trust the
                 latest values (should this even be an option)?
-
         Returns:
             Dict[str, pint.Quantity]: prefactors
                 Dict of {channel_name: prefactor} where prefactor is a pint Quantity.
@@ -68,52 +62,41 @@ class SusceptometerMicroscope(Microscope):
             prefactor = 1
             if ch == 'MAG':
                 prefactor /= mod_width
-            elif ch == 'SUSCX':
+            elif ch in ['SUSCX', 'SUSCY']:
                 r_lead = self.Q_(measurement['channels'][ch]['r_lead'])
-                amp = (self.SUSC_lockin.sigout_amplitude() *
-                    self.SUSC_lockin.sigout_range() * self.ureg('V'))
-                #: sqrt(2) because auxouts are Vpk, not Vrms
-                prefactor *=  np.sqrt(2) * (r_lead / amp) / (mod_width * self.SUSC_lockin.gain_X())
-            elif ch == 'SUSCY':
-                snap_susc = getattr(self, 'SUSC_lockin').snapshot(update=update)['parameters']
-                r_lead = self.Q_(measurement['channels'][ch]['r_lead'])
-                amp = (self.SUSC_lockin.sigout_amplitude() *
-                    self.SUSC_lockin.sigout_range() * self.ureg('V'))
-                #: sqrt(2) because auxouts are Vpk, not Vrms
-                prefactor *=  np.sqrt(2) * (r_lead / amp) / (mod_width * self.SUSC_lockin.gain_Y())
+                snap = getattr(self, 'SUSC_lockin').snapshot(update=update)['parameters']
+                susc_sensitivity = snap['sensitivity']['value']
+                amp = snap['amplitude']['value'] * self.ureg(snap['amplitude']['unit'])
+                #: The factor of 10 here is because SR830 output gain is 10/sensitivity
+                prefactor *=  (r_lead / amp) / (mod_width * 10 / susc_sensitivity)
             elif ch == 'CAP':
-                gain_cap = self.CAP_lockin.gain_X()
-                #: sqrt(2) because auxouts are Vpk, not Vrms
-                prefactor *= np.sqrt(2) / (self.Q_(self.scanner.metadata['cantilever']['calibration']) * gain_cap)
-            elif ch in ['x_cap', 'y_cap']:
-                prefactor *= self.Q_(measurement['channels'][ch]['conversion'])
+                snap = getattr(self, 'CAP_lockin').snapshot(update=update)['parameters']
+                cap_sensitivity = snap['sensitivity']['value']
+                #: The factor of 10 here is because SR830 output gain is 10/sensitivity
+                prefactor /= (self.Q_(self.scanner.metadata['cantilever']['calibration']) * 10 / cap_sensitivity)
             prefactor /= measurement['channels'][ch]['gain']
-            prefactors.update({ch: prefactor})
+            prefactors.update({ch: prefactor.to('{}/V'.format(measurement['channels'][ch]['unit']))})
         return prefactors
 
-    def scan_plane(self, scan_params: Dict[str, Any]) -> Any:
+    def scan_surface(self, scan_params: Dict[str, Any]) -> None:
         """
-        Scan the current plane while acquiring data in the channels defined in
+        Scan the current surface while acquiring data in the channels defined in
         measurement configuration file (e.g. MAG, SUSCX, SUSCY, CAP).
-
+        
         Args:
             scan_params: Dict of scan parameters as defined
                 in measuremnt configuration file.
-
-        Returns:
-            Tuple[qcodes.DataSet, plots.ScanPlot]: data, plot
-                qcodes DataSet containing acquired arrays and metdata,
-                and ScanPlot instance populated with acquired data.
         """
-        #if not self.atto.plane_is_current:
-        #    raise RuntimeError('Plane is not current. Aborting scan.')
+        if not self.atto.surface_is_current:
+            raise RuntimeError('Surface is not current. Aborting scan.')
+        surface_type = scan_params['surface_type'].lower()
+        if surface_type not in ['plane', 'surface']:
+            raise ValueError('surface_type must be "plane" or "surface".')
+
         old_pos = self.scanner.position()
         
         daq_config = self.config['instruments']['daq']
-        #ao_channels = daq_config['channels']['analog_outputs']
-        ao_channels = {}
-        for ax in ['x', 'y', 'z']:
-            ao_channels.update({ax: daq_config['channels']['analog_outputs'][ax]})
+        ao_channels = daq_config['channels']['analog_outputs']
         ai_channels = daq_config['channels']['analog_inputs']
         meas_channels = scan_params['channels']
         channels = {}
@@ -128,22 +111,26 @@ class SusceptometerMicroscope(Microscope):
         fast_ax = scan_params['fast_ax'].lower()
         slow_ax = 'x' if fast_ax == 'y' else 'y'
         
-        line_duration = self.Q_(scan_params['range'][fast_ax]) / self.Q_(scan_params['scan_rate'])
-        pts_per_line = int(daq_rate * line_duration.to('s').magnitude)
         pix_per_line = scan_params['scan_size'][fast_ax]
+        line_duration = pix_per_line * self.ureg('pixels') / self.Q_(scan_params['scan_rate'])
+        pts_per_line = int(daq_rate * line_duration.to('s').magnitude)
         
-        plane = self.scanner.metadata['plane']
         height = self.Q_(scan_params['height']).to('V').magnitude
-        scanner_constants = self.config['instruments']['scanner']['constants']
-        scan_vectors = utils.make_scan_vectors(scan_params, scanner_constants, self.temp, self.ureg)
-        scan_grids = utils.make_scan_grids(scan_vectors, slow_ax, fast_ax,
-                                           pts_per_line, plane, height)
+        
+        scan_vectors = utils.make_scan_vectors(scan_params, self.ureg)
+        #scan_grids = utils.make_scan_grids(scan_vectors, slow_ax, fast_ax,
+        #                                   pts_per_line, plane, height)
+        plane = self.scanner.metadata['plane']
+        if surface_type == 'plane':
+            scan_grids = utils.make_scan_surface(surface_type, scan_vectors, slow_ax, fast_ax,
+                                                pts_per_line, plane, height)
+        else:
+            scan_grids = utils.make_scan_surface(surface_type, scan_vectors, slow_ax, fast_ax,
+                                                pts_per_line, plane, height, interpolator=self.scanner.surface_interp)
         utils.validate_scan_params(self.scanner.metadata, scan_params,
                                    scan_grids, self.temp, self.ureg, log)
         self.scanner.goto([scan_grids[axis][0][0] for axis in ['x', 'y', 'z']])
-        # let the piezos relax before starting the scan
-        time.sleep(10)
-        #self.set_lockins(scan_params)
+        self.set_lockins(scan_params)
         #: get channel prefactors in pint Quantity form
         prefactors = self.get_prefactors(scan_params)
         #: get channel prefactors in string form so they can be saved in metadata
@@ -155,7 +142,8 @@ class SusceptometerMicroscope(Microscope):
         ai_task = nidaqmx.Task('scan_plane_ai_task')
         self.remove_component('daq_ai')
         if hasattr(self, 'daq_ai'):
-            self.daq_ai.clear_instances()
+            #self.daq_ai.clear_instances()
+            self.daq_ai.close()
         self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, daq_rate, channels, ai_task,
                                       samples_to_read=pts_per_line, target_points=pix_per_line,
                                       #: Very important to synchronize AOs and AIs
@@ -167,7 +155,7 @@ class SusceptometerMicroscope(Microscope):
         slow_ax_step = scan_vectors[slow_ax][1] - scan_vectors[slow_ax][0]
         #: There is probably a counter built in to qc.Loop, but I couldn't find it
         loop_counter = utils.Counter()
-        scan_plot = ScanPlot(scan_params, scanner_constants, self.temp, self.ureg)
+        scan_plot = ScanPlot(scan_params, self.ureg)
         loop = qc.Loop(slow_ax_position.sweep(start=slow_ax_start,
                                               stop=slow_ax_end,
                                               step=slow_ax_step), delay=0.1
@@ -194,8 +182,11 @@ class SusceptometerMicroscope(Microscope):
         ).then(
             qc.Task(ai_task.stop),
             qc.Task(ai_task.close),
-            qc.Task(self.daq_ai.clear_instances),
-            qc.Task(self.scanner.goto, old_pos)
+            qc.Task(self.daq_ai.close),
+            #qc.Task(self.daq_ai.clear_instances),
+            qc.Task(self.scanner.goto, old_pos),
+            #qc.Task(self.CAP_lockin.amplitude, 0.004),
+            #qc.Task(self.SUSC_lockin.amplitude, 0.004)
         )
         #: loop.metadata will be saved in DataSet
         loop.metadata.update(scan_params)
@@ -210,7 +201,6 @@ class SusceptometerMicroscope(Microscope):
         #: If loop is aborted by user:
         except KeyboardInterrupt:
             log.warning('Scan interrupted by user. Going to [0, 0, 0] V.')
-            self.abort_scan_loop = True
             #: Stop 'scan_plane_ai_task' so that we can read our current position
             ai_task.stop()
             ai_task.close()
@@ -225,88 +215,6 @@ class SusceptometerMicroscope(Microscope):
             #self.SUSC_lockin.amplitude(0.004)
             log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
         self.remove_component('daq_ai')
-        utils.scan_to_mat_file(data, real_units=True)
-        return data, scan_plot
-
-    def multi_fc_scan(self, mfs_params: Dict[str, Any], scan_params: Dict[str, Any]):
-        log.info('Starting multiple field-cooling scans.')
-        self.abort_scan_loop = False
-        self.keithley.mode('CURR')
-        time.sleep(1)
-        #self.keithley.sense('VOLT')
-        self.keithley.rangei(100e-3)
-        time.sleep(1)
-        self.keithley.compliancev(10)
-        time.sleep(1)
-        self.keithley.curr(mfs_params['current'][0])
-        time.sleep(1)
-        self.keithley.output(1)
-        for current in mfs_params['current']:
-            if not self.abort_scan_loop:
-                log.info('Setting current to {} A'.format(current))
-                self.keithley.curr(current)
-                time.sleep(1)
-                self.cycle_T(mfs_params['t_low'], mfs_params['t_high'])
-                _ = self.scan_plane(scan_params)
-                clear_output(wait=True)
+        utils.scan_to_mat_file(data, real_units=True, interpolator=self.scanner.surface_interp)
+        #return data, scan_plot
         
-    def cycle_T(self, t_low: float, t_high: float):
-        log.info('Starting temperature cycle. Warming to {}.'.format(t_high))
-        try:
-            self.ls340.ramp_rate(0)
-            time.sleep(0.1)
-            self.ls340.set_temperature(t_high)
-            time.sleep(0.1)
-            self.ls340.heater_range(2)
-            for _ in range(90):
-                time.sleep(1)
-            self.ls340.ramp_rate(0.1)
-            time.sleep(0.1)
-            self.ls340.set_temperature(t_low)
-            dt = t_high - t_low
-            ramp_time = int(60 * dt / 0.1 + 10)
-            for _ in range(ramp_time):
-                time.sleep(1)
-            self.ls340.heater_range(0)
-            t = self.ls340.A.temperature()
-            log.info('Temperature cycle complete. Current temperature: {} K.'.format(t))
-        except KeyboardInterrupt:
-            log.warning('Temperature cycle interrupted by user. Turning off heater.')
-            self.ls340.heater_range(0)
-    def plot_T_vs_time(self):
-        time_vec=[]
-        sample_T=[]
-        elapsed_time=0
-        self.fig, self.ax = plt.subplots(1,1)
-        self.ax.set_xlabel('t(sec)')
-        self.ax.set_ylabel('T(K)')
-        
-        while (True):
-            sample_T.append(self.ls340.A.temperature())
-            time_vec.append(elapsed_time)
-            time.sleep(1)
-            elapsed_time=elapsed_time+1
-            self.ax.plot(time_vec,sample_T)
-            self.fig.canvas.draw()
-    def noise_vs_IPHI(self):
-        # sampling rate in Hz
-        fSampling=10000
-        nchannels = 1
-        
-        ntimes=10000
-        dt=nchannels/fSampling
-        self.fig, self.ax = plt.subplots(1,1)
-        self.ax.set_xlabel('f(Hz)')
-        self.ax.set_ylabel('V(V)')
-        frequency_vec=np.linspace(0,1,ntimes)/dt  
-        with nidaqmx.Task() as task:
-            task.ai_channels.add_ai_voltage_chan("Dev1/ai4")
-            task.timing.cfg_samp_clk_timing(fSampling)
-            task.wait_until_done(10.0)
-            noise_data=task.read(number_of_samples_per_channel=ntimes)
-            noise_data=np.fft.fft(noise_data)
-            self.ax.plot(frequency_vec[1:-1],np.real(noise_data)[1:-1])  
-        #write_one_sample(data, timeout=10) 
-        #nidaqmx._task_modules.timing.Timing.ai_conv_rate(1000)
-
-            

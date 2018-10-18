@@ -28,6 +28,7 @@ class AttocubeController(VisaInstrument):
         self.visa_handle.baud_rate = atto_config['baud_rate']
         self.visa_handle.stop_bits = visa.constants.StopBits.one
         self.visa_handle.parity = visa.constants.Parity.none
+        self.visa_handle.read_termination = '\r\nOK\r\n>'
         _ = self.parameters.pop('IDN') # Get rid of this parameter
         self.ureg = ureg
         # Callable for converting a string into a quantity with units
@@ -61,7 +62,7 @@ class AttocubeController(VisaInstrument):
                                 label='{} axis voltage'.format(axis),
                                 unit='V',
                                 get_cmd='getv {}'.format(idx),
-                                set_cmd='setv {} {{:.3f}}'.format(idx),
+                                set_cmd='setv {} {{:d}}'.format(idx),
                                 vals=vals.Numbers(min_value=0, max_value=self.voltage_limits[axis]),
                                 get_parser=self._voltage_parser,
                                 snapshot_get=False
@@ -239,9 +240,7 @@ class AttocubeController(VisaInstrument):
         Returns:
             str: response
         """
-        self.set_terminator('\n') #: Bug in ANC300! Response is terminated with '\n'
         response = self.ask('getf {}'.format(idx))
-        self.set_terminator('\r\n') #: Set terminator back to '\r\n', works for other paramaters
         return response
     
     def _get_cap(self, idx: int) -> str:
@@ -255,31 +254,18 @@ class AttocubeController(VisaInstrument):
         """
         self.parameters['mode_ax{}'.format(idx)].set('cap')
         self.write('capw {}'.format(idx))
+        response = self.ask('getc {}'.format(idx))
         #: There's some delay for cap, so query three times and return the last response.
-        for _ in range(3):
-            response = self.ask('getc {}'.format(idx))
+        #for _ in range(3):
+        #    response = self.ask('getc {}'.format(idx))
         return response
 
-class ANC300(AttocubeController):
+class ANC150(AttocubeController):
     """ANC300 Attocube controller instrument.
     """
     def __init__(self, atto_config: Dict, temp: str, ureg: Any,
                  timestamp_format: str, **kwargs) -> None:
         super().__init__(atto_config, temp, ureg, timestamp_format, **kwargs)
-        self.add_parameter('serialnum',
-                    label='Controller serial number',
-                    get_cmd='getcser',
-                    get_parser=str,
-                    snapshot_get=False
-                    )
-        for axis, idx in self.axes.items():
-            #: serial number for axis controller module (gettable only)
-            self.add_parameter('serialnum_ax{}'.format(idx),
-                                label='{} axis serial number'.format(axis),
-                                get_cmd='getser {}'.format(idx),
-                                get_parser=str,
-                                snapshot_get=False
-                                )
         self.initialize()
 
     def initialize(self) -> None:
@@ -293,30 +279,6 @@ class ANC300(AttocubeController):
             self.parameters['voltage_ax{}'.format(idx)].set(voltage_lim)
             self.parameters['mode_ax{}'.format(idx)].set('gnd')
         self.version() #: sometimes returns 'OK' instead of version info on the first try
-        self.serialnum()
-        self.serialnum_ax1()
-        self.serialnum_ax2()
-        self.serialnum_ax3()
+        self.version() #: or the second try...
         print('Connected to: {}.'.format(self.version()))
-        
-# class ANC150(AttocubeController):
-#    """ANC150 Attocube controller instrument.
-#    """
-#    def __init__(self, atto_config: Dict, temp: str, ureg: Any,
-#                 timestamp_format: str, **kwargs) -> None:
-#         super().__init__(atto_config, temp, ureg, timestamp_format, **kwargs)
-#         self.initialize()
-
-#     def initialize(self) -> None:
-#         """Initialize instrument with parameters from self.metadata.
-#         """
-#         log.info('Initializing ANC150 controller.')
-#         for axis, idx in self.axes.items():
-#             freq_in_Hz = self.Q_(self.metadata['default_frequency'][axis]).to('Hz').magnitude
-#             voltage_lim = self.voltage_limits[axis]
-#             self.parameters['freq_ax{}'.format(idx)].set(freq_in_Hz)
-#             self.parameters['voltage_ax{}'.format(idx)].set(voltage_lim)
-#             self.parameters['mode_ax{}'.format(idx)].set('gnd')
-#         self.version() #: sometimes returns 'OK' instead of version info on the first try
-#         print('Connected to: {}.'.format(self.version()))
         

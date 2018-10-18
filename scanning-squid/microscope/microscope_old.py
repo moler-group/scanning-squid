@@ -36,7 +36,7 @@ from instruments.daq import DAQAnalogInputs
 from plots import ScanPlot, TDCPlot
 from instruments.lakeshore import Model_372, Model_331, Model_340
 from instruments.heater import EL320P
-from instruments.keithley_2400 import Keithley_2400
+
 #: Pint for manipulating physical units
 from pint import UnitRegistry
 ureg = UnitRegistry()
@@ -98,7 +98,6 @@ class Microscope(Station):
         self._add_scanner()
         self._add_SQUID()
         self._add_lockins()
-        self._add_keithley()
 
     def _add_atto(self):
         """Add Attocube controller to microscope.
@@ -148,22 +147,6 @@ class Microscope(Station):
         self.ls340 = Model_340(ls_config['name'], ls_config['address'])
         self.add_component(self.ls340)
         log.info('Lakeshore 340 successfully added to microscope.')
-    def _add_keithley(self):
-        """Add Keithley to microscope.
-        """
-        k_config = self.config['instruments']['keithley']
-        if hasattr(self, 'keithley'):
-            self.keithley.clear_instances()
-        self.remove_component(k_config['name'])
-        self.keithley = Keithley_2400(k_config['name'], k_config['address'])
-        self.add_component(self.keithley)
-        self.keithley.mode('CURR')
-        #self.keithley.sense('VOLT')
-        self.keithley.rangei(100e-3)
-        self.keithley.curr(0)
-        self.keithley.compliancev(10)
-        self.keithley.output(1)
-        log.info('Keithley controller successfully added to microscope.')    
 
     def _add_scanner(self):
         """Add scanner instrument to microscope.
