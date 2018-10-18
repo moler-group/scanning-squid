@@ -290,7 +290,6 @@ class ANC300(AttocubeController):
             self.parameters['freq_ax{}'.format(idx)].set(freq_in_Hz)
             self.parameters['voltage_ax{}'.format(idx)].set(voltage_lim)
             self.parameters['mode_ax{}'.format(idx)].set('gnd')
-        self.version() #: sometimes returns 'OK' instead of version info on the first try
         self.serialnum()
         self.serialnum_ax1()
         self.serialnum_ax2()
@@ -315,5 +314,4 @@ class ANC150(AttocubeController):
             self.parameters['freq_ax{}'.format(idx)].set(freq_in_Hz)
             self.parameters['voltage_ax{}'.format(idx)].set(voltage_lim)
             self.parameters['mode_ax{}'.format(idx)].set('gnd')
-        self.version() #: sometimes returns 'OK' instead of version info on the first try
         print('Connected to: {}.'.format(self.version()))
