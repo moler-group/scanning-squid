@@ -141,7 +141,7 @@ class Scanner(Instrument):
                     channel = self.metadata['daq']['name'] + '/ao{}'.format(idx)
                     ao_task.ao_channels.add_ao_voltage_chan(channel, axis)
                 ao_task.timing.cfg_samp_clk_timing(self.daq_rate, samps_per_chan=len(ramp[0]))
-                pts = ao_task.write(ramp, auto_start=False)
+                pts = ao_task.write(ramp, auto_start=False, timeout=30)
                 ao_task.start()
                 ao_task.wait_until_done()
                 log.debug('Wrote {} samples to {}.'.format(pts, ao_task.channel_names))
