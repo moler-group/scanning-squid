@@ -1,3 +1,27 @@
+"""
+This file is part of the scanning-squid package.
+
+Copyright (c) 2018 Logan Bishop-Van Horn
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+"""
+
 import qcodes as qc
 from qcodes.instrument.base import Instrument
 import qcodes.utils.validators as vals
@@ -10,22 +34,8 @@ import logging
 log = logging.getLogger(__name__)
 
 class HF2LI(Instrument):
-    """ Qcodes driver for a single "lockin channel" of a Zurich Instruments HF2LI.
-
-    Here, a "lockin channel" refers to a single demodulator and signal output, and pair of
-    auxilary outputs (e.g. for X, Y).
-    """
     def __init__(self, name: str, device: str, demod: int, sigout: int,
         auxouts: Dict[str, int], **kwargs) -> None:
-        """
-        Args:
-            name: Qcodes instrument name.
-            device: HF2LI device ID
-            demod: Index of lockin channel demodulator
-            sigout: Index of lockin channel signal output
-            auxouts: Dict of {'X': index_of_auxout_X, 'Y': index_of_auxout_Y}
-            **kwargs: Keyword arguments passed to Instrument constructor.
-        """
         super().__init__(name, **kwargs)
         instr = zhinst.utils.create_api_session(device, 1, required_devtype='HF2LI')
         self.daq, self.dev_id, self.props = instr
@@ -66,7 +76,15 @@ class HF2LI(Instrument):
                                #set_cmd=lambda gain, ch=ch: self._set_offset(offset, channel=ch)
                                #vals=vals.Ints(-1,3)
                                )
-
+            
+        self.add_parameter(name='phase',
+                           label='Phase',
+                           unit='deg',
+                           get_cmd=self._get_phase,
+                           get_parser=float,
+                           set_cmd=self._set_phase,
+                           vals=vals.Numbers(-180,180)
+                           )
         self.add_parameter(name='time_constant',
                            label='Time constant',
                            unit='s',
@@ -108,12 +126,15 @@ class HF2LI(Instrument):
                            vals=vals.Numbers(-1, 1),
                            snapshot_get=False
                            )
-    def sample(self):
-        """Samples the lockin channel demodulator.
-        """
-        path = '/{}/demods/{}/sample/'.format(self.dev_id, self.demod)
-        return daq.getSample(path)
+    def _get_phase(self):
+        path = '/{}/demods/{}/phaseshift/'.format(self.dev_id, self.demod)
+        phase = self.daq.getDouble(path)
+        return phase
 
+    def _set_phase(self, phase):
+        path = '/{}/demods/{}/phaseshift/'.format(self.dev_id, self.demod)
+        self.daq.setDouble(path, phase)
+        
     def _get_gain(self, channel=None):
         path = '/{}/auxouts/{}/scale/'.format(self.dev_id, self.auxouts[channel])
         gain = self.daq.getDouble(path)
@@ -189,3 +210,7 @@ class HF2LI(Instrument):
         path = '/{}/demods/{}/freq/'.format(self.dev_id, self.demod)
         freq = self.daq.getDouble(path)
         return freq
+
+    def sample(self):
+        path = '/{}/demods/{}/sample/'.format(self.dev_id, self.demod)
+        return daq.getSample(path)
