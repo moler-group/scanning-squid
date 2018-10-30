@@ -309,7 +309,7 @@ def td_to_mat_file(td_data: Any, real_units: Optional[bool]=True, fname: Optiona
     arrays = td_to_arrays(td_data, ureg=ureg, real_units=real_units)
     mdict = {}
     for name, arr in arrays.items():
-        if name != 'height':
+        if name is not 'height':
             unit = meta['channels'][name]['unit'] if real_units else 'V'
             mdict.update({name: {'array': arr.to(unit).magnitude, 'unit': unit}})
     mdict.update({'height': {'array': arrays['height'].to('V').magnitude, 'unit': 'V'}})
