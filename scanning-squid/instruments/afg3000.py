@@ -34,7 +34,7 @@ class AFG3000(VisaInstrument):
     By default, most parameters are not queried during a snapshot.
     Logan Bishop-Van Horn (2018)
     """
-    def __init__(self, name, address, **kwargs):
+    def __init__(self, name, address, channels, **kwargs):
         super().__init__(name, address, terminator='\n', timeout=20, **kwargs)
 
         self.add_parameter('trigger_mode',
@@ -46,9 +46,10 @@ class AFG3000(VisaInstrument):
                 vals=vals.Enum('TRIGger', 'TRIG', 'SYNC')
         )
 
-        #: Source/output parameters, 2 channels
-        for src in [1, 2]:
-
+        #: Source/output parameters, 1 or 2 channels
+        for src in range(1, 1 + channels):
+            if src == 1 and channels == 1:
+                src = ''
             #: Outputs
             self.add_parameter('impedance_output{}'.format(src),
                    label='Output {} impedance'.format(src),
@@ -225,14 +226,15 @@ class AFG3000(VisaInstrument):
                    set_cmd='SOURce{}:FREQuency:CENTer {{}}'.format(src),
                    vals=vals.Strings()
             )
-            self.add_parameter('freq_concurrent{}'.format(src),
-                   label='Source {} concurrent frequency'.format(src),
-                   unit='',
-                   get_cmd='SOURce{}:FREQuency:CONCurrent?'.format(src),
-                   get_parser=lambda x: bool(int(x)),
-                   set_cmd='SOURce{}:FREQuency:CONCurrent {{}}'.format(src),
-                   vals=vals.Enum('OFF', 0, 'ON', 1)
-            ) 
+            if channels == 2:
+                self.add_parameter('freq_concurrent{}'.format(src),
+                       label='Source {} concurrent frequency'.format(src),
+                       unit='',
+                       get_cmd='SOURce{}:FREQuency:CONCurrent?'.format(src),
+                       get_parser=lambda x: bool(int(x)),
+                       set_cmd='SOURce{}:FREQuency:CONCurrent {{}}'.format(src),
+                       vals=vals.Enum('OFF', 0, 'ON', 1)
+                ) 
             self.add_parameter('freq_cw{}'.format(src),
                    label='Source {} continuous frequency'.format(src),
                    unit='Hz',
@@ -465,15 +467,16 @@ class AFG3000(VisaInstrument):
                    vals=vals.Strings()
             )
 
-            #: Voltage parameters       
-            self.add_parameter('voltage_concurrent{}'.format(src),
-                   label='Source {} concurrent voltage'.format(src),
-                   unit='',
-                   get_cmd='SOURce{}:VOLTage:CONCurrent:STATe?'.format(src),
-                   get_parser=lambda x: bool(int(x)),
-                   set_cmd='SOURce{}:VOLTage:CONCurrent:STATe {{}}'.format(src),
-                   vals=vals.Enum('OFF', 0, 'ON', 1)
-            ) 
+            #: Voltage parameters
+            if channels == 2:       
+                self.add_parameter('voltage_concurrent{}'.format(src),
+                       label='Source {} concurrent voltage'.format(src),
+                       unit='',
+                       get_cmd='SOURce{}:VOLTage:CONCurrent:STATe?'.format(src),
+                       get_parser=lambda x: bool(int(x)),
+                       set_cmd='SOURce{}:VOLTage:CONCurrent:STATe {{}}'.format(src),
+                       vals=vals.Enum('OFF', 0, 'ON', 1)
+                ) 
             self.add_parameter('voltage_high{}'.format(src),
                    label='Source {} high voltage level'.format(src),
                    unit='V',
@@ -532,15 +535,16 @@ class AFG3000(VisaInstrument):
             )
 
         #: Noise parameters
-        for src in [3, 4]:
-            self.add_parameter('noise_level{}'.format(src),
-                   label='Source {} noise level'.format(src),
-                   unit='%',
-                   get_cmd='SOURce{}:POWer:LEVel:IMMediate:AMPLitude?'.format(src),
-                   get_parser=float,
-                   set_cmd='SOURce{}:POWer:LEVel:IMMediate:AMPLitude {{}}'.format(src),
-                   vals=vals.Strings()
-            )
+        if channels == 2:
+            for src in [3, 4]:
+                self.add_parameter('noise_level{}'.format(src),
+                       label='Source {} noise level'.format(src),
+                       unit='%',
+                       get_cmd='SOURce{}:POWer:LEVel:IMMediate:AMPLitude?'.format(src),
+                       get_parser=float,
+                       set_cmd='SOURce{}:POWer:LEVel:IMMediate:AMPLitude {{}}'.format(src),
+                       vals=vals.Strings()
+                )
 
         self.add_parameter('ref_osc_source',
                label='Reference clock source'.format(src),

@@ -230,7 +230,8 @@ class AttocubeController(VisaInstrument):
         Returns:
             float: parsed_response
         """
-        return float(response.split('=')[1].split('H')[0])
+        #return float(response.split('=')[1].split('H')[0])
+        return float(response.split('=')[1].strip().split(' ')[0])
     
     def _voltage_parser(self, response: str) -> float:
         """Parse controller response like 'voltage = 20 V'.
@@ -252,7 +253,8 @@ class AttocubeController(VisaInstrument):
         Returns:
             float: parsed_response
         """
-        return float(response.split('=')[1].split('nF')[0].strip())
+        #return float(response.split('=')[1].split('nF')[0].strip())
+        return float(response.split('=')[1].strip().split(' ')[0])
     
     def _get_freq(self, idx: int) -> str:
         """Query frequency of axis given by idx.
@@ -278,7 +280,7 @@ class AttocubeController(VisaInstrument):
             str: response
         """
         self.parameters['mode_ax{}'.format(idx)].set('cap')
-        self.write('capw {}'.format(idx))
+        _ = self.ask('capw {}'.format(idx))
         response = self.ask('getc {}'.format(idx))
         return response
 

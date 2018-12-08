@@ -45,8 +45,9 @@ from nidaqmx.constants import AcquisitionType
 from instruments.daq import DAQAnalogInputs
 from instruments.dg645 import DG645
 from instruments.afg3000 import AFG3000
+from plots import ScanPlot
 from .microscope import Microscope
-from utils import Counter, clear_artists
+import utils
 
 #: Pint for manipulating physical units
 from pint import UnitRegistry
@@ -68,7 +69,7 @@ class SamplerMicroscope(Microscope):
         super().__init__(config_file, temp, ureg=ureg, log_level=log_level,
             log_name=log_name, **kwargs)
         self._add_delay_generator()
-        self._add_function_generator()
+        self._add_function_generators()
 
     def _add_delay_generator(self):
         """Add SRS DG645 digital delay generator to SamplerMicroscope.
@@ -83,49 +84,49 @@ class SamplerMicroscope(Microscope):
         self.add_component(getattr(self, name))
         log.info('{} successfully added to microscope.'.format(name))
 
-    def _add_function_generator(self):
-        """Add Tektronix AFG3000 series function generator to SamplerMicroscope.
+    def _add_function_generators(self):
+        """Add Tektronix AFG3000 series function generators to SamplerMicroscope.
         """
-        info = self.config['instruments']['function_generator']
-        name = 'afg'
-        if hasattr(self, name):
-            getattr(self, name, 'clear_instances')()
-        self.remove_component(name)
-        instr = AFG3000(name, info['address'], metadata=info)
-        setattr(self, name, instr)
-        self.add_component(getattr(self, name))
-        log.info('{} successfully added to microscope.'.format(name))
+        cfg = self.config['instruments']['function_generators']
+        for name, info in cfg.items():
+            if hasattr(self, name):
+                getattr(self, name).close()
+            self.remove_component(name)
+            instr = AFG3000(name, info['address'], info['channels'], metadata=info)
+            setattr(self, name, instr)
+            self.add_component(getattr(self, name))
+            log.info('{} successfully added to microscope.'.format(name))
 
-    # def get_prefactors(self, measurement: Dict[str, Any], update: bool=True) -> Dict[str, Any]:
-    #     """For each channel, calculate prefactors to convert DAQ voltage into real units.
+    def get_prefactors(self, measurement: Dict[str, Any], update: bool=True) -> Dict[str, Any]:
+        """For each channel, calculate prefactors to convert DAQ voltage into real units.
 
-    #     Args:
-    #         measurement: Dict of measurement parameters as defined
-    #             in measurement configuration file.
-    #         update: Whether to query instrument parameters or simply trust the
-    #             latest values (should this even be an option)?
+        Args:
+            measurement: Dict of measurement parameters as defined
+                in measurement configuration file.
+            update: Whether to query instrument parameters or simply trust the
+                latest values (should this even be an option)?
 
-    #     Returns:
-    #         Dict[str, pint.Quantity]: prefactors
-    #             Dict of {channel_name: prefactor} where prefactor is a pint Quantity.
-    #     """
-    #     prefactors = {}
-    #     for ch in measurement['channels']:
-    #         prefactor = 1
-    #         if ch == 'MAG':
-    #             snap = getattr(self, 'MAG_lockin').snapshot(update=update)['parameters']
-    #             mag_sensitivity = snap['sensitivity']['value']
-    #             #amp = snap['amplitude']['value'] * self.ureg(snap['amplitude']['unit'])
-    #             #: The factor of 10 here is because SR830 output gain is 10/sensitivity
-    #             prefactor /=  self.Q_(10 / mag_sensitivity)
-    #         elif ch == 'CAP':
-    #             snap = getattr(self, 'CAP_lockin').snapshot(update=update)['parameters']
-    #             cap_sensitivity = snap['sensitivity']['value']
-    #             #: The factor of 10 here is because SR830 output gain is 10/sensitivity
-    #             prefactor /= (self.Q_(self.scanner.metadata['cantilever']['calibration']) * 10 / cap_sensitivity)
-    #         prefactor /= measurement['channels'][ch]['gain']
-    #         prefactors.update({ch: prefactor})
-    #     return prefactors
+        Returns:
+            Dict[str, pint.Quantity]: prefactors
+                Dict of {channel_name: prefactor} where prefactor is a pint Quantity.
+        """
+        prefactors = {}
+        for ch in measurement['channels']:
+            prefactor = self.Q_(1)
+            if ch in ['v_comp', 'nothing']:
+                snap = getattr(self, 'MAG_lockin').snapshot(update=update)['parameters']
+                mag_sensitivity = snap['sensitivity']['value']
+                #amp = snap['amplitude']['value'] * self.ureg(snap['amplitude']['unit'])
+                #: The factor of 10 here is because SR830 output gain is 10/sensitivity
+                prefactor /=  self.Q_(10 / mag_sensitivity)
+            elif ch == 'CAP':
+                snap = getattr(self, 'CAP_lockin').snapshot(update=update)['parameters']
+                cap_sensitivity = snap['sensitivity']['value']
+                #: The factor of 10 here is because SR830 output gain is 10/sensitivity
+                prefactor /= (self.Q_(self.scanner.metadata['cantilever']['calibration']) * 10 / cap_sensitivity)
+            prefactor /= measurement['channels'][ch]['gain']
+            prefactors.update({ch: prefactor})
+        return prefactors
 
     def iv_mod_tek(self, ivm_params: Dict[str, Any]) -> Tuple[Dict[str, Any]]:
         """Measures IV characteristic at different mod coil voltages.
@@ -155,21 +156,21 @@ class SamplerMicroscope(Microscope):
         ivmY = np.full_like(mod_grid, np.nan, dtype=np.double)
         
         #: Set AFG output channels
-        self.afg.voltage_low1('0V')
-        self.afg.voltage_high1('{}V'.format(bias_range[0]))
+        self.afg1.voltage_low1('0V')
+        self.afg1.voltage_high1('{}V'.format(bias_range[0]))
 
-        self.afg.voltage_low2('0V')
-        self.afg.voltage_high2('{}V'.format(mod_range[0]))
-        self.afg.voltage_offset2('0V')
+        self.afg1.voltage_low2('0V')
+        self.afg1.voltage_high2('{}V'.format(mod_range[0]))
+        self.afg1.voltage_offset2('0V')
 
         #: Set pulse parameters
         for ch in [1, 2]:
             p = ivm_params['afg']['ch{}'.format(ch)]
-            getattr(self.afg, 'pulse_period{}'.format(ch))('{}us'.format(self.Q_(p['period']).to('us').magnitude))
-            getattr(self.afg, 'pulse_width{}'.format(ch))('{}us'.format(self.Q_(p['width']).to('us').magnitude))
-            getattr(self.afg, 'pulse_trans_lead{}'.format(ch))('{}us'.format(self.Q_(p['lead']).to('us').magnitude))
-            getattr(self.afg, 'pulse_trans_trail{}'.format(ch))('{}us'.format(self.Q_(p['trail']).to('us').magnitude))
-            getattr(self.afg, 'pulse_delay{}'.format(ch))('{}us'.format(self.Q_(p['delay']).to('us').magnitude))
+            getattr(self.afg1, 'pulse_period{}'.format(ch))('{}us'.format(self.Q_(p['period']).to('us').magnitude))
+            getattr(self.afg1, 'pulse_width{}'.format(ch))('{}us'.format(self.Q_(p['width']).to('us').magnitude))
+            getattr(self.afg1, 'pulse_trans_lead{}'.format(ch))('{}us'.format(self.Q_(p['lead']).to('us').magnitude))
+            getattr(self.afg1, 'pulse_trans_trail{}'.format(ch))('{}us'.format(self.Q_(p['trail']).to('us').magnitude))
+            getattr(self.afg1, 'pulse_delay{}'.format(ch))('{}us'.format(self.Q_(p['delay']).to('us').magnitude))
 
         #: Get instrument metadata and prefactors
         lockin_snap = self.MAG_lockin.snapshot(update=True)
@@ -178,7 +179,7 @@ class SamplerMicroscope(Microscope):
             lockin_meta.update({param: lockin_snap['parameters'][param]})
         meta_dict.update({'metadata':
                             {'lockin': lockin_meta,
-                             'afg': self.afg.snapshot(update=True),
+                             'afg': self.afg1.snapshot(update=True),
                              'ivm_params': ivm_params}
                         })
         prefactor = 1 / (10 / lockin_snap['parameters']['sensitivity']['value'])
@@ -194,10 +195,10 @@ class SamplerMicroscope(Microscope):
         try:
             for j in range(len(mod_vec)):
                 dataX, dataY, dataX_avg, dataY_avg = (np.zeros(len(mod_vec)), ) * 4
-                self.afg.voltage_offset2('{}V'.format(mod_vec[j]))
+                self.afg1.voltage_offset2('{}V'.format(mod_vec[j]))
                 for _ in range(ivm_params['navg']):
                     for i in range(len(bias_vec)):
-                        self.afg.voltage_high1('{}V'.format(bias_vec[i]))
+                        self.afg1.voltage_high1('{}V'.format(bias_vec[i]))
                         time.sleep(delay)
                         dataX[i] = self.MAG_lockin.X()
                         dataY[i] = self.MAG_lockin.Y()
@@ -207,7 +208,7 @@ class SamplerMicroscope(Microscope):
                 dataY_avg /= ivm_params['navg']
                 ivmX[:,j] = prefactor * dataX_avg
                 ivmY[:,j] = prefactor * dataY_avg
-                clear_artists(ax)
+                utils.clear_artists(ax)
                 ax.plot(bias_vec, prefactor * dataX_avg, 'bo-')
                 plt.tight_layout()
                 fig.canvas.draw()
@@ -302,13 +303,13 @@ class SamplerMicroscope(Microscope):
         #: Set AFG pulse parameters
         for ch in [1, 2]:
             p = ivm_params['afg']['ch{}'.format(ch)]
-            getattr(self.afg, 'voltage_high{}'.format(ch))('{}V'.format(self.Q_(p['high']).to('V').magnitude))
-            getattr(self.afg, 'voltage_low{}'.format(ch))('{}V'.format(self.Q_(p['low']).to('V').magnitude))
-            getattr(self.afg, 'pulse_period{}'.format(ch))('{}us'.format(self.Q_(p['period']).to('us').magnitude))
-            getattr(self.afg, 'pulse_width{}'.format(ch))('{}us'.format(self.Q_(p['width']).to('us').magnitude))
-            getattr(self.afg, 'pulse_trans_lead{}'.format(ch))('{}us'.format(self.Q_(p['lead']).to('us').magnitude))
-            getattr(self.afg, 'pulse_trans_trail{}'.format(ch))('{}us'.format(self.Q_(p['trail']).to('us').magnitude))
-            getattr(self.afg, 'pulse_delay{}'.format(ch))('{}us'.format(self.Q_(p['delay']).to('us').magnitude))
+            getattr(self.afg1, 'voltage_high{}'.format(ch))('{}V'.format(self.Q_(p['high']).to('V').magnitude))
+            getattr(self.afg1, 'voltage_low{}'.format(ch))('{}V'.format(self.Q_(p['low']).to('V').magnitude))
+            getattr(self.afg1, 'pulse_period{}'.format(ch))('{}us'.format(self.Q_(p['period']).to('us').magnitude))
+            getattr(self.afg1, 'pulse_width{}'.format(ch))('{}us'.format(self.Q_(p['width']).to('us').magnitude))
+            getattr(self.afg1, 'pulse_trans_lead{}'.format(ch))('{}us'.format(self.Q_(p['lead']).to('us').magnitude))
+            getattr(self.afg1, 'pulse_trans_trail{}'.format(ch))('{}us'.format(self.Q_(p['trail']).to('us').magnitude))
+            getattr(self.afg1, 'pulse_delay{}'.format(ch))('{}us'.format(self.Q_(p['delay']).to('us').magnitude))
 
         #: Set delay generator parameters
         p = ivm_params['dg']
@@ -330,7 +331,7 @@ class SamplerMicroscope(Microscope):
             lockin_meta.update({param: lockin_snap['parameters'][param]})
         meta_dict.update({'metadata':
                             {'lockin': lockin_meta,
-                             'afg': self.afg.snapshot(update=True),
+                             'afg': self.afg1.snapshot(update=True),
                              'dg': self.dg.snapshot(update=True),
                              'ivm_params': ivm_params}
                         })
@@ -381,12 +382,12 @@ class SamplerMicroscope(Microscope):
                     avg_start_pt = int(nsamples * tavg // (tsettle + tavg))
                     vmod_vec[j] = np.mean(vmod_time[avg_start_pt:])
 
-                    clear_artists(axM)
+                    utils.clear_artists(axM)
                     axM.plot(delay_vec, vmod_vec, 'bo-')
                     plt.tight_layout()
                     figM.canvas.draw()
 
-                    clear_artists(axT)
+                    utils.clear_artists(axT)
                     axT.plot(vmod_time, 'bo')
                     plt.tight_layout()
                     figT.canvas.draw()
@@ -422,3 +423,148 @@ class SamplerMicroscope(Microscope):
             log.info('Data saved to {}.'.format(loc))
 
         return data_dict, meta_dict
+
+    def scan_surface(self, scan_params: Dict[str, Any]) -> None:
+        """
+        Scan the current surface while acquiring data in the channels defined in
+        measurement configuration file (e.g. MAG, SUSCX, SUSCY, CAP).
+
+        Args:
+            scan_params: Dict of scan parameters as defined
+                in measuremnt configuration file.
+
+        Returns:
+            Tuple[qcodes.DataSet, plots.ScanPlot]: data, plot
+                qcodes DataSet containing acquired arrays and metdata,
+                and ScanPlot instance populated with acquired data.
+        """
+        if not self.atto.surface_is_current:
+            raise RuntimeError('Surface is not current. Aborting scan.')
+        surface_type = scan_params['surface_type'].lower()
+        if surface_type not in ['plane', 'surface']:
+            raise ValueError('surface_type must be "plane" or "surface".')
+
+        old_pos = self.scanner.position()
+        
+        daq_config = self.config['instruments']['daq']
+        ao_channels = daq_config['channels']['analog_outputs']
+        ai_channels = daq_config['channels']['analog_inputs']
+        meas_channels = scan_params['channels']
+        channels = {}
+        for ch in meas_channels:
+            channels.update({ch: ai_channels[ch]})
+        nchannels = len(channels.keys())
+
+        daq_name = daq_config['name']
+        #: DAQ AI sampling rate is divided amongst all active AI channels
+        daq_rate = self.Q_(daq_config['rate']).to('Hz').magnitude / nchannels
+        
+        fast_ax = scan_params['fast_ax'].lower()
+        slow_ax = 'x' if fast_ax == 'y' else 'y'
+        
+        pix_per_line = scan_params['scan_size'][fast_ax]
+        line_duration = pix_per_line * self.ureg('pixels') / self.Q_(scan_params['scan_rate'])
+        pts_per_line = int(daq_rate * line_duration.to('s').magnitude)
+        
+        height = self.Q_(scan_params['height']).to('V').magnitude
+        
+        scan_vectors = utils.make_scan_vectors(scan_params, self.ureg)
+        #scan_grids = utils.make_scan_grids(scan_vectors, slow_ax, fast_ax,
+        #                                   pts_per_line, plane, height)
+        plane = self.scanner.metadata['plane']
+        if surface_type == 'plane':
+            scan_grids = utils.make_scan_surface(surface_type, scan_vectors, slow_ax, fast_ax,
+                                                pts_per_line, plane, height)
+        else:
+            scan_grids = utils.make_scan_surface(surface_type, scan_vectors, slow_ax, fast_ax,
+                                                pts_per_line, plane, height, interpolator=self.scanner.surface_interp)
+        utils.validate_scan_params(self.scanner.metadata, scan_params,
+                                   scan_grids, self.temp, self.ureg, log)
+        self.scanner.goto([scan_grids[axis][0][0] for axis in ['x', 'y', 'z']])
+        self.set_lockins(scan_params)
+        #: get channel prefactors in pint Quantity form
+        prefactors = self.get_prefactors(scan_params)
+        #: get channel prefactors in string form so they can be saved in metadata
+        prefactor_strs = {}
+        for ch, prefac in prefactors.items():
+            unit = scan_params['channels'][ch]['unit']
+            pre = prefac.to('{}/V'.format(unit))
+            prefactor_strs.update({ch: '{} {}'.format(pre.magnitude, pre.units)})
+        ai_task = nidaqmx.Task('scan_plane_ai_task')
+        self.remove_component('daq_ai')
+        if hasattr(self, 'daq_ai'):
+            #self.daq_ai.clear_instances()
+            self.daq_ai.close()
+        self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, daq_rate, channels, ai_task,
+                                      samples_to_read=pts_per_line, target_points=pix_per_line,
+                                      #: Very important to synchronize AOs and AIs
+                                      clock_src='ao/SampleClock')
+        self.add_component(self.daq_ai)
+        slow_ax_position = getattr(self.scanner, 'position_{}'.format(slow_ax))
+        slow_ax_start = scan_vectors[slow_ax][0]
+        slow_ax_end = scan_vectors[slow_ax][-1]
+        slow_ax_step = scan_vectors[slow_ax][1] - scan_vectors[slow_ax][0]
+        #: There is probably a counter built in to qc.Loop, but I couldn't find it
+        loop_counter = utils.Counter()
+        scan_plot = ScanPlot(scan_params, self.ureg)
+        loop = qc.Loop(slow_ax_position.sweep(start=slow_ax_start,
+                                              stop=slow_ax_end,
+                                              step=slow_ax_step), delay=0.1
+        ).each(
+            #: Create AO task and queue data to be written to AOs
+            qc.Task(self.scanner.scan_line, scan_grids, ao_channels, daq_rate, loop_counter),
+            #: Start AI task; acquisition won't start until AO task is started
+            qc.Task(ai_task.start),
+            #: Start AO task
+            qc.Task(self.scanner.control_ao_task, 'start'),
+            #: Acquire voltage from all active AI channels
+            self.daq_ai.voltage,
+            qc.Task(ai_task.wait_until_done),
+            qc.Task(self.scanner.control_ao_task, 'wait_until_done'),
+            qc.Task(ai_task.stop),
+            #: Stop and close AO task so that AOs can be used for goto
+            qc.Task(self.scanner.control_ao_task, 'stop'),
+            qc.Task(self.scanner.control_ao_task, 'close'),
+            qc.Task(self.scanner.goto_start_of_next_line, scan_grids, loop_counter),
+            #: Update and save plot
+            qc.Task(scan_plot.update, qc.loops.active_data_set, loop_counter),
+            qc.Task(scan_plot.save),
+            qc.Task(loop_counter.advance)
+        ).then(
+            qc.Task(ai_task.stop),
+            qc.Task(ai_task.close),
+            qc.Task(self.daq_ai.close),
+            #qc.Task(self.daq_ai.clear_instances),
+            qc.Task(self.scanner.goto, old_pos),
+            #qc.Task(self.CAP_lockin.amplitude, 0.004),
+            #qc.Task(self.SUSC_lockin.amplitude, 0.004)
+        )
+        #: loop.metadata will be saved in DataSet
+        loop.metadata.update(scan_params)
+        loop.metadata.update({'prefactors': prefactor_strs})
+        for idx, ch in enumerate(meas_channels):
+            loop.metadata['channels'][ch].update({'idx': idx})
+        data = loop.get_data_set(name=scan_params['fname'])
+        #: Run the loop
+        try:
+            loop.run()
+            log.info('Scan completed. DataSet saved to {}.'.format(data.location))
+        #: If loop is aborted by user:
+        except KeyboardInterrupt:
+            log.warning('Scan interrupted by user. Going to [0, 0, 0] V.')
+            #: Stop 'scan_plane_ai_task' so that we can read our current position
+            ai_task.stop()
+            ai_task.close()
+            #: If there's an active AO task, close it so that we can use goto
+            try:
+                self.scanner.control_ao_task('stop')
+                self.scanner.control_ao_task('close')
+            except:
+                pass
+            self.scanner.goto([0, 0, 0])
+            #self.CAP_lockin.amplitude(0.004)
+            #self.SUSC_lockin.amplitude(0.004)
+            log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
+        self.remove_component('daq_ai')
+        utils.scan_to_mat_file(data, real_units=True, interpolator=self.scanner.surface_interp)
+        #return data, scan_plot

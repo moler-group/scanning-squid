@@ -144,8 +144,13 @@ class SusceptometerMicroscope(Microscope):
         pix_per_line = scan_params['scan_size'][fast_ax]
         line_duration = pix_per_line * self.ureg('pixels') / self.Q_(scan_params['scan_rate'])
         pts_per_line = int(daq_rate * line_duration.to('s').magnitude)
-        
         height = self.Q_(scan_params['height']).to('V').magnitude
+        
+        if 1 / self.Q_(scan_params['scan_rate']).to('pixels/s').magnitude < self.SUSC_lockin.time_constant():
+            warning = 'Averaging time per pixel is less than the SUSC_lockin time constant. '
+            warning += 'For reliable susceptibility data, averaging time per pixel should be '
+            warning += 'significantly greater than the SUSC_lockin time constant.'
+            log.warning(warning)
         
         scan_vectors = utils.make_scan_vectors(scan_params, self.ureg)
         #scan_grids = utils.make_scan_grids(scan_vectors, slow_ax, fast_ax,
@@ -157,8 +162,8 @@ class SusceptometerMicroscope(Microscope):
         else:
             scan_grids = utils.make_scan_surface(surface_type, scan_vectors, slow_ax, fast_ax,
                                                 pts_per_line, plane, height, interpolator=self.scanner.surface_interp)
-        utils.validate_scan_params(self.scanner.metadata, scan_params,
-                                   scan_grids, self.temp, self.ureg, log)
+        utils.validate_scan_params(self.scanner.metadata, scan_params, scan_grids,
+                                    pix_per_line, pts_per_line, self.temp, self.ureg, log)
         self.scanner.goto([scan_grids[axis][0][0] for axis in ['x', 'y', 'z']])
         self.set_lockins(scan_params)
         #: get channel prefactors in pint Quantity form
@@ -230,21 +235,21 @@ class SusceptometerMicroscope(Microscope):
             log.info('Scan completed. DataSet saved to {}.'.format(data.location))
         #: If loop is aborted by user:
         except KeyboardInterrupt:
-            log.warning('Scan interrupted by user. Going to [0, 0, 0] V.')
-            #: Stop 'scan_plane_ai_task' so that we can read our current position
-            ai_task.stop()
-            ai_task.close()
-            #: If there's an active AO task, close it so that we can use goto
+            log.warning('Scan aborted by user. Going to [0,0,0] V. DataSet saved to {}.'.format(data.location))
+        finally:
             try:
+                #: Stop 'scan_plane_ai_task' so that we can read our current position
+                ai_task.stop()
+                ai_task.close()
+                #: If there's an active AO task, close it so that we can use goto
                 self.scanner.control_ao_task('stop')
                 self.scanner.control_ao_task('close')
+                self.remove_component('daq_ai')
             except:
                 pass
-            self.scanner.goto([0, 0, 0])
-            #self.CAP_lockin.amplitude(0.004)
-            #self.SUSC_lockin.amplitude(0.004)
-            log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
-        self.remove_component('daq_ai')
+        self.scanner.goto([0, 0, 0])
+        #self.CAP_lockin.amplitude(0.004)
+        #self.SUSC_lockin.amplitude(0.004)
         utils.scan_to_mat_file(data, real_units=True, interpolator=self.scanner.surface_interp)
         #return data, scan_plot
         
