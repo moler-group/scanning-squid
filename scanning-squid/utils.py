@@ -183,14 +183,15 @@ def make_xy_grids(scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
     return {'x': X, 'y': Y}
 
 def validate_scan_params(scanner_config: Dict[str, Any], scan_params: Dict[str, Any],
-                         scan_grids: Dict[str, Any], temp: str, ureg: Any,
-                         logger: Any) -> None:
+                         scan_grids: Dict[str, Any], pix_per_line: int, pts_per_line: int,
+                         temp: str, ureg: Any, logger: Any) -> None:
     """Checks whether requested scan parameters are consistent with microscope limits.
-
     Args:
         scanner_config: Scanner configuration dict as defined in microscope configuration file.
         scan_params: Scan parameter dict as defined in measurements configuration file.
         scan_grids: Dict of x, y, z scan grids (from make_scan_grids).
+        pix_per_line: Number of pixels per line of the scan.
+        pts_per_line: Number of points per line sampled by the DAQ (to be averaged down to pix_per_line)
         temp: Temperature mode of the microscope ('LT' or 'RT').
         ureg: pint UnitRegistry, manages physical units.
         logger: Used to log the fact that the scan was validated.
@@ -203,6 +204,11 @@ def validate_scan_params(scanner_config: Dict[str, Any], scan_params: Dict[str, 
         if np.max(scan_grids[ax]) < min(limits) or np.max(scan_grids[ax] > max(limits)):
             err = 'Requested {} axis position is outside of allowed range: {} V.'
             raise ValueError(err.format(ax, limits))        
+    if pts_per_line % pix_per_line != 0:
+        err = 'Current per-channel DAQ rate, line time, and number of channels '
+        err += 'are incompatible with requested number of fast axis pixels. '
+        err += 'Please adjust your scan parameters and/or DAQ rate.'
+        raise ValueError(err)
     logger.info('Scan parameters are valid. Starting scan.')
 
 def to_real_units(data_set: Any, ureg: Any=None) -> Any:
