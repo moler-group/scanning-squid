@@ -1,6 +1,6 @@
 # Scanning SQUID measurement and control
 ### Moler Group, Stanford University
-# Example edit from the cloud
+
 scanning-squid is an instrument control and data acquisition package for scanning SQUID (Superconducting QUantum Interference Device) microscopy. It is based on the [QCoDeS](http://qcodes.github.io/Qcodes/) framework, and is designed to run in either a standalone [Jupyter Notebook](http://jupyter.org/index.html), or in [Jupyter Lab](http://jupyterlab.readthedocs.io/en/stable/).
 
 ### Project homepage: [scanning-squid.readthedocs.io](https://scanning-squid.readthedocs.io/en/latest/).
