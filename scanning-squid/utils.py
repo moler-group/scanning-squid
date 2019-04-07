@@ -200,7 +200,7 @@ def validate_scan_params(scanner_config: Dict[str, Any], scan_params: Dict[str, 
     unit = scanner_config['voltage_limits']['unit']
     for ax in ['x', 'y', 'z']:
         limits = [(lim * ureg(unit)).to('V').magnitude for lim in voltage_limits[ax]]
-        if np.max(scan_grids[ax]) < min(limits) or np.max(scan_grids[ax] > max(limits)):
+        if np.min(scan_grids[ax]) < min(limits) or np.max(scan_grids[ax]) > max(limits):
             err = 'Requested {} axis position is outside of allowed range: {} V.'
             raise ValueError(err.format(ax, limits))        
     if pts_per_line % pix_per_line != 0:
