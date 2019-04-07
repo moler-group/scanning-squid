@@ -97,7 +97,7 @@ Approaching the Sample
 
 The initial approach of the sample is done by iteratively performing capacitive touchdowns and :meth:`instruments.atto.AttocubeController.step` towards the sample in the z direction until a touchdown is detected. The basic flow of :meth:`microscope.microscope.Microscope.approach` goes as follows:
 
-    - Run :meth:`microscope.microscope.Microscope.td_cap` to see if the SQUID is alread close to the sample.
+    - Run :meth:`microscope.microscope.Microscope.td_cap` to see if the SQUID is already close to the sample.
     - If no touchdown is detected, while the :meth:`microscope.microscope.Microscope.td_cap` loop is not broken:
 
         - Perform the requested number of z Attocube steps towards the sample
