@@ -5,7 +5,7 @@ Getting Started
 
 `scanning-squid <https://github.com/moler-group/scanning-squid>`_ is an instrument control and data acquisition package for scanning SQUID (Superconducting QUantum Interference Device) microscopy. It is based on the `QCoDeS <http://qcodes.github.io/Qcodes/>`_ framework, and is designed to run in either a standalone `Jupyter Notebook <http://jupyter.org/index.html>`_, or in `Jupyter Lab <http://jupyterlab.readthedocs.io/en/stable/>`_.
 
-**Contact: Logan Bishop-Van Horn (lbvh [at] stanford [dot] edu).**
+**Contact: Logan Bishop-Van Horn (logan.bvh [at] gmail [dot] com).**
 
 Installation
 ------------
