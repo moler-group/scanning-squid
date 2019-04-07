@@ -10,7 +10,7 @@ Scanning SQUID measurement & control
 
 To install scanning-squid, see :ref:`getting-started`.
 
-Contact: Logan Bishop-Van Horn (lbvh [at] stanford [dot] edu).
+Contact: Logan Bishop-Van Horn (logan.bvh [at] gmail [dot] com).
 
    .. image:: https://readthedocs.org/projects/scanning-squid/badge/?version=latest
       :target: https://scanning-squid.readthedocs.io/en/latest/?badge=latest
