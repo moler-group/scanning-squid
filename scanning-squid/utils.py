@@ -46,8 +46,10 @@ class Counter(object):
 
 def load_json_ordered(filename: str) -> OrderedDict:
     """Loads json file as an ordered dict.
+    
     Args:
         filename: Path to json file to be loaded.
+        
     Returns:
         OrderedDict: odict
             OrderedDict containing data from json file.
@@ -185,6 +187,7 @@ def validate_scan_params(scanner_config: Dict[str, Any], scan_params: Dict[str, 
                          scan_grids: Dict[str, Any], pix_per_line: int, pts_per_line: int,
                          temp: str, ureg: Any, logger: Any) -> None:
     """Checks whether requested scan parameters are consistent with microscope limits.
+    
     Args:
         scanner_config: Scanner configuration dict as defined in microscope configuration file.
         scan_params: Scan parameter dict as defined in measurements configuration file.
@@ -194,6 +197,9 @@ def validate_scan_params(scanner_config: Dict[str, Any], scan_params: Dict[str, 
         temp: Temperature mode of the microscope ('LT' or 'RT').
         ureg: pint UnitRegistry, manages physical units.
         logger: Used to log the fact that the scan was validated.
+        
+    Returns:
+        None
     """
     Q_ = ureg.Quantity
     voltage_limits = scanner_config['voltage_limits'][temp]
