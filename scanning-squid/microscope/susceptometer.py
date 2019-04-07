@@ -104,6 +104,7 @@ class SusceptometerMicroscope(Microscope):
         """
         Scan the current surface while acquiring data in the channels defined in
         measurement configuration file (e.g. MAG, SUSCX, SUSCY, CAP).
+        
         Args:
             scan_params: Dict of scan parameters as defined
                 in measuremnt configuration file.
