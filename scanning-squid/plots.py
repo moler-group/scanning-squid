@@ -59,7 +59,7 @@ class ScanPlot(object):
         cols = N if N < MAXN_COLS else MAXN_COLS
         plot_rows = int(np.ceil(N / cols))
         rows = 3 * plot_rows
-        self.fig, self.ax = plt.subplots(rows, cols, figsize=(10,4.5 * plot_rows), tight_layout=True,
+        self.fig, self.ax = plt.subplots(rows, cols, figsize=(10,4.5 * plot_rows),
                                          gridspec_kw={"height_ratios":list((0.075, 1, 0.5)*plot_rows)})
         self.fig.patch.set_alpha(1)
         self.plots = {'colorbars': {}, 'images': {}, 'lines': {}}
@@ -92,6 +92,8 @@ class ScanPlot(object):
             self.plots['colorbars'][ch].update({'cbar': cbar})
         for ax, ch in zip(self.ax[0], self.channels.keys()):
             ax.set_title(self.channels[ch]['label'])
+        self.fig.canvas.draw()
+        self.fig.tight_layout()
             
     def update(self, data_set: Any, loop_counter: Any, num_lines: Optional[int]=5,
                offline: Optional[bool]=False) -> None:
@@ -123,10 +125,10 @@ class ScanPlot(object):
             self.plots['images'][ch]['ax'].clear()
             self.plots['images'][ch]['quad'] = self.plots['images'][ch]['ax'].pcolormesh(
                 self.X, self.Y, np.ma.masked_invalid(data_ch), cmap='Greys', norm=norm)
+            self.plots['colorbars'][ch]['cax'].clear()
             self.plots['colorbars'][ch]['cbar'] = self.fig.colorbar(self.plots['images'][ch]['quad'],
                                                                     cax=self.plots['colorbars'][ch]['cax'],
                                                                     orientation='horizontal')
-            self.plots['colorbars'][ch]['cax'].clear()
             self.plots['colorbars'][ch]['cbar'].locator = ticker.MaxNLocator(nbins=3)
             self.plots['colorbars'][ch]['cbar'].update_ticks()
             self.plots['colorbars'][ch]['cbar'].set_label(r'{}'.format(self.channels[ch]['unit_latex']))
@@ -141,6 +143,7 @@ class ScanPlot(object):
             self.plots['lines'][ch].grid(True)
             self.plots['lines'][ch].set_aspect('auto')
             self.plots['lines'][ch].set_xlabel('{} position [V]'.format(self.fast_ax))
+            self.plots['lines'][ch].set_ylabel(r'{}'.format(self.channels[ch]['unit_latex']))
             xdata = self.scan_vectors[self.fast_ax]
             if line < num_lines:
                 for l in range(line+1):
@@ -207,7 +210,7 @@ class TDCPlot(object):
         self.channels = tdc_params['channels']
         self.ureg = ureg
         self.Q_ = ureg.Quantity
-        self.fig, self.ax = plt.subplots(1,len(self.channels), figsize=(3*len(self.channels),3), tight_layout=True)
+        self.fig, self.ax = plt.subplots(1,len(self.channels), figsize=(3*len(self.channels),3))
         self.fig.patch.set_alpha(1)
         self.init_empty()
 
@@ -225,6 +228,7 @@ class TDCPlot(object):
             self.ax[i].set_ylabel(r'{} [{}]'.format(self.channels[ch]['label'], self.channels[ch]['unit_latex']))
             self.ax[i].set_title(self.channels[ch]['label'])
         self.fig.canvas.draw()
+        self.fig.tight_layout()
 
     def update(self, data_set: Any) -> None:
         """Update plot with data from data_set.
