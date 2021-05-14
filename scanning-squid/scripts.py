@@ -38,9 +38,9 @@ def fft_noise(dev_name, channel, unit, prefactor, samplerate, sampleduration, na
     prefactor_str.update({list(channel.keys())[0]: '{} {}'.format(prefactor.magnitude, prefactor.units)})
     mdict = {
         'metadata': {
-            'channel': channel,
-            'unit': unit,
-            'prefactor': prefactor_str,
+            #'channel': channel,
+            #'unit': unit,
+            #'prefactor': prefactor_str,
             'samplerate': samplerate,
             'sampleduration': sampleduration,
             'navg': navg,
@@ -110,7 +110,8 @@ def time_trace(dev_name, channels, units, prefactors, samplerate, sampleduration
         for inst in DAQAnalogInputs.instances():
             inst.close()
         daq_ai = DAQAnalogInputs('daq_ai', dev_name, samplerate, channels, ai_task,
-                                 samples_to_read=nsamples, timeout=sampleduration+10)
+                                 samples_to_read=nsamples, timeout=sampleduration+10,
+                                 min_val=-10, max_val=10)
         data_v = daq_ai.voltage()
         daq_ai.close()
     for i, ch in enumerate(channels):

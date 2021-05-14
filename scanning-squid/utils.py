@@ -24,7 +24,9 @@ import os
 import numpy as np
 from typing import Dict, List, Optional, Sequence, Any, Union, Tuple, Callable
 import qcodes as qc
-from qcodes.instrument.parameter import ArrayParameter
+from qcodes.instrument.parameter import ArrayParameter, Parameter
+from qcodes.instrument.base import Instrument
+import qcodes.utils.validators as vals
 from scipy import io
 from collections import OrderedDict
 import json
@@ -33,6 +35,24 @@ import json
 with open('squid_units.txt', 'w') as f:
     f.write('Phi0 = 2.067833831e-15 * Wb\n')
     f.write('Ohm = ohm\n')
+
+class DummyBlock(Instrument):
+    """
+    IPZ 06/24/19: Dummy instrument with block index parameter for meas_ring.
+    """
+    def __init__(self:str, name:str, **kwargs):
+        """
+        Args:
+            name: Name of instrument (usually 'block').
+        """
+        super().__init__(name, **kwargs)
+
+        self.add_parameter('current_block',
+            unit='',
+            label='current block',
+            vals=vals.Numbers(0, 1000),
+            get_cmd=None,
+            set_cmd=None)
 
 class Counter(object):
     """Simple counter used to keep track of progress in a Loop.
@@ -286,10 +306,85 @@ def td_to_arrays(td_data: Any, ureg: Optional[Any]=None, real_units: Optional[bo
     meta = td_data.metadata['loop']['metadata']
     h = [Q_(val).to('V').magnitude for val in meta['range']]
     dV = Q_(meta['dV']).to('V').magnitude
-    heights = np.linspace(h[0], h[1], int((h[1]-h[0])/dV))
+    heights = np.linspace(h[0], h[1], int((h[1]-h[0])/dV) + 1)
     arrays = {'height': heights * ureg('V')}
     for ch, info in meta['channels'].items():
         array = td_data.daq_ai_voltage[:,info['idx'],0] * ureg('V')
+        if real_units:
+            pre = meta['prefactors'][ch]
+            arrays.update({ch: (Q_(pre) * array).to(info['unit'])})
+        else:
+            arrays.update({ch: array})
+    return arrays
+
+
+def gate_to_arrays(gate_data: Any, ureg: Optional[Any]=None, real_units: Optional[bool]=True) -> Dict[str, Any]:
+    """Extracts gated IV data from DataSet and converts to requested units.
+
+    Args:
+        gate_data: qcodes DataSet created by Microscope.td_cap
+        ureg: pint UnitRegistry, manages physical units.
+        real_units: If True, converts data from DAQ voltage into
+            units specified in measurement configuration file.
+    Returns:
+        Dict: arrays
+            Dict of measured data in requested units.
+    """
+    if ureg is None:
+        from pint import UnitRegistry
+        ureg = UnitRegistry()
+        #: Tell the UnitRegistry what a Phi0 is, and that ohm and Ohm are the same thing.
+        with open('squid_units.txt', 'w') as f:
+            f.write('Phi0 = 2.067833831e-15 * Wb\n')
+            f.write('Ohm = ohm\n')
+        ureg.load_definitions('./squid_units.txt')
+    Q_ = ureg.Quantity
+    meta = gate_data.metadata['loop']['metadata']
+    G = [Q_(val).to('V').magnitude for val in meta['range']]
+    
+    dV = Q_(meta['dV']).to('V').magnitude
+    G_array = np.linspace(G[0], G[1], int((G[1]-G[0])/dV) + 1)
+    arrays = {'gate': G_array * ureg('V')}
+    for ch, info in meta['channels'].items():
+        array = gate_data.daq_ai_voltage[:,info['idx'],0] * ureg('V')
+        if real_units:
+            pre = meta['prefactors'][ch]
+            arrays.update({ch: (Q_(pre) * array).to(info['unit'])})
+        else:
+            arrays.update({ch: array})
+    return arrays
+
+def meas_to_arrays(meas_data: Any, co_freq:Union[int,float],
+                   scans_per_period:int, ureg: Optional[Any]=None, real_units: Optional[bool]=True) -> Dict[str, Any]:
+    """Extracts ring measurement data from DataSet and converts to requested units.
+    Args:
+        meas_data: qcodes DataSet created by Microscope.meas_ring
+        ureg: pint UnitRegistry, manages physical units.
+        real_units: If True, converts z-axis data from DAQ voltage into
+            units specified in measurement configuration file.
+    Returns:
+        Dict: arrays
+            Dict of block number measured data in requested units.
+    """
+    if ureg is None:
+        from pint import UnitRegistry
+        ureg = UnitRegistry()
+        #: Tell the UnitRegistry what a Phi0 is, and that ohm and Ohm are the same thing.
+        with open('squid_units.txt', 'w') as f:
+            f.write('Phi0 = 2.067833831e-15 * Wb\n')
+            f.write('Ohm = ohm\n')
+        ureg.load_definitions('./squid_units.txt')
+    Q_ = ureg.Quantity
+    meta = meas_data.metadata['loop']['metadata']
+    time = np.linspace(0, 1 / co_freq, scans_per_period)
+    #: Make the nominal FC output axis
+    r_lead = Q_(meta['channels']['LIA']['r_lead']).to('Ohm').magnitude
+    LIA_amp = Q_(meta['channels']['LIA']['lockin']['amplitude']).to('V').magnitude
+    ifc_full = LIA_amp / r_lead * np.sqrt(2) * np.sin(2 * np.pi * time * co_freq)
+    ifc = np.mean(np.reshape(ifc_full, newshape=(scans_per_period, -1)), axis=1)
+    arrays = {'nominal_ifc': ifc * ureg('A')}
+    for ch, info in meta['channels'].items():
+        array = meas_data.daq_ai_voltage[:,info['idx'],:] * ureg('V')
         if real_units:
             pre = meta['prefactors'][ch]
             arrays.update({ch: (Q_(pre) * array).to(info['unit'])})
@@ -373,6 +468,68 @@ def td_to_mat_file(td_data: Any, real_units: Optional[bool]=True, fname: Optiona
         fname = meta['fname']
     fpath = td_data.location + '/'
     io.savemat(next_file_name(fpath + fname, 'mat'), mdict)
+
+def meas_to_mat_file(meas_data: Any, co_freq:Union[int,float], 
+                   scans_per_period:int, real_units: Optional[bool]=True, fname: Optional[str]=None) -> None:
+    """Export DataSet created by microscope.meas_ring to .mat file for analysis.
+    Args:
+        meas_data: qcodes DataSet created by Microscope.meas_cap
+        real_units: If True, converts data from DAQ voltage into
+            units specified in measurement configuration file.
+        fname: File name (without extension) for resulting .mat file.
+            If None, uses the file name defined in measurement configuration file.
+    """
+    from pint import UnitRegistry
+    ureg = UnitRegistry()
+    ureg.load_definitions('./squid_units.txt')
+    Q_ = ureg.Quantity
+    meta = meas_data.metadata['loop']['metadata']
+    arrays = meas_to_arrays(meas_data, co_freq, scans_per_period, ureg=ureg, real_units=real_units)
+    mdict = {}
+    for name, arr in arrays.items():
+        if name is not 'nominal_ifc':
+            unit = meta['channels'][name]['unit'] if real_units else 'V'
+            mdict.update({name: {'array': arr.to(unit).magnitude, 'unit': unit}})
+    mdict.update({'nominal_ifc': {'array': arrays['nominal_ifc'].to('A').magnitude, 'unit': 'A'}})
+    mdict.update({
+        'prefactors': meta['prefactors'],
+        'location': meas_data.location
+        })
+    if fname is None:
+        fname = meta['fname']
+    fpath = meas_data.location + '/'
+    io.savemat(next_file_name(fpath + fname, 'mat'), mdict)
+
+def gate_to_mat_file(gate_data: Any, real_units: Optional[bool]=True, fname: Optional[str]=None) -> None:
+    """Export DataSet created by microscope.td_cap to .mat file for analysis.
+
+    Args:
+        R_data: qcodes DataSet created by Microscope.Four_prob
+        real_units: If True, converts data from DAQ voltage into
+            units specified in measurement configuration file.
+        fname: File name (without extension) for resulting .mat file.
+            If None, uses the file name defined in measurement configuration file.
+    """
+    from pint import UnitRegistry
+    ureg = UnitRegistry()
+    ureg.load_definitions('./squid_units.txt')
+    Q_ = ureg.Quantity
+    meta = gate_data.metadata['loop']['metadata']
+    arrays = gate_to_arrays(gate_data, ureg=ureg, real_units=real_units)
+    mdict = {}
+    for name, arr in arrays.items():
+        if name is not 'gate':
+            unit = meta['channels'][name]['unit'] if real_units else 'V'
+            mdict.update({name: {'array': arr.to(unit).magnitude, 'unit': unit}})
+    mdict.update({'gate': {'array': arrays['gate'].to('V').magnitude, 'unit': 'V'}})
+    mdict.update({
+        'prefactors': meta['prefactors'],
+        })
+    if fname is None:
+        fname = 'gated_IV'
+    fpath = gate_data.location + '/'
+    io.savemat(next_file_name(fpath + fname, 'mat'), mdict)
+
 
 def moving_avg(x: Union[List, np.ndarray], y: Union[List, np.ndarray],
     window_width: int) -> Tuple[np.ndarray]:

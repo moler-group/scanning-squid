@@ -286,7 +286,7 @@ class Model_340(VisaInstrument):
     Adapted from QCoDeS Lakeshore 336 driver
     """
 
-    def __init__(self, name, address, active_channels={'A': 'sample'}, **kwargs):
+    def __init__(self, name, address, active_channels={'A': 'sample','B':'MXC'}, **kwargs):
         super().__init__(name, address, terminator="\n\r", **kwargs)
 
         # Allow access to channels either by referring to the channel name
@@ -309,11 +309,11 @@ class Model_340(VisaInstrument):
         ###############
         self.add_parameter(
                 name='set_temperature',
-                get_cmd='SETP?',
+                get_cmd='SETP? 1',
                 get_parser=float,
                 set_cmd='SETP 1,{}',
                 label='Set Temerature',
-                vals=Numbers(0.3, 300),
+                vals=Numbers(0.1, 300),
                 unit='K',
                 snapshot_get=False
             )
@@ -342,6 +342,20 @@ class Model_340(VisaInstrument):
                 label='Analog output configuration.',
                 unit=''
             )
+        self.add_parameter(
+                name='pid_loop1',
+                get_cmd='PID? 1',
+                get_parser=str,
+                label='PID loop1',
+                unit=''
+            )
+        self.add_parameter(
+                name='heater_output',
+                get_cmd='HTR?',
+                get_parser=float,
+                label='Heater Output',
+                unit='%'
+          )
         #############
         self.connect_message()
 
@@ -349,4 +363,8 @@ class Model_340(VisaInstrument):
         output=1, bipolar=0, source=1, mode=1):
         msg = 'ANALOG {},{},{},{},{},{},{},{}'.format(
             output, bipolar, mode, input_name, source, high_value, low_value, maunal_value)
+        self.write(msg)
+
+    def pid(self, loop_name, p, i, d):
+        msg = ' PID {},{},{},{}'.format(loop_name, p, i, d)
         self.write(msg)
