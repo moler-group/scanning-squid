@@ -1,3 +1,27 @@
+"""
+This file is part of the scanning-squid package.
+
+Copyright (c) 2018 Logan Bishop-Van Horn
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+"""
+
 from qcodes.instrument.base import Instrument
 from qcodes.instrument.parameter import Parameter, ArrayParameter
 import nidaqmx
@@ -36,14 +60,14 @@ class DAQAnalogInputs(Instrument):
     """Instrument to acquire DAQ analog input data in a qcodes Loop or measurement.
     """
     def __init__(self, name: str, dev_name: str, rate: Union[int, float], channels: Dict[str, int],
-                 task: Any, min_val: Optional[float]=-10, max_val: Optional[float]=10,
+                 task: Any, min_val: Optional[float]=-5, max_val: Optional[float]=5,
                  clock_src: Optional[str]=None, samples_to_read: Optional[int]=2,
                  target_points: Optional[int]=None, timeout: Optional[Union[float, int]]=60, **kwargs) -> None:
         """
         Args:
             name: Name of instrument (usually 'daq_ai').
             dev_name: NI DAQ device name (e.g. 'Dev1').
-            rate: Desired DAQ sampling rate in Hz.
+            rate: Desired DAQ sampling rate per channel in Hz.
             channels: Dict of analog input channel configuration.
             task: fresh nidaqmx.Task to be populated with ai_channels.
             min_val: minimum of input voltage range (-0.1, -0.2, -0.5, -1, -2, -5 [default], or -10)
@@ -94,8 +118,8 @@ class DAQAnalogInputs(Instrument):
             parameter_class=DAQAnalogInputVoltages,
             task=self.task,
             samples_to_read=samples_to_read,
-            timeout=timeout,
             shape=(nchannels, target_points),
+            timeout=timeout,
             label='Voltage',
             unit='V'
         ) 

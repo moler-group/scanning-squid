@@ -1,3 +1,27 @@
+"""
+This file is part of the scanning-squid package.
+
+Copyright (c) 2018 Logan Bishop-Van Horn
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+"""
+
 from qcodes import VisaInstrument, InstrumentChannel, ChannelList
 from qcodes.utils.validators import Enum, Strings, Numbers, Ints, MultiType
 import visa
@@ -65,7 +89,7 @@ class Model_331(VisaInstrument):
                    get_parser=float,
                    set_cmd='SETP 1,{}',
                    label='Set Temerature',
-                   vals=Numbers(2.7, 300),
+                   vals=Numbers(3, 300),
                    unit='K')
         self.add_parameter(name='heater_range',
                    get_cmd='RANGE?',
@@ -78,7 +102,7 @@ class Model_331(VisaInstrument):
                    get_cmd='RAMP? 1',
                    get_parser=str,
                    set_cmd='RAMP 1,1,{}',
-                   label='Ramp rate',
+                   label='Heater range',
                    vals=Numbers(min_value=0, max_value=100),
                    unit='K/min')
         ##############
@@ -196,10 +220,6 @@ class Model_372(VisaInstrument):
             channel = SensorChannel372(self, 'Chan{}'.format(chan_name), chan_name, sensor_name)
             channels.append(channel)
             self.add_submodule(chan_name, channel)
-        for chan_name in ('A'):
-            channel = SensorChannel372(self, 'Chan{}'.format(chan_name), chan_name, 'NA')
-            channels.append(channel)
-            self.add_submodule(chan_name, channel)
         channels.lock()
         self.add_submodule("channels", channels)
         ###############
@@ -268,8 +288,8 @@ class Model_340(VisaInstrument):
     Adapted from QCoDeS Lakeshore 336 driver
     """
 
-    def __init__(self, name, address, active_channels={'A': 'sample'}, **kwargs):
-        super().__init__(name, address, terminator="\n\r", **kwargs)
+    def __init__(self, name, address, active_channels={'A': 'cernox', 'B': 'diode'}, **kwargs):
+        super().__init__(name, address, terminator="\r\n", **kwargs)
 
         # Allow access to channels either by referring to the channel name
         # or through a channel list.
@@ -291,13 +311,12 @@ class Model_340(VisaInstrument):
         ###############
         self.add_parameter(
                 name='set_temperature',
-                get_cmd='SETP? 1',
+                get_cmd='SETP?',
                 get_parser=float,
                 set_cmd='SETP 1,{}',
-                label='Set Temerature',
+                label='Set Temperature',
                 vals=Numbers(0.3, 300),
-                unit='K',
-                snapshot_get=False
+                unit='K'
             )
         self.add_parameter(
                 name='heater_range',

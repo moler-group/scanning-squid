@@ -78,9 +78,14 @@ class Model_331(VisaInstrument):
                    get_cmd='RAMP? 1',
                    get_parser=str,
                    set_cmd='RAMP 1,1,{}',
-                   label='Ramp rate',
+                   label='Heater range',
                    vals=Numbers(min_value=0, max_value=100),
                    unit='K/min')
+        self.add_parameter(name="heater_output",
+                   get_cmd='HTR? {}',
+                   get_parser=float,
+                   label='Heater output',
+                   unit='%')
         ##############
         self.connect_message()
 
@@ -197,7 +202,7 @@ class Model_372(VisaInstrument):
             channels.append(channel)
             self.add_submodule(chan_name, channel)
         for chan_name in ('A'):
-            channel = SensorChannel372(self, 'Chan{}'.format(chan_name), chan_name, 'NA')
+            channel = SensorChannel372(self, 'Chan{}'.format(chan_name), chan_name)
             channels.append(channel)
             self.add_submodule(chan_name, channel)
         channels.lock()

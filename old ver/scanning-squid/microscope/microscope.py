@@ -1,24 +1,26 @@
-# This file is part of the scanning-squid package.
-#
-# Copyright (c) 2018 Logan Bishop-Van Horn
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+"""
+This file is part of the scanning-squid package.
+
+Copyright (c) 2018 Logan Bishop-Van Horn
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+"""
 
 #: Various Python utilities
 import os
@@ -55,9 +57,8 @@ import instruments.atto as atto
 import utils
 from scanner import Scanner
 from instruments.daq import DAQAnalogInputs
-from plots import ScanPlot, TDCPlot, RPlot, RvTPlot
+from plots import ScanPlot, TDCPlot
 from instruments.lakeshore import Model_372, Model_331
-from instruments.keithley import Keithley_2400
 from instruments.heater import EL320P
 
 #: Pint for manipulating physical units
@@ -116,21 +117,11 @@ class Microscope(Station):
 
         self._add_atto()
         self._add_ls372()
-        self._add_ls331()
+        #self._add_ls331()
         #self._add_keithley()
         self._add_scanner()
         self._add_SQUID()
         self._add_lockins()
-        #self._add_ke2400()
-
-    def _add_ke2400(self):
-    	ke_config = self.config['instruments']['ke2400']
-    	if hasattr(self,'ke2400'):
-    		self.ke2400.close()
-    	self.remove_component(ke_config['name'])
-    	self.ke2400 = Keithley_2400(ke_config['name'], ke_config['address'])
-    	self.add_component(self.ke2400)
-    	log.info('Keithley 2400 successfully added to microscope')
 
     def _add_atto(self):
         """Add Attocube controller to microscope.
@@ -329,200 +320,6 @@ class Microscope(Station):
                 pass
         utils.td_to_mat_file(data, real_units=True)
         return data, tdc_plot
-
-    def measure_R(self, R_params: Dict[str, Any], update_snap: bool=True) -> Tuple[Any]:
-        """Performs a four prob measurement
-
-        Args:
-            R_params: Dict of 4 prob parameters as defined
-                in measurement configuration file.
-            update_snap: Whether to update the microscope snapshot. Default True.
-                (You may want this to be False when getting a plane or approaching.)
-
-        Returns:
-            Tuple[qcodes.DataSet, plots.Four_prob]: data, Four_prob
-                DataSet and plot.
-        """
-        daq_config = self.config['instruments']['daq']
-        daq_name = daq_config['name']
-        ai_channels = daq_config['channels']['analog_inputs']
-        meas_channels = R_params['channels']
-        constants = R_params['constants']
-        channels = {} 
-        for ch in meas_channels:
-            channels.update({ch: ai_channels[ch]})
-        daq_rate = self.Q_(daq_config['rate']).to('Hz').magnitude
-
-        self.set_lockins(R_params)
-        self.snapshot(update=update_snap)
-         #: out put delta V
-        dV = self.Q_(R_params['dV']).to('V').magnitude
-        #: bias voltage output range
-        startV, endV = sorted([self.Q_(lim).to('V').magnitude for lim in R_params['range']])
-        if startV == .04:
-            startV = dV
-
-        delay = constants['wait_factor'] * self.Four_prob_lockin.time_constant()
-        
-        prefactors = self.get_prefactors(R_params)
-        #: get channel prefactors in string form so they can be saved in metadata
-        prefactor_strs = {}
-        for ch, prefac in prefactors.items():
-            unit = R_params['channels'][ch]['unit']
-            pre = prefac.to('{}/V'.format(unit))
-            prefactor_strs.update({ch: '{} {}'.format(pre.magnitude, pre.units)})
-        ai_task =  nidaqmx.Task('Four_prob_ai_task')
-        self.remove_component('daq_ai')
-        if hasattr(self, 'daq_ai'):
-            #self.daq_ai.clear_instances()
-            self.daq_ai.close()
-        self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, daq_rate, channels, ai_task)
-        loop_counter = utils.Counter()
-        R_plot = RPlot(R_params, self.ureg) 
-        self.SUSC_lockin.amplitude(startV)
-        print(startV)
-        print(dV)
-        loop = qc.Loop(self.Four_prob_lockin.amplitude.sweep(startV, endV, dV)
-            ).each(
-                qc.Task(time.sleep, delay),
-                self.daq_ai.voltage,
-                qc.Task(self.scanner.get_R, R_plot, qc.loops.active_data_set, loop_counter),
-                qc.Task(loop_counter.advance)
-            ).then(
-                qc.Task(ai_task.stop),
-                qc.Task(ai_task.close),
-                #qc.Task(self.CAP_lockin.amplitude, 0.004),
-                #qc.Task(self.SUSC_lockin.amplitude, 0.004),
-                qc.Task(R_plot.fig.show),
-                qc.Task(R_plot.save)
-            )
-        #: loop.metadata will be saved in DataSet
-        loop.metadata.update(R_params)
-        loop.metadata.update({'prefactors': prefactor_strs})
-        for idx, ch in enumerate(meas_channels):
-            loop.metadata['channels'][ch].update({'idx': idx})
-        data = loop.get_data_set(name=R_params['fname'], write_period=None)
-        try:
-            log.info('Starting voltage sweep:')
-            loop.run()
-        except KeyboardInterrupt:
-            log.warning('Four prob measurement interrupted by user. DataSet saved to {}.'.format(data.location))
-            #: Set break_loop = True so that get_plane() and approach() will be aborted
-            self.scanner.break_loop = True
-            self.Four_prob_lockin.amplitude(0.04)
-            ai_task.stop()
-            ai_task.close()
-        finally:
-            try:
-                #: Stop 'td_cap_ai_task' so that we can read our current position
-                ai_task.stop()
-                ai_task.close()
-                self.Four_prob_lockin.amplitude(0.04)
-                R_plot.fig.show()
-                R_plot.save()
-            except:
-                pass
-        utils.R_to_mat_file(data, real_units=True)
-
-        return data, R_plot
-
-    def measure_R_v_T(self, R_params: Dict[str, Any], update_snap: bool=True) -> Tuple[Any]:
-        """Performs a four prob measurement over a range of temperature
-
-        Args:
-            R_params: Dict of 4 prob parameters as defined
-                in measurement configuration file.
-            update_snap: Whether to update the microscope snapshot. Default True.
-                (You may want this to be False when getting a plane or approaching.)
-
-        Returns:
-            Tuple[qcodes.DataSet, plots.Four_prob]: data, Four_prob
-                DataSet and plot.
-        """
-        daq_config = self.config['instruments']['daq']
-        daq_name = daq_config['name']
-        ai_channels = daq_config['channels']['analog_inputs']
-        meas_channels = R_params['channels']
-        constants = R_params['constants']
-        channels = {} 
-        for ch in meas_channels:
-            channels.update({ch: ai_channels[ch]})
-        daq_rate = self.Q_(daq_config['rate']).to('Hz').magnitude
-
-        self.set_lockins(R_params)
-        self.snapshot(update=update_snap)
-         #: out put delta V
-        dT = self.Q_(constants['dT']).to('K').magnitude
-        #: bias voltage output range
-        ramp_rate = self.ls331.ramp_rate()
-        ramp_rate = ramp_rate.split(',')[1]
-        ramp_rate = float(ramp_rate)
-        startT, endT = sorted([self.Q_(lim).to('K').magnitude for lim in constants['T_range']])
-
-
-        delay = constants['wait_factor'] * self.Four_prob_lockin.time_constant()
-        T_delay = constants['T_wait_factor'] * dT/ramp_rate * 60
-        print("data acquization time interval is(s)")
-        print(T_delay)
-
-        prefactors = self.get_prefactors(R_params)
-        #: get channel prefactors in string form so they can be saved in metadata
-        prefactor_strs = {}
-        for ch, prefac in prefactors.items():
-            unit = R_params['channels'][ch]['unit']
-            pre = prefac.to('{}/V'.format(unit))
-            prefactor_strs.update({ch: '{} {}'.format(pre.magnitude, pre.units)})
-        ai_task =  nidaqmx.Task('Four_prob_v_T_ai_task')
-        self.remove_component('daq_ai')
-        if hasattr(self, 'daq_ai'):
-            self.daq_ai.clear_instances()
-            self.daq_ai.close()
-        self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, daq_rate, channels, ai_task)
-        loop_counter = utils.Counter()
-        RvT_plot = RvTPlot(R_params, self.ureg) 
-        loop = qc.Loop(self.ls331.set_temperature.sweep(startT, endT, dT)
-            ).each(
-                qc.Task(time.sleep, T_delay),
-                self.daq_ai.voltage,
-                qc.Task(self.scanner.get_RvT, RvT_plot, qc.loops.active_data_set, loop_counter),
-                qc.Task(loop_counter.advance),
-            ).then(
-                qc.Task(ai_task.stop),
-                qc.Task(ai_task.close),
-                #qc.Task(self.CAP_lockin.amplitude, 0.004),
-                #qc.Task(self.SUSC_lockin.amplitude, 0.004),
-                qc.Task(RvT_plot.fig.show),
-                qc.Task(RvT_plot.save)
-            )
-        #: loop.metadata will be saved in DataSet
-        loop.metadata.update(R_params)
-        loop.metadata.update({'prefactors': prefactor_strs})
-        for idx, ch in enumerate(meas_channels):
-            loop.metadata['channels'][ch].update({'idx': idx})
-        data = loop.get_data_set(name=R_params['fvTname'], write_period=None)
-        try:
-            log.info('Starting voltage sweep:')
-            loop.run()
-        except KeyboardInterrupt:
-            log.warning('Four prob measurement interrupted by user. DataSet saved to {}.'.format(data.location))
-            #: Set break_loop = True so that get_plane() and approach() will be aborted
-            self.scanner.break_loop = True
-            self.Four_prob_lockin.amplitude(0.04)
-            ai_task.stop()
-            ai_task.close()
-        finally:
-            try:
-                #: Stop 'td_cap_ai_task' so that we can read our current position
-                ai_task.stop()
-                ai_task.close()
-                self.Four_prob_lockin.amplitude(0.04)
-                RvT_plot.fig.show()
-                RvT_plot.save()
-            except:
-                pass
-        utils.RvT_to_mat_file(data, real_units=True)
-
-        return data, RvT_plot
 
     def approach(self, tdc_params: Dict[str, Any], attosteps: int=100) -> None:
         """Approach the sample by iteratively stepping z Attocube and performing td_cap().

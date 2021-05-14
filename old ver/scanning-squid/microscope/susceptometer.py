@@ -1,24 +1,26 @@
-# This file is part of the scanning-squid package.
-#
-# Copyright (c) 2018 Logan Bishop-Van Horn
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+"""
+This file is part of the scanning-squid package.
+
+Copyright (c) 2018 Logan Bishop-Van Horn
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+"""
 
 #: Various Python utilities
 from typing import Dict, List, Sequence, Any, Union, Tuple
@@ -34,8 +36,6 @@ from nidaqmx.constants import AcquisitionType
 from instruments.daq import DAQAnalogInputs
 from plots import ScanPlot
 from .microscope import Microscope
-from instruments.afg3000old import AFG3000
-from instruments.dg645 import DG645
 import utils
 
 #: Pint for manipulating physical units
@@ -67,54 +67,6 @@ class SusceptometerMicroscope(Microscope):
             **kwargs: Keyword arguments to be passed to Station constructor.
         """
         super().__init__(config_file, temp, ureg, log_level, log_name, **kwargs)
-        #self._add_function_generator()
-        #self._add_delay_generator()
-        #self._add_function_generator2()
-
-    def _add_delay_generator(self):
-        """Add SRS DG645 digital delay generator to SamplerMicroscope.
-        """
-        info = self.config['instruments']['delay_generator']
-        name = 'dg'
-        if hasattr(self, name):
-            getattr(self, name, 'clear_instances')()
-        self.remove_component(name)
-        instr = DG645(name, info['address'], metadata=info)
-        setattr(self, name, instr)
-        self.add_component(getattr(self, name))
-        log.info('{} successfully added to microscope.'.format(name))
-
-    def _add_function_generator(self):
-        """Add Tektronix AFG3000 series function generator to SamplerMicroscope.
-        """
-        info = self.config['instruments']['function_generator']
-        name = 'afg'
-        if hasattr(self, name):
-            getattr(self, name, 'clear_instances')()
-        self.remove_component(name)
-        instr = AFG3000(name, info['address'], info['channels'], metadata=info)
-        setattr(self, name, instr)
-        self.add_component(getattr(self, name))
-        log.info('{} successfully added to microscope.'.format(name))
-
-    def _add_function_generator2(self):
-        """Add Tektronix AFG3000 series function generator to SamplerMicroscope.
-        """
-
-        """ for sampler measurement, Eli had to create second add_function_generator function
-         for the single channel afg. to add the single channel afg I had to import the old afg3000 driver because the
-         new afg3000 driver seemed to be hard coded for a 2 channel afg"""
-        info = self.config['instruments']['function_generator2']
-        name = 'afg2'
-        if hasattr(self, name):
-            getattr(self, name, 'clear_instances')()
-        self.remove_component(name)
-        instr = AFG3000(name, info['address'], info['channels'], metadata=info)
-        setattr(self, name, instr)
-        self.add_component(getattr(self, name))
-        log.info('{} successfully added to microscope.'.format(name))
-
-
 
     def get_prefactors(self, measurement: Dict[str, Any], update: bool=True) -> Dict[str, Any]:
         """For each channel, calculate prefactors to convert DAQ voltage into real units.
@@ -147,20 +99,8 @@ class SusceptometerMicroscope(Microscope):
                 cap_sensitivity = snap['sensitivity']['value']
                 #: The factor of 10 here is because SR830 output gain is 10/sensitivity
                 prefactor /= (self.Q_(self.scanner.metadata['cantilever']['calibration']) * 10 / cap_sensitivity)
-            elif ch == 'Four_prob':
-                snap = getattr(self, 'Four_prob_lockin').snapshot(update=update)['parameters']
-                Four_prob_sensitivity = snap['sensitivity']['value']
-                #: The factor of 10 here is because SR830 output gain is 10/sensitivity
-                prefactor *= Four_prob_sensitivity/10
-            elif ch == 'NoiseTestRaw':
-                prefactor /= mod_width
-            elif ch == 'NoiseTestPROut':
-                prefactor = 1
-            elif ch == 'NoiseTestRPOut':
-                prefactor = 1
-            prefactor = self.ureg.Quantity(str(prefactor))
             prefactor /= measurement['channels'][ch]['gain']
-            prefactors.update({ch: prefactor.to('{}/V'.format(measurement['channels'][ch]['unit']))})  
+            prefactors.update({ch: prefactor.to('{}/V'.format(measurement['channels'][ch]['unit']))})
         return prefactors
 
     def scan_surface(self, scan_params: Dict[str, Any]) -> None:

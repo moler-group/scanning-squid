@@ -1,0 +1,148 @@
+INFO:2018-06-18_13:23:04:microscope:Logging started.
+INFO:2018-06-18_13:23:04:microscope:Initializing microscope object using file config_microscope.json.
+INFO:2018-06-18_13:23:04:atto:Initializing Attocube controller.
+INFO:2018-06-18_13:23:06:microscope:Attocube controller successfully added to microscope.
+INFO:2018-06-18_13:23:06:scanner:Moved scanner from [0.0, 0.0, -0.0] V to [0.0, 0.0, 0.0] V.
+INFO:2018-06-18_13:23:06:microscope:Scanner successfully added to microscope.
+INFO:2018-06-18_13:23:06:microscope:Susceptometer(SQUID) successfully added to microscope.
+INFO:2018-06-18_13:23:07:microscope:SUSC_lockin successfully added to microscope.
+INFO:2018-06-18_13:23:08:microscope:CAP_lockin successfully added to microscope.
+INFO:2018-06-18_13:23:31:microscope:Attempting to approach sample.
+INFO:2018-06-18_13:23:31:microscope:Setting amplitude on CAP_lockin to 1 V.
+INFO:2018-06-18_13:23:31:microscope:Setting frequency on CAP_lockin to 6821.0 Hz.
+INFO:2018-06-18_13:23:33:microscope:Starting capacitive touchdown.
+INFO:2018-06-18_13:23:53:scanner:Touchdown occurred at 0.2404 V.
+INFO:2018-06-18_13:23:53:scanner:Pre-touchdown slope: 0.722158677353573 fF/V fF/V.
+INFO:2018-06-18_13:23:53:scanner:Post-touchdown slope: 28.24145749139069 fF/V fF/V.
+INFO:2018-06-18_13:23:55:scanner:Moved scanner from [-0.001, 0.0, 0.5] V to [-0.0, 0.001, -2.0] V.
+INFO:2018-06-18_13:23:55:microscope:Touchdown detected. Performing td_cap() to confirm.
+INFO:2018-06-18_13:23:55:microscope:Setting amplitude on CAP_lockin to 1 V.
+INFO:2018-06-18_13:23:55:microscope:Setting frequency on CAP_lockin to 6821.0 Hz.
+INFO:2018-06-18_13:23:56:microscope:Starting capacitive touchdown.
+INFO:2018-06-18_13:24:16:scanner:Touchdown occurred at 0.2166 V.
+INFO:2018-06-18_13:24:16:scanner:Pre-touchdown slope: 0.2976857494517602 fF/V fF/V.
+INFO:2018-06-18_13:24:16:scanner:Post-touchdown slope: 28.042868534826173 fF/V fF/V.
+INFO:2018-06-18_13:24:17:scanner:Moved scanner from [0.0, 0.0, 0.499] V to [-0.0, 0.0, -2.0] V.
+INFO:2018-06-18_13:24:17:microscope:Touchdown confirmed.
+INFO:2018-06-18_13:24:34:scanner:Moved scanner from [-0.0, 0.0, -2.0] V to [-0.0, -0.0, -0.0] V.
+INFO:2018-06-18_13:24:40:microscope:Aqcuiring a plane.
+INFO:2018-06-18_13:24:41:scanner:Moved scanner from [0.0, 0.0, 0.0] V to [-1.99, -1.99, -2.0] V.
+INFO:2018-06-18_13:24:41:microscope:Setting amplitude on CAP_lockin to 1 V.
+INFO:2018-06-18_13:24:41:microscope:Setting frequency on CAP_lockin to 6821.0 Hz.
+INFO:2018-06-18_13:24:43:microscope:Starting capacitive touchdown.
+INFO:2018-06-18_13:25:02:scanner:Touchdown occurred at 0.2192 V.
+INFO:2018-06-18_13:25:02:scanner:Pre-touchdown slope: -0.3293825559841258 fF/V fF/V.
+INFO:2018-06-18_13:25:02:scanner:Post-touchdown slope: 27.32176651601096 fF/V fF/V.
+INFO:2018-06-18_13:25:04:scanner:Moved scanner from [-1.988, -1.99, 0.5] V to [-1.988, -1.99, -2.0] V.
+INFO:2018-06-18_13:25:05:scanner:Moved scanner from [-1.988, -1.99, -2.0] V to [-0.0, -1.99, -2.0009999999999999] V.
+INFO:2018-06-18_13:25:05:microscope:Setting amplitude on CAP_lockin to 1 V.
+INFO:2018-06-18_13:25:05:microscope:Setting frequency on CAP_lockin to 6821.0 Hz.
+INFO:2018-06-18_13:25:07:microscope:Starting capacitive touchdown.
+INFO:2018-06-18_13:25:27:scanner:Touchdown occurred at 0.2196 V.
+INFO:2018-06-18_13:25:27:scanner:Pre-touchdown slope: -0.2921388179908526 fF/V fF/V.
+INFO:2018-06-18_13:25:27:scanner:Post-touchdown slope: 27.73668678697551 fF/V fF/V.
+INFO:2018-06-18_13:25:28:scanner:Moved scanner from [0.0, -1.9890000000000001, 0.5] V to [-0.0, -1.9890000000000001, -2.0009999999999999] V.
+INFO:2018-06-18_13:25:29:scanner:Moved scanner from [0.0, -1.9890000000000001, -2.0] V to [1.9890000000000001, -1.99, -2.0] V.
+INFO:2018-06-18_13:25:29:microscope:Setting amplitude on CAP_lockin to 1 V.
+INFO:2018-06-18_13:25:29:microscope:Setting frequency on CAP_lockin to 6821.0 Hz.
+INFO:2018-06-18_13:25:31:microscope:Starting capacitive touchdown.
+INFO:2018-06-18_13:25:50:scanner:Touchdown occurred at 0.2167 V.
+INFO:2018-06-18_13:25:50:scanner:Pre-touchdown slope: -0.1735399687596621 fF/V fF/V.
+INFO:2018-06-18_13:25:50:scanner:Post-touchdown slope: 27.335502259117195 fF/V fF/V.
+INFO:2018-06-18_13:25:52:scanner:Moved scanner from [1.9870000000000001, -1.9890000000000001, 0.499] V to [1.9870000000000001, -1.9890000000000001, -2.0] V.
+INFO:2018-06-18_13:25:54:scanner:Moved scanner from [1.9870000000000001, -1.9890000000000001, -2.0] V to [-1.99, -0.0, -2.0] V.
+INFO:2018-06-18_13:25:54:microscope:Setting amplitude on CAP_lockin to 1 V.
+INFO:2018-06-18_13:25:54:microscope:Setting frequency on CAP_lockin to 6821.0 Hz.
+INFO:2018-06-18_13:25:56:microscope:Starting capacitive touchdown.
+INFO:2018-06-18_13:26:15:scanner:Touchdown occurred at 0.2155 V.
+INFO:2018-06-18_13:26:15:scanner:Pre-touchdown slope: -0.16244608831031246 fF/V fF/V.
+INFO:2018-06-18_13:26:15:scanner:Post-touchdown slope: 27.90494441776052 fF/V fF/V.
+INFO:2018-06-18_13:26:16:scanner:Moved scanner from [-1.9910000000000001, 0.001, 0.499] V to [-1.9910000000000001, 0.001, -2.0] V.
+INFO:2018-06-18_13:26:19:scanner:Moved scanner from [-1.9910000000000001, 0.001, -2.0] V to [-0.0, 0.0, -2.0] V.
+INFO:2018-06-18_13:26:19:microscope:Setting amplitude on CAP_lockin to 1 V.
+INFO:2018-06-18_13:26:19:microscope:Setting frequency on CAP_lockin to 6821.0 Hz.
+INFO:2018-06-18_13:26:20:microscope:Starting capacitive touchdown.
+INFO:2018-06-18_13:26:39:scanner:Touchdown occurred at 0.2162 V.
+INFO:2018-06-18_13:26:39:scanner:Pre-touchdown slope: -0.4148054268885125 fF/V fF/V.
+INFO:2018-06-18_13:26:39:scanner:Post-touchdown slope: 28.304982957276064 fF/V fF/V.
+INFO:2018-06-18_13:26:41:scanner:Moved scanner from [-0.0, 0.001, 0.45000000000000001] V to [0.0, 0.001, -2.0] V.
+INFO:2018-06-18_13:26:42:scanner:Moved scanner from [0.0, 0.001, -2.0] V to [1.99, -0.0, -2.0] V.
+INFO:2018-06-18_13:26:42:microscope:Setting amplitude on CAP_lockin to 1 V.
+INFO:2018-06-18_13:26:42:microscope:Setting frequency on CAP_lockin to 6821.0 Hz.
+INFO:2018-06-18_13:26:44:microscope:Starting capacitive touchdown.
+INFO:2018-06-18_13:27:03:scanner:Touchdown occurred at 0.2194 V.
+INFO:2018-06-18_13:27:03:scanner:Pre-touchdown slope: -0.07527989443063862 fF/V fF/V.
+INFO:2018-06-18_13:27:03:scanner:Post-touchdown slope: 26.947480220029256 fF/V fF/V.
+INFO:2018-06-18_13:27:05:scanner:Moved scanner from [1.986, 0.0, 0.5] V to [1.9870000000000001, 0.001, -2.0] V.
+INFO:2018-06-18_13:27:07:scanner:Moved scanner from [1.9870000000000001, 0.001, -2.0] V to [-1.99, 1.9890000000000001, -2.0] V.
+INFO:2018-06-18_13:27:07:microscope:Setting amplitude on CAP_lockin to 1 V.
+INFO:2018-06-18_13:27:07:microscope:Setting frequency on CAP_lockin to 6821.0 Hz.
+INFO:2018-06-18_13:27:09:microscope:Starting capacitive touchdown.
+INFO:2018-06-18_13:27:28:scanner:Touchdown occurred at 0.2204 V.
+INFO:2018-06-18_13:27:28:scanner:Pre-touchdown slope: -0.16244608529915527 fF/V fF/V.
+INFO:2018-06-18_13:27:28:scanner:Post-touchdown slope: 28.81376218587321 fF/V fF/V.
+INFO:2018-06-18_13:27:29:scanner:Moved scanner from [-1.9890000000000001, 1.9870000000000001, 0.5] V to [-1.9890000000000001, 1.9870000000000001, -2.0] V.
+INFO:2018-06-18_13:27:31:scanner:Moved scanner from [-1.9890000000000001, 1.9870000000000001, -2.0] V to [-0.0, 1.99, -2.0] V.
+INFO:2018-06-18_13:27:31:microscope:Setting amplitude on CAP_lockin to 1 V.
+INFO:2018-06-18_13:27:31:microscope:Setting frequency on CAP_lockin to 6821.0 Hz.
+INFO:2018-06-18_13:27:33:microscope:Starting capacitive touchdown.
+INFO:2018-06-18_13:27:52:scanner:Touchdown occurred at 0.2149 V.
+INFO:2018-06-18_13:27:52:scanner:Pre-touchdown slope: -0.03988513797511267 fF/V fF/V.
+INFO:2018-06-18_13:27:52:scanner:Post-touchdown slope: 27.37613584224212 fF/V fF/V.
+INFO:2018-06-18_13:27:54:scanner:Moved scanner from [-0.0, 1.9870000000000001, 0.499] V to [-0.001, 1.986, -2.0] V.
+INFO:2018-06-18_13:27:55:scanner:Moved scanner from [-0.001, 1.9870000000000001, -2.0] V to [1.99, 1.99, -2.0] V.
+INFO:2018-06-18_13:27:55:microscope:Setting amplitude on CAP_lockin to 1 V.
+INFO:2018-06-18_13:27:55:microscope:Setting frequency on CAP_lockin to 6821.0 Hz.
+INFO:2018-06-18_13:27:57:microscope:Starting capacitive touchdown.
+INFO:2018-06-18_13:28:16:scanner:Touchdown occurred at 0.239 V.
+INFO:2018-06-18_13:28:16:scanner:Pre-touchdown slope: 0.632139811592868 fF/V fF/V.
+INFO:2018-06-18_13:28:16:scanner:Post-touchdown slope: 29.57721634894106 fF/V fF/V.
+INFO:2018-06-18_13:28:17:scanner:Moved scanner from [1.9870000000000001, 1.988, 0.499] V to [1.9850000000000001, 1.9870000000000001, -2.0] V.
+INFO:2018-06-18_13:28:19:scanner:Moved scanner from [1.986, 1.9870000000000001, -2.0] V to [-0.0, -0.0, -0.001] V.
+INFO:2018-06-18_13:28:19:microscope:New plane : [0.0016747772670780263, 0.0015616270777237271, 0.2201072639347669].
+INFO:2018-06-18_13:28:40:scanner:Moved scanner from [-0.0, -0.0, -0.0] V to [-0.0, 0.0, -0.0] V.
+INFO:2018-06-18_13:28:41:utils:Scan parameters are valid. Starting scan.
+INFO:2018-06-18_13:28:42:scanner:Moved scanner from [0.0, 0.0, 0.0] V to [-1.5, -1.5, 0.014999999999999999] V.
+INFO:2018-06-18_13:28:42:microscope:Setting amplitude on SUSC_lockin to 1 V.
+INFO:2018-06-18_13:28:42:microscope:Setting frequency on SUSC_lockin to 131.79 Hz.
+INFO:2018-06-18_13:28:42:microscope:Setting amplitude on CAP_lockin to 1 V.
+INFO:2018-06-18_13:28:42:microscope:Setting frequency on CAP_lockin to 18437.0 Hz.
+WARNING:2018-06-18_13:29:08:microscope:Scan interrupted by user. Going to [0, 0, 0] V.
+INFO:2018-06-18_13:29:09:scanner:Moved scanner from [-1.5, -1.071, 0.016] V to [0.0, 0.0, -0.0] V.
+INFO:2018-06-18_13:29:09:microscope:Scan aborted by user. DataSet saved to data/2018-06-18/#045_scan_13-28-45.
+INFO:2018-06-18_13:29:09:microscope:Removed daq_ai from microscope.
+INFO:2018-06-18_13:29:40:utils:Scan parameters are valid. Starting scan.
+INFO:2018-06-18_13:29:41:scanner:Moved scanner from [-0.0, -0.0, -0.0] V to [-1.5, -1.5, -0.28499999999999998] V.
+INFO:2018-06-18_13:29:41:microscope:Setting amplitude on SUSC_lockin to 1 V.
+INFO:2018-06-18_13:29:41:microscope:Setting frequency on SUSC_lockin to 131.79 Hz.
+INFO:2018-06-18_13:29:41:microscope:Setting amplitude on CAP_lockin to 1 V.
+INFO:2018-06-18_13:29:41:microscope:Setting frequency on CAP_lockin to 18437.0 Hz.
+INFO:2018-06-18_13:32:32:scanner:Moved scanner from [1.5, 1.5, -0.27500000000000002] V to [0.0, 0.0, -0.001] V.
+INFO:2018-06-18_13:32:32:microscope:Scan completed. DataSet saved to data/2018-06-18/#046_scan_13-29-44.
+INFO:2018-06-18_13:32:32:microscope:Removed daq_ai from microscope.
+INFO:2018-06-18_13:32:49:utils:Scan parameters are valid. Starting scan.
+INFO:2018-06-18_13:32:50:scanner:Moved scanner from [-0.0, -0.0, -0.001] V to [-1.5, -1.5, -0.28499999999999998] V.
+INFO:2018-06-18_13:32:50:microscope:Setting amplitude on SUSC_lockin to 1 V.
+INFO:2018-06-18_13:32:50:microscope:Setting frequency on SUSC_lockin to 131.79 Hz.
+INFO:2018-06-18_13:32:50:microscope:Setting amplitude on CAP_lockin to 1 V.
+INFO:2018-06-18_13:32:50:microscope:Setting frequency on CAP_lockin to 18437.0 Hz.
+INFO:2018-06-18_13:35:41:scanner:Moved scanner from [1.5, 1.5, -0.27500000000000002] V to [-0.0, 0.0, -0.001] V.
+INFO:2018-06-18_13:35:41:microscope:Scan completed. DataSet saved to data/2018-06-18/#047_scan_13-32-53.
+INFO:2018-06-18_13:35:41:microscope:Removed daq_ai from microscope.
+INFO:2018-06-18_13:36:15:microscope:Setting amplitude on CAP_lockin to 1 V.
+INFO:2018-06-18_13:36:15:microscope:Setting frequency on CAP_lockin to 6821.0 Hz.
+INFO:2018-06-18_13:36:17:microscope:Starting capacitive touchdown.
+INFO:2018-06-18_13:36:38:scanner:Touchdown occurred at 0.2151 V.
+INFO:2018-06-18_13:36:38:scanner:Pre-touchdown slope: 0.1735399710636208 fF/V fF/V.
+INFO:2018-06-18_13:36:38:scanner:Post-touchdown slope: 27.27312212798885 fF/V fF/V.
+INFO:2018-06-18_13:36:39:scanner:Moved scanner from [-0.0, 0.0, 0.499] V to [-0.0, -0.0, -2.0] V.
+INFO:2018-06-18_13:37:04:atto:Performing -100 steps along axis z.
+INFO:2018-06-18_13:37:09:atto:Performing -500 steps along axis z.
+INFO:2018-06-18_13:37:56:scanner:Moved scanner from [-0.0, -0.0, -2.0] V to [-0.0, -0.0, -0.0] V.
+INFO:2018-06-18_15:11:57:base:Closing all registered instruments
+INFO:2018-06-18_15:11:57:base:Closing atto
+INFO:2018-06-18_15:11:57:base:Closing benders
+INFO:2018-06-18_15:11:57:base:Closing SQUID
+INFO:2018-06-18_15:11:57:base:Closing SUSC_lockin
+INFO:2018-06-18_15:11:57:base:Closing CAP_lockin
+INFO:2018-06-18_15:11:57:base:Closing daq_ai

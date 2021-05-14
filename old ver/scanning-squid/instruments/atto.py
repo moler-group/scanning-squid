@@ -1,3 +1,27 @@
+"""
+This file is part of the scanning-squid package.
+
+Copyright (c) 2018 Logan Bishop-Van Horn
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+"""
+
 from qcodes.instrument.visa import VisaInstrument
 from typing import List, Dict, Union, Optional, Sequence, Any, Tuple
 import qcodes.utils.validators as vals
@@ -26,6 +50,7 @@ class AttocubeController(VisaInstrument):
         self.visa_handle.baud_rate = atto_config['baud_rate']
         self.visa_handle.stop_bits = visa.constants.StopBits.one
         self.visa_handle.parity = visa.constants.Parity.none
+        self.visa_handle.read_termination = '\r\n'
         _ = self.parameters.pop('IDN') # Get rid of this parameter
         self.ureg = ureg
         # Callable for converting a string into a quantity with units
@@ -48,8 +73,7 @@ class AttocubeController(VisaInstrument):
             self.add_parameter('mode_ax{}'.format(idx),
                                 label='{} axis mode'.format(axis),
                                 unit='',
-                                get_cmd=(lambda idx=idx: self._get_mode(idx)),
-                                #get_cmd='getm {}'.format(idx),
+                                get_cmd='getm {}'.format(idx),
                                 set_cmd='setm {} {{}}'.format(idx),
                                 vals=vals.Enum('gnd', 'inp', 'cap', 'stp', 'off', 'stp+', 'stp-'),
                                 get_parser=self._mode_parser,
@@ -59,8 +83,7 @@ class AttocubeController(VisaInstrument):
             self.add_parameter('voltage_ax{}'.format(idx),
                                 label='{} axis voltage'.format(axis),
                                 unit='V',
-                                get_cmd=(lambda idx=idx: self._get_voltage(idx)),
-                                #get_cmd='getv {}'.format(idx),
+                                get_cmd='getv {}'.format(idx),
                                 set_cmd='setv {} {{:.3f}}'.format(idx),
                                 vals=vals.Numbers(min_value=0, max_value=self.voltage_limits[axis]),
                                 get_parser=self._voltage_parser,
@@ -97,7 +120,8 @@ class AttocubeController(VisaInstrument):
         """
         self.device_clear()
         response = super().ask_raw(cmd)
-        self.check_response(response)
+        status = super().ask_raw(cmd)
+        self.check_response(status)
         time.sleep(0.2)
         return response
         
@@ -115,7 +139,7 @@ class AttocubeController(VisaInstrument):
         Args:
             response: Response from controller.
         """
-        if 'ERROR' in response: #: I'm not sure this actually works!
+        if 'ERROR' in response:
             raise RuntimeError(response)
         
     def stop(self, axis: Union[int, str]) -> None:
@@ -148,7 +172,6 @@ class AttocubeController(VisaInstrument):
         self.write('stepw {}'.format(idx))
         #: do nothing while stepping
         time.sleep(abs(steps) / freq * 1.25)
-        #time.sleep(5)
         getattr(self, 'mode_ax{}'.format(idx))('gnd')
         ts = time.strftime(self.timestamp_fmt)
         msg = 'Moved {} steps along {} axis.'.format(steps, axis)
@@ -208,6 +231,7 @@ class AttocubeController(VisaInstrument):
             float: parsed_response
         """
         return float(response.split('=')[1].split('H')[0])
+        #return float(response.split('=')[1].strip().split(' ')[0])
     
     def _voltage_parser(self, response: str) -> float:
         """Parse controller response like 'voltage = 20 V'.
@@ -229,55 +253,9 @@ class AttocubeController(VisaInstrument):
         Returns:
             float: parsed_response
         """
-        return float(response.split('=')[1].split('nF')[0].strip())
-
-
-    def _get_mode(self, idx: int) -> str:
-        """Query mode of axis given by idx.
-        
-        Args:
-            idx: axis index (1, 2, or 3)
-
-        Returns:
-            str: response
-        """
-        self.set_terminator('\n')
-        self.device_clear()
-        #for _ in range(2):
-        #    time.sleep(0.1)
-        #    response = self.visa_handle.query('getm {}'.format(idx))
-        #return response
-        response = ''
-        #ANC300 spits out a bunch of garbage before the actual answer, so need to query multiple times til "mode = ..."
-        while 'mode' not in response:
-            response = self.visa_handle.query('getm {}'.format(idx))
-            time.sleep(0.1)
-        self.set_terminator('\r\n')
-        return response
-
-    def _get_voltage(self, idx: int) -> str:
-        """Query voltage of axis given by idx.
-        
-        Args:
-            idx: axis index (1, 2, or 3)
-
-        Returns:
-            str: response
-        """
-        self.set_terminator('\n')
-        self.device_clear()
-        #for _ in range(2):
-        #    time.sleep(0.1)
-        #    response = self.visa_handle.query('getv {}'.format(idx))
-        #return response
-        response = ''
-        #ANC300 spits out a bunch of garbage before the actual voltage, so need to query multiple times til "voltage = ..."
-        while 'voltage' not in response:
-            response = self.visa_handle.query('getv {}'.format(idx))
-            time.sleep(0.1)
-        self.set_terminator('\r\n')
-        return response
-
+        #return float(response.split('=')[1].split('nF')[0].strip())
+        return float(response.split('=')[1].strip().split(' ')[0])
+    
     def _get_freq(self, idx: int) -> str:
         """Query frequency of axis given by idx.
         
@@ -287,23 +265,11 @@ class AttocubeController(VisaInstrument):
         Returns:
             str: response
         """
-        self.set_terminator('\n') #: Bug in ANC300! Response is terminated with '\n'
-        self.device_clear()
-        
-        #for _ in range(2):
-        #    time.sleep(0.1)
-        #    response = self.visa_handle.query('getf {}'.format(idx))
-        #self.set_terminator('\r\n') #: Set terminator back to '\r\n', works for other paramaters
-        #return response
-    	
-        response = ''
-        #ANC300 spits out a bunch of garbage before the actual frequency, so need to query multiple times until get "frequency = *** Hz"
-        while 'frequency' not in response:
-            response = self.visa_handle.query('getf {}'.format(idx))
-            time.sleep(0.1)
+        self.set_terminator('\n') #: Bug in ANC300! Response for getf is terminated with '\n'
+        response = self.ask('getf {}'.format(idx))
         self.set_terminator('\r\n') #: Set terminator back to '\r\n', works for other paramaters
         return response
-
+    
     def _get_cap(self, idx: int) -> str:
         """Query capacitance of axis given by idx.
         
@@ -313,26 +279,10 @@ class AttocubeController(VisaInstrument):
         Returns:
             str: response
         """
-        self.set_terminator('\n')
-        self.device_clear()
-        #self.parameters['mode_ax{}'.format(idx)].set('cap')
-        #self.visa_handle.write('setm {} cap'.format(idx))
-        #self.visa_handle.write('capw {}'.format(idx))
-        #: There's some delay for cap, so query seven times and return the last response.
-        #for _ in range(7):
-        #    time.sleep(0.3)
-        #    response = self.ask('getc {}'.format(idx))
-        #return response
-        response = ''
-        #ANC300 spits out a bunch of garbage before the actual cap, so need to query multiple times til "capacitance = ..."
-        self.visa_handle.write('setm {} cap'.format(idx))
-        self.visa_handle.write('capw {}'.format(idx))
-        while 'capacitance' not in response:
-            response = self.visa_handle.query('getc {}'.format(idx))
-            time.sleep(0.1)
-        self.set_terminator('\r\n')
+        self.parameters['mode_ax{}'.format(idx)].set('cap')
+        _ = self.ask('capw {}'.format(idx))
+        response = self.ask('getc {}'.format(idx))
         return response
-
 
 class ANC300(AttocubeController):
     """ANC300 Attocube controller instrument.
@@ -366,33 +316,28 @@ class ANC300(AttocubeController):
             self.parameters['freq_ax{}'.format(idx)].set(freq_in_Hz)
             self.parameters['voltage_ax{}'.format(idx)].set(voltage_lim)
             self.parameters['mode_ax{}'.format(idx)].set('gnd')
-        self.version() #: sometimes returns 'OK' instead of version info on the first try
         self.serialnum()
         self.serialnum_ax1()
         self.serialnum_ax2()
         self.serialnum_ax3()
-        #self.serialnum_ax4()
-        #self.serialnum_ax5()
         print('Connected to: {}.'.format(self.version()))
-
-# class ANC150(AttocubeController):
-#    """ANC150 Attocube controller instrument.
-#    """
-#    def __init__(self, atto_config: Dict, temp: str, ureg: Any,
-#                 timestamp_format: str, **kwargs) -> None:
-#         super().__init__(atto_config, temp, ureg, timestamp_format, **kwargs)
-#         self.initialize()
-
-#     def initialize(self) -> None:
-#         """Initialize instrument with parameters from self.metadata.
-#         """
-#         log.info('Initializing ANC150 controller.')
-#         for axis, idx in self.axes.items():
-#             freq_in_Hz = self.Q_(self.metadata['default_frequency'][axis]).to('Hz').magnitude
-#             voltage_lim = self.voltage_limits[axis]
-#             self.parameters['freq_ax{}'.format(idx)].set(freq_in_Hz)
-#             self.parameters['voltage_ax{}'.format(idx)].set(voltage_lim)
-#             self.parameters['mode_ax{}'.format(idx)].set('gnd')
-#         self.version() #: sometimes returns 'OK' instead of version info on the first try
-#         print('Connected to: {}.'.format(self.version()))
         
+class ANC150(AttocubeController):
+    """ANC150 Attocube controller instrument.
+    """
+    def __init__(self, atto_config: Dict, temp: str, ureg: Any,
+                timestamp_format: str, **kwargs) -> None:
+        super().__init__(atto_config, temp, ureg, timestamp_format, **kwargs)
+        self.initialize()
+
+    def initialize(self) -> None:
+        """Initialize instrument with parameters from self.metadata.
+        """
+        log.info('Initializing ANC150 controller.')
+        for axis, idx in self.axes.items():
+            freq_in_Hz = self.Q_(self.metadata['default_frequency'][axis]).to('Hz').magnitude
+            voltage_lim = self.voltage_limits[axis]
+            self.parameters['freq_ax{}'.format(idx)].set(freq_in_Hz)
+            self.parameters['voltage_ax{}'.format(idx)].set(voltage_lim)
+            self.parameters['mode_ax{}'.format(idx)].set('gnd')
+        print('Connected to: {}.'.format(self.version()))

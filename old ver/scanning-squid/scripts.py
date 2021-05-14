@@ -41,7 +41,7 @@ def fft_noise(dev_name: str, channel: Dict[str, int], unit: str,
         dev_name: DAQ device name (e.g. 'Dev1').
         channel: Dict of {channel_name: analog_input} (e.g. {'MAG': 0}).
         unit: Physical unit of the channel (e.g. 'Phi0').
-        prefactor: Pint Quantity with dimenions of unit/V, from susceptometer.get_prefactors().
+        prefactor: Pint Quantity with dimenions of unit/V, from microscope.get_prefactors().
         samplerate: DAQ sampling rate in Hz.
         sampleduration: Sampling time in seconds.
         navg: Number of times to average the spectrum.
@@ -152,5 +152,9 @@ def time_trace(dev_name: str, channels: Dict[str,int], units: Dict[str,str],
     io.savemat(loc + '/time_trace.mat', mdict)
     return mdict
 
+#def lockin_sweep(lockin, amplitude, frequencies, mode='XY'):
+    """Sweeps the frequency of lockin output and records X and Y or R and Theta.
 
-
+    Args:
+        lockin: Instance of qcodes.instrument_drivers
+    """

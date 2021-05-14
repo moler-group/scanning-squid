@@ -31,7 +31,7 @@ import time
 import qcodes as qc
 
 def BF4K_cooldown(fname=None, gpib372=13, sample_thermometer=True, gpib331=30,
-                  stop_temp=1, dt=60, ts_fmt='%Y-%m-%d_%H:%M:%S'):
+                  stop_temp=3, dt=60, ts_fmt='%Y-%m-%d_%H:%M:%S'):
     """Logs fridge temperature (and optionally sample temperature) during a cooldown.
     """
     t0 = time.strftime(ts_fmt)
