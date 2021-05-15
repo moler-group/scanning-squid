@@ -1,25 +1,3 @@
-# This file is part of the scanning-squid package.
-#
-# Copyright (c) 2018 Logan Bishop-Van Horn
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-
 #: Various Python utilities
 from typing import Dict, List, Sequence, Any, Union, Tuple
 import numpy as np
@@ -27,7 +5,6 @@ import time
 from IPython.display import clear_output
 import matplotlib.pyplot as plt
 import pdb
-import scipy.io as io
 
 #: Qcodes for running measurements and saving data
 import qcodes as qc
@@ -87,6 +64,7 @@ class SusceptometerMicroscope(Microscope):
         """
         mod_width = self.Q_(self.SQUID.metadata['modulation_width'])
         prefactors = {}
+        offsets = {}
         for ch in measurement['channels']:
             prefactor = 1
             if ch == 'MAG':
@@ -110,8 +88,18 @@ class SusceptometerMicroscope(Microscope):
                 prefactor *= np.sqrt(2) / (self.Q_(self.scanner.metadata['cantilever']['calibration']) * gain_cap)
             elif ch in ['x_cap', 'y_cap']:
                 prefactor *= self.Q_(measurement['channels'][ch]['conversion'])
+            elif ch in ['Sample_T']:
+                ANALOG = m.temp_controller.analog_output().split(',')
+                minT = float(ANALOG[3])
+                maxT = float(ANALOG[2])
+                pol = float(ANALOG[4])
+                if pol == 1:
+                    prefactor *= (maxT-minT)/20
+                else:
+                    prefactor *= (maxT-minT)/10
             prefactor /= measurement['channels'][ch]['gain']
             prefactors.update({ch: prefactor})
+            offsets.update({ch: offset})
         return prefactors
 
     def scan_plane(self, scan_params: Dict[str, Any]) -> Any:
@@ -222,7 +210,7 @@ class SusceptometerMicroscope(Microscope):
             qc.Task(self.scanner.goto, old_pos)
         )
         # query temperature to be saved in snapshot
-        self.temp_controller.A.temperature()    
+        self.temp_controller.A.temperature()
         #: loop.metadata will be saved in DataSet
         loop.metadata.update(scan_params)
         loop.metadata.update({'prefactors': prefactor_strs})
@@ -271,7 +259,7 @@ class SusceptometerMicroscope(Microscope):
             if not self.abort_scan_loop:
                 log.info('Setting current to {} A'.format(current))
                 self.keithley.curr(current)
-                self.keithley.volt()
+                self.keithley.resistance()
                 time.sleep(1)
                 self.cycle_T(mfs_params['t_low'], mfs_params['t_high'])
                 _ = self.scan_plane(scan_params)
@@ -292,7 +280,7 @@ class SusceptometerMicroscope(Microscope):
                 if mts_params['touchdown']==1:
                     _ = self.td_cap(td_params)
                 _ = self.scan_plane(scan_params)
-                clear_output(wait=True)   
+                clear_output(wait=True)  
 
     def multi_Vfc_scan(self, mts_params: Dict[str, Any], scan_params: Dict[str, Any]):
         log.info('Starting multiple field coil current scans.')
@@ -367,40 +355,6 @@ class SusceptometerMicroscope(Microscope):
             elapsed_time=elapsed_time+1
             self.ax.plot(time_vec,sample_T)
             self.fig.canvas.draw()
-            
-    #def plot_T_vs_time(self):
-        #time_vec=[]
-        #sample_T=[]
-        #heater_V=[]
-        #elapsed_time=0
-        #self.fig, (self.ax1, self.ax2) = plt.subplots(2,1)
-        
-        #while (True):
-            #try:
-                #sample_T.append(self.temp_controller.A.temperature())
-                #heater_V.append(self.keithley.volt())
-                #time_vec.append(elapsed_time)
-                #time.sleep(1)
-                #elapsed_time=elapsed_time+1
-                #self.ax1.clear()
-                #self.ax2.clear()
-                #self.ax1.plot(time_vec,sample_T)
-                #self.ax2.plot(time_vec,heater_V)
-                #self.ax1.set_title('Temperature')
-                #self.ax2.set_title('Heater')
-                #self.ax1.set_xlabel('t(sec)')
-                #self.ax1.set_ylabel('T(K)')
-                #self.ax2.set_xlabel('t(sec)')
-                #self.ax2.set_ylabel('Volt (V)')
-                #self.fig.canvas.draw()
-            #except KeyboardInterrupt:
-                #print("Plotting interrupted by user.")
-                #svdata = {'time_vec': time_vec,'sample_T': sample_T, 'heater_V': heater_V}
-                #io.savemat('T_and_Heater_vs_Time.mat', svdata)
-                #return svdata
-
-        
-
     def IV_vs_temperature(self, mivts_params: Dict[str, Any]):
          # sampling rate in Hz
         samplerate=1000000

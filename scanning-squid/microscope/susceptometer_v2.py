@@ -1,25 +1,3 @@
-# This file is part of the scanning-squid package.
-#
-# Copyright (c) 2018 Logan Bishop-Van Horn
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-
 #: Various Python utilities
 from typing import Dict, List, Sequence, Any, Union, Tuple
 import numpy as np
@@ -27,7 +5,6 @@ import time
 from IPython.display import clear_output
 import matplotlib.pyplot as plt
 import pdb
-import scipy.io as io
 
 #: Qcodes for running measurements and saving data
 import qcodes as qc
@@ -96,7 +73,7 @@ class SusceptometerMicroscope(Microscope):
                 amp = (self.SUSC_lockin.sigout_amplitude() *
                     self.SUSC_lockin.sigout_range() * self.ureg('V'))
                 #: sqrt(2) because auxouts are Vpk, not Vrms
-                prefactor *= np.sqrt(2) * (r_lead / amp) / (mod_width * self.SUSC_lockin.gain_X())
+                prefactor *=  np.sqrt(2) * (r_lead / amp) / (mod_width * self.SUSC_lockin.gain_X())
             elif ch == 'SUSCY':
                 snap_susc = getattr(self, 'SUSC_lockin').snapshot(update=update)['parameters']
                 r_lead = self.Q_(measurement['channels'][ch]['r_lead'])
@@ -163,10 +140,9 @@ class SusceptometerMicroscope(Microscope):
                                            pts_per_line, plane, height)
         utils.validate_scan_params(self.scanner.metadata, scan_params,
                                    scan_grids, self.temp, self.ureg, log)
-        #pdb.set_trace()
         self.scanner.goto([scan_grids[axis][0][0] for axis in ['x', 'y', 'z']])
         # let the piezos relax before starting the scan
-        time.sleep(30)
+        time.sleep(10)
         #self.set_lockins(scan_params)
         #: get channel prefactors in pint Quantity form
         prefactors = self.get_prefactors(scan_params)
@@ -221,8 +197,6 @@ class SusceptometerMicroscope(Microscope):
             qc.Task(self.daq_ai.clear_instances),
             qc.Task(self.scanner.goto, old_pos)
         )
-        # query temperature to be saved in snapshot
-        self.temp_controller.A.temperature()    
         #: loop.metadata will be saved in DataSet
         loop.metadata.update(scan_params)
         loop.metadata.update({'prefactors': prefactor_strs})
@@ -271,63 +245,25 @@ class SusceptometerMicroscope(Microscope):
             if not self.abort_scan_loop:
                 log.info('Setting current to {} A'.format(current))
                 self.keithley.curr(current)
-                self.keithley.volt()
                 time.sleep(1)
                 self.cycle_T(mfs_params['t_low'], mfs_params['t_high'])
                 _ = self.scan_plane(scan_params)
                 clear_output(wait=True)
-    def multi_T_scan(self, mts_params: Dict[str, Any], scan_params: Dict[str, Any], td_params: Dict[str, Any]):
+    def multi_T_scan(self, mts_params: Dict[str, Any], scan_params: Dict[str, Any]):
         log.info('Starting multiple temperature scans.')
         self.abort_scan_loop = False
         
         for temperature in mts_params['temperatures']:
             if not self.abort_scan_loop:
-                log.info('Setting temperature to {} K'.format(temperature))
+                log.info('Setting temperature to {} A'.format(temperature))
                 self.temp_controller.ramp_rate(0)
                 time.sleep(0.1)
                 self.temp_controller.set_temperature(temperature)
                 time.sleep(0.1)
-                self.temp_controller.heater_range(mts_params['heater_range'])
+                self.temp_controller.heater_range(2)
                 time.sleep(100)
-                if mts_params['touchdown']==1:
-                    _ = self.td_cap(td_params)
                 _ = self.scan_plane(scan_params)
-                clear_output(wait=True)   
-
-    def multi_Vfc_scan(self, mts_params: Dict[str, Any], scan_params: Dict[str, Any]):
-        log.info('Starting multiple field coil current scans.')
-        self.abort_scan_loop = False
-        
-        for Vfc in mts_params['Vfcs']:
-            if not self.abort_scan_loop:
-                log.info('Setting susc lock-in amplitude to {} V'.format(Vfc))
-                self.SUSC_lockin.sigout_amplitude(Vfc)
-                time.sleep(0.1)
-                _ = self.scan_plane(scan_params)
-                clear_output(wait=True)
-
-    def multi_fc_frequency_scan(self, mts_params: Dict[str, Any], scan_params: Dict[str, Any]):
-        log.info('Starting multiple field coil frequency scans.')
-        self.abort_scan_loop = False
-        
-        for frequency in mts_params['frequencies']:
-            if not self.abort_scan_loop:
-                log.info('Setting susc lock-in frequency to {} Hz'.format(frequency))
-                self.SUSC_lockin.frequency(frequency)
-                time.sleep(0.1)
-                _ = self.scan_plane(scan_params)
-                clear_output(wait=True)                           
-    
-    def multi_height_scan(self, mts_params: Dict[str, Any], scan_params: Dict[str, Any]):
-        log.info('Starting multiple height scans.')
-        self.abort_scan_loop = False
-        for height in mts_params['heights']:
-            if not self.abort_scan_loop:
-                log.info('Setting height to {} '.format(height))
-                scan_params['height']=height
-                time.sleep(0.1)
-                _ = self.scan_plane(scan_params)
-                clear_output(wait=True)                                      
+                clear_output(wait=True)            
         
     def cycle_T(self, t_low: float, t_high: float):
         log.info('Starting temperature cycle. Warming to {}.'.format(t_high))
@@ -367,107 +303,26 @@ class SusceptometerMicroscope(Microscope):
             elapsed_time=elapsed_time+1
             self.ax.plot(time_vec,sample_T)
             self.fig.canvas.draw()
-            
-    #def plot_T_vs_time(self):
-        #time_vec=[]
-        #sample_T=[]
-        #heater_V=[]
-        #elapsed_time=0
-        #self.fig, (self.ax1, self.ax2) = plt.subplots(2,1)
+    def noise_vs_IPHI(self):
+        # sampling rate in Hz
+        fSampling=10000
+        nchannels = 1
         
-        #while (True):
-            #try:
-                #sample_T.append(self.temp_controller.A.temperature())
-                #heater_V.append(self.keithley.volt())
-                #time_vec.append(elapsed_time)
-                #time.sleep(1)
-                #elapsed_time=elapsed_time+1
-                #self.ax1.clear()
-                #self.ax2.clear()
-                #self.ax1.plot(time_vec,sample_T)
-                #self.ax2.plot(time_vec,heater_V)
-                #self.ax1.set_title('Temperature')
-                #self.ax2.set_title('Heater')
-                #self.ax1.set_xlabel('t(sec)')
-                #self.ax1.set_ylabel('T(K)')
-                #self.ax2.set_xlabel('t(sec)')
-                #self.ax2.set_ylabel('Volt (V)')
-                #self.fig.canvas.draw()
-            #except KeyboardInterrupt:
-                #print("Plotting interrupted by user.")
-                #svdata = {'time_vec': time_vec,'sample_T': sample_T, 'heater_V': heater_V}
-                #io.savemat('T_and_Heater_vs_Time.mat', svdata)
-                #return svdata
-
-        
-
-    def IV_vs_temperature(self, mivts_params: Dict[str, Any]):
-         # sampling rate in Hz
-        samplerate=1000000
-        
-        nsamples=10000
-        
-        fig, ax = plt.subplots(1,1)
-        ax.set_xlabel('Vv')
-        ax.set_ylabel('Vi') 
-        v0_min=mivts_params['v0_min']
-        v0_max=mivts_params['v0_max']
-        nv0s=mivts_params['nv0s']
-        temperatures=mivts_params['temperatures']
-        v0_list=np.linspace(v0_min,v0_max,nv0s)
-        nTs=len(temperatures)
-        #v1_list=np.linspace(v1_min,v1_max,nv1s)
-        #p=Pyrpl('squid_lockbox')
-        #r=p.rp
-        Iave_mat=np.zeros((nv0s,nTs))
-        # turn off RedPitaya feedback
-        #print('Turn on feedback\r')
-        #r.pid0.p=0
-        #r.pid0.i=800
-        #r.pid0.inputfilter=(0,0,0,0)
-        # reset lockpoint
-        #r.pid0.ival=0
-        nT=-1
-        for temperature in mivts_params['temperatures']:
-            nT=nT+1
-            log.info('Setting temperature to {} K'.format(temperature))
-            self.temp_controller.ramp_rate(0)
-            time.sleep(0.1)
-            self.temp_controller.set_temperature(temperature)
-            time.sleep(0.1)
-            self.temp_controller.heater_range(mivts_params['heater_range'])
-            time.sleep(50)
-                
-            with nidaqmx.Task() as read_task:
-                for inst in DAQAnalogInputs.instances():
-                    inst.close()
-                daq_ai = DAQAnalogInputs('daq_ai', 'Dev2', samplerate, {'MAG': 4}, read_task,
-                        samples_to_read=nsamples)
-        
-                with nidaqmx.Task() as write_task:   
-                    write_task.ao_channels.add_ao_voltage_chan('Dev2/ao3')
-                    nv0=-1
-                
-                    for v0 in v0_list:
-                        nv0=nv0+1
-                        
-                        write_task.start()
-                   #
-                        write_task.write(v0,auto_start=True)
-                        write_task.stop()
-                        
-                        time.sleep(0.1)
-                        #print('Measure average current\r')
-                        # measure average current
-                        I_data=daq_ai.voltage()[0].T
-                        
-                        Iave_mat[nv0,nT]=np.mean(I_data)
-                    ax.plot(v0_list,Iave_mat[:,nT])    
-            
-            daq_ai.close()
-                     
-        
-        np.savetxt('Iave.dat',Iave_mat)
+        ntimes=10000
+        dt=nchannels/fSampling
+        self.fig, self.ax = plt.subplots(1,1)
+        self.ax.set_xlabel('f(Hz)')
+        self.ax.set_ylabel('V(V)')
+        frequency_vec=np.linspace(0,1,ntimes)/dt  
+        with nidaqmx.Task() as task:
+            task.ai_channels.add_ai_voltage_chan("Dev1/ai4")
+            task.timing.cfg_samp_clk_timing(fSampling)
+            task.wait_until_done(10.0)
+            noise_data=task.read(number_of_samples_per_channel=ntimes)
+            noise_data=np.fft.fft(noise_data)
+            self.ax.plot(frequency_vec[1:-1],np.real(noise_data)[1:-1])  
+        #write_one_sample(data, timeout=10) 
+        #nidaqmx._task_modules.timing.Timing.ai_conv_rate(1000)
     def manual_plane(self, scan_params: Dict[str, Any]) -> Any:
     #     """
     #     Fine tune the scan plane by repeatedly scanning lines in the fast axis,
@@ -509,7 +364,6 @@ class SusceptometerMicroscope(Microscope):
         line_duration = self.Q_(scan_params['range'][fast_ax]) / self.Q_(scan_params['scan_rate'])
         pts_per_line = int(daq_rate * line_duration.to('s').magnitude)
         pix_per_line = scan_params['scan_size'][fast_ax]
-        pts_per_pix=int(pts_per_line/pix_per_line)
         lines_per_image = scan_params['scan_size'][slow_ax]
         center_line = int(np.floor(lines_per_image/2))
         plane = self.scanner.metadata['plane']
@@ -520,14 +374,47 @@ class SusceptometerMicroscope(Microscope):
                                             pts_per_line, plane, height)
         utils.validate_scan_params(self.scanner.metadata, scan_params,
                                            scan_grids, self.temp, self.ureg, log)
-        #pdb.set_trace()
-        
-        self.scanner.goto([scan_grids[axis][center_line][0] for axis in ['x', 'y', 'z']])
+        if fast_ax == 'x':
+            self.scanner.goto([scan_grids[axis][center_line][0] for axis in ['x', 'y', 'z']])
+        else:
+            self.scanner.goto([scan_grids[axis][center_line][0] for axis in ['x', 'y', 'z']])
         #self.scanner.goto([scan_grids[axis][0][0] for axis in ['x', 'y', 'z']])
         # let the piezos relax before starting the scan
         time.sleep(10)
         while (1):
-    
+    #     #self.set_lockins(scan_params)
+    #     #: get channel prefactors in pint Quantity form
+    #     prefactors = self.get_prefactors(scan_params)
+    #     #: get channel prefactors in string form so they can be saved in metadata
+    #     prefactor_strs = {}
+    #     for ch, prefac in prefactors.items():
+    #         unit = scan_params['channels'][ch]['unit']
+    #         pre = prefac.to('{}/V'.format(unit))
+    #         prefactor_strs.update({ch: '{} {}'.format(pre.magnitude, pre.units)})
+    #     ai_task = nidaqmx.Task('scan_plane_ai_task')
+    #     self.remove_component('daq_ai')
+    #     if hasattr(self, 'daq_ai'):
+    #         self.daq_ai.clear_instances()
+    #     self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, daq_rate, channels, ai_task,
+    #                                   samples_to_read=pts_per_line, target_points=pix_per_line,
+    #                                   #: Very important to synchronize AOs and AIs
+    #                                   clock_src='ao/SampleClock')
+    #     self.add_component(self.daq_ai)
+    #     slow_ax_position = getattr(self.scanner, 'position_{}'.format(slow_ax))
+    #     slow_ax_start = scan_vectors[slow_ax][0]
+    #     slow_ax_end = scan_vectors[slow_ax][-1]
+    #     slow_ax_step = scan_vectors[slow_ax][1] - scan_vectors[slow_ax][0]
+    #     #slow_ax_position = getattr(self.scanner, 'position_{}'.format(slow_ax))
+    #     #slow_ax_start = (scan_vectors[slow_ax][0]+scan_vectors[slow_ax][-1])/2
+    #     #slow_ax_end = slow_ax_start
+    #     #slow_ax_step = scan_vectors[slow_ax][1] - scan_vectors[slow_ax][0]
+    #     #: There is probably a counter built in to qc.Loop, but I couldn't find it
+    #     loop_counter = utils.Counter()
+    #     scan_plot = ScanPlot(scan_params, scanner_constants, self.temp, self.ureg)
+    #     loop = qc.Loop(slow_ax_position.sweep(start=slow_ax_start,
+    #                                           stop=slow_ax_end,
+    #                                           step=slow_ax_step), delay=0.1
+    #     ).each(
             new_input=input('xu,xd,yu,yd,zu,zd,r,q')
             if new_input == 'xu' :
                 plane['x']=plane['x']+0.01
@@ -538,9 +425,9 @@ class SusceptometerMicroscope(Microscope):
             if new_input == 'yd' :
                plane['y']=plane['y']-0.01
             if new_input == 'zu' :
-               plane['z']=plane['z']+0.1
+               plane['z']=plane['z']+0.01
             if new_input == 'zd' :
-               plane['z']=plane['z']-0.1
+               plane['z']=plane['z']-0.01
             if new_input == 'q':
                break    
             log.info('x={} y={} z={}'.format(plane['x'],plane['y'],plane['z']))                    
@@ -549,15 +436,58 @@ class SusceptometerMicroscope(Microscope):
             utils.validate_scan_params(self.scanner.metadata, scan_params,
                                    scan_grids, self.temp, self.ureg, log)
             #this starts the built-in python debugger
-            
+            pdb.set_trace()
             for npix in range (0,pix_per_line):
-                npt=pts_per_pix*npix
-                #pdb.set_trace()
-                
-                self.scanner.goto([scan_grids[axis][center_line][npt] for axis in ['x', 'y', 'z']],False,None,True)
-            
-            self.scanner.goto([scan_grids[axis][center_line][0] for axis in ['x', 'y', 'z']],False,None,True)        
-               
+                set_
+                if fast_ax == 'x':
+                    self.scanner.goto([scan_grids[axis][center_line][npix] for axis in ['x', 'y', 'z']],False,None,True)
+                else:
+                    self.scanner.goto([scan_grids[axis][center_line][npix] for axis in ['x', 'y', 'x']],False,None,True)
+                #time.sleep(line_duration/pts_per_line)    
+
+    #         #: Create AO task and queue data to be written to AOs
+    #         qc.Task(self.scanner.scan_line, scan_grids, ao_channels, daq_rate, loop_counter),
+    #         #: Start AI task; acquisition won't start until AO task is started
+    #         qc.Task(ai_task.start),
+    #         #: Start AO task
+    #         qc.Task(self.scanner.control_ao_task, 'start'),
+    #         #: Acquire voltage from all active AI channels
+    #         self.daq_ai.voltage,
+    #         qc.Task(ai_task.wait_until_done),
+    #         qc.Task(self.scanner.control_ao_task, 'wait_until_done'),
+    #         qc.Task(ai_task.stop),
+    #         #: Stop and close AO task so that AOs can be used for goto
+    #         qc.Task(self.scanner.control_ao_task, 'stop'),
+    #         qc.Task(self.scanner.control_ao_task, 'close'),
+    #         qc.Task(self.scanner.goto_start_of_next_line, scan_grids, loop_counter),
+    #         #: Update and save plot
+    #         qc.Task(scan_plot.update, qc.loops.active_data_set, loop_counter),
+    #         qc.Task(scan_plot.save),
+    #         qc.Task(loop_counter.advance)
+    #     ).then(
+    #         qc.Task(ai_task.stop),
+    #         qc.Task(ai_task.close),
+    #         qc.Task(self.daq_ai.clear_instances),
+    #         qc.Task(self.scanner.goto, old_pos)
+    #     )
+    #     #: loop.metadata will be saved in DataSet
+    #     loop.metadata.update(scan_params)
+    #     loop.metadata.update({'prefactors': prefactor_strs})
+    #     for idx, ch in enumerate(meas_channels):
+    #         loop.metadata['channels'][ch].update({'idx': idx})
+    #     data = loop.get_data_set(name=scan_params['fname'])
+    #     #: Run the loop
+    #     try:
+    #         loop.run()
+    #         log.info('Scan completed. DataSet saved to {}.'.format(data.location))
+    #     #: If loop is aborted by user:
+    #     except KeyboardInterrupt:
+    #         log.warning('Scan interrupted by user. Going to [0, 0, 0] V.')
+    #         self.abort_scan_loop = True
+    #         #: Stop 'scan_plane_ai_task' so that we can read our current position
+    #         ai_task.stop()
+    #         ai_task.close()
+            #: If there's an active AO task, close it so that we can use goto
         try:
             self.scanner.control_ao_task('stop')
             self.scanner.control_ao_task('close')

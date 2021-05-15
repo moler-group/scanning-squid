@@ -28,6 +28,7 @@ from qcodes.instrument.parameter import ArrayParameter
 from scipy import io
 import json
 from collections import OrderedDict
+import pdb
 
 #: Tell the UnitRegistry what a Phi0 is, and that ohm and Ohm are the same thing.
 with open('squid_units.txt', 'w') as f:
@@ -90,14 +91,17 @@ def make_scan_vectors(scan_params: Dict[str, Any], scanner_constants: Dict[str, 
     center = []
     size = []
     rng = []
+    dirc = []
     for ax in ['x', 'y']:
         c = Q_(scan_params['center'][ax]) / Q_(scanner_constants[temp][ax])
         center.append(c.to('V').magnitude)
         size.append(scan_params['scan_size'][ax])
         r = Q_(scan_params['range'][ax]) / Q_(scanner_constants[temp][ax])
         rng.append(r.to('V').magnitude)
-    x = np.linspace(center[0] - 0.5 * rng[0], center[0] + 0.5 * rng[0], size[0])
-    y = np.linspace(center[1] - 0.5 * rng[1], center[1] + 0.5 * rng[1], size[1])
+        dirc.append(1 if scan_params['direction'][ax] == "pos" else -1)
+        
+    x = np.linspace(center[0] - 0.5 * dirc[0] * rng[0], center[0] + 0.5 * dirc[0] * rng[0], size[0])
+    y = np.linspace(center[1] - 0.5 * dirc[1] * rng[1], center[1] + 0.5 * dirc[1] * rng[1], size[1])
     return {'x': x, 'y': y}
 
 def make_scan_grids(scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
@@ -127,6 +131,7 @@ def make_scan_grids(scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
     else:
         X, Y = np.meshgrid(fast_ax_vec, slow_ax_vec, indexing='xy')
     Z = X * plane['x'] + Y * plane['y'] + plane['z'] + height
+    
     return {'x': X, 'y': Y, 'z': Z}
 
 def make_xy_grids(scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
@@ -288,6 +293,8 @@ def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True,
     if fname is None:
         fname = meta['fname']
     fpath = scan_data.location + '/'
+    mdict.update({'keithley_current': scan_data.metadata['station']['instruments']['keithley']['parameters']['curr']['value']})
+    mdict.update({'temperature': scan_data.metadata['station']['instruments']['lakeshore']['submodules']['A']['parameters']['temperature']['value']})
     io.savemat(next_file_name(fpath + fname, 'mat'), mdict)
 
 def td_to_mat_file(td_data: Any, real_units: Optional[bool]=True, fname: Optional[str]=None) -> None:

@@ -1,25 +1,3 @@
-# This file is part of the scanning-squid package.
-#
-# Copyright (c) 2018 Logan Bishop-Van Horn
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-
 #: Various Python utilities
 import os
 import sys
@@ -41,6 +19,7 @@ import qcodes as qc
 from qcodes.station import Station
 #from qcodes.instrument_drivers.tektronix.Keithley_2400 import Keithley_2400
 from instruments.keithley_2400 import Keithley_2400
+from instruments.keithleyinplane import Keithley_2400
 from instruments.hf2li import HF2LI
 from instruments.lakeshore import Model_335
 
@@ -114,6 +93,7 @@ class Microscope(Station):
         self._add_atto()
         self._add_temp_controller()
         self._add_keithley()
+        self._add_keithleyinplane()
         self._add_scanner()
         self._add_SQUID()
         self._add_lockins()
@@ -159,6 +139,23 @@ class Microscope(Station):
         self.keithley.compliancev(10)
         self.keithley.output(1)
         log.info('Keithley controller successfully added to microscope.')
+
+    def _add_keithleyinplane(self):
+        """Add Keithleyinplane to microscope.
+        """
+        k_config = self.config['instruments']['keithleyinplane']
+        if hasattr(self, 'keithleyinplane'):
+            self.keithleyinplane.clear_instances()
+        self.remove_component(k_config['name'])
+        self.keithleyinplane = Keithley_2400(k_config['name'], k_config['address'])
+        self.add_component(self.keithleyinplane)
+        self.keithleyinplane.mode('CURR')
+        #self.keithleyinplane.sense('VOLT')
+        self.keithleyinplane.rangei(100e-3)
+        self.keithleyinplane.curr(0)
+        self.keithleyinplane.compliancev(10)
+        self.keithleyinplane.output(1)
+        log.info('Keithleyinplane controller successfully added to microscope.')
     
 
     def _add_scanner(self):
@@ -252,7 +249,7 @@ class Microscope(Station):
         dV = self.Q_(tdc_params['dV']).to('V').magnitude
         #: Start and end z position voltages
         startV, endV = sorted([self.Q_(lim).to('V').magnitude for lim in tdc_params['range']])
-        delay = constants['wait_factor'] * max(self.CAP_lockin.time_constant(), self.SUSC_lockin.time_constant())
+        delay = constants['wait_factor'] * self.CAP_lockin.time_constant()
         prefactors = self.get_prefactors(tdc_params)
         #: get channel prefactors in string form so they can be saved in metadata
         prefactor_strs = {}
@@ -292,25 +289,20 @@ class Microscope(Station):
         try:
             log.info('Starting capacitive touchdown.')
             loop.run()
-            if self.scanner.td_height is not None:
-                data.metadata['loop']['metadata'].update({'td_height': self.scanner.td_height})
-                if abs(old_pos[0]) < 0.002 and abs(old_pos[1]) < 0.002:
-                    self.scanner.metadata['plane'].update({'z': self.scanner.td_height})
+            if abs(old_pos[0]) < 0.002 and abs(old_pos[1]) < 0.002 and self.scanner.td_height is not None:
+                self.scanner.metadata['plane'].update({'z': self.scanner.td_height})
         except KeyboardInterrupt:
-            log.warning('Touchdown interrupted by user. Retracting scanner. DataSet saved to {}.'.format(data.location))
+            log.warning('Touchdown interrupted by user. Retracting scanner.')
             #: Set break_loop = True so that get_plane() and approach() will be aborted
             self.scanner.break_loop = True
-        finally:
-            try:
-                #: Stop 'td_cap_ai_task' so that we can read our current position
-                ai_task.stop()
-                ai_task.close()
-                self.scanner.retract()
-                #self.CAP_lockin.amplitude(0.004)
-                tdc_plot.fig.show()
-                tdc_plot.save()
-            except:
-                pass
+            #: Stop 'td_cap_ai_task' so that we can read our current position
+            ai_task.stop()
+            ai_task.close()
+            self.scanner.retract()
+            #self.CAP_lockin.amplitude(0.004)
+            tdc_plot.fig.show()
+            tdc_plot.save()
+            log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
         utils.td_to_mat_file(data, real_units=True)
         return data, tdc_plot
 

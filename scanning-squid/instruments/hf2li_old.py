@@ -1,24 +1,22 @@
-# This file is part of the scanning-squid package.
-#
-# Copyright (c) 2018 Logan Bishop-Van Horn
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+"""
+This file is part of the scanning-squid package.
+Copyright (c) 2018 Logan Bishop-Van Horn
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+"""
 
 import qcodes as qc
 from qcodes.instrument.base import Instrument
@@ -95,7 +93,7 @@ class HF2LI(Instrument):
                            label='Frequency',
                            unit='Hz',
                            get_cmd=self._get_frequency,
-                           set_cmd=self._set_frequency                     
+                           get_parser=float
                            ) 
         self.add_parameter(name='sigout_range',
                            label='Signal output range',
@@ -202,21 +200,13 @@ class HF2LI(Instrument):
 
     def _set_sigout_amplitude(self, amp):
         path = '/{}/sigouts/{}/amplitudes/{}/'.format(self.dev_id, self.sigout[0], self.sigout[1])
-        self.daq.setDouble(path, amp)
+        self.daq.setDouble(path, offset)
 
     def _get_frequency(self):
         path = '/{}/demods/{}/freq/'.format(self.dev_id, self.demod)
         freq = self.daq.getDouble(path)
         return freq
 
-    def _set_frequency(self, freq):
-        path = '/{}/oscs/1/freq/'.format(self.dev_id)
-        self.daq.setDouble(path, freq)
-
     def sample(self):
         path = '/{}/demods/{}/sample/'.format(self.dev_id, self.demod)
-<<<<<<< Updated upstream
         return daq.getSample(path)
-=======
-        return self.daq.getSample(path)
->>>>>>> Stashed changes

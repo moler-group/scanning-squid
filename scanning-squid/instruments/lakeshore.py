@@ -102,5 +102,9 @@ class Model_335(VisaInstrument):
                    label='Heater range',
                    vals=Numbers(min_value=0),
                    unit='K/min')
+        self.add_parameter(name='analog_output',
+                   get_cmd='ANALOG?',
+                   get_parser=str,
+                   label='Analog output')
         ##############
         self.connect_message()
