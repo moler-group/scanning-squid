@@ -24,6 +24,7 @@ import qcodes as qc
 from qcodes.instrument.base import Instrument
 import qcodes.utils.validators as vals
 import utils
+import time
 from scipy import io
 from scipy.interpolate import Rbf
 from typing import Dict, List, Optional, Sequence, Any, Union
@@ -161,16 +162,16 @@ class Scanner(Instrument):
                     channel = self.metadata['daq']['name'] + '/ao{}'.format(idx)
                     ao_task.ao_channels.add_ao_voltage_chan(channel, axis)
                 ao_task.timing.cfg_samp_clk_timing(self.daq_rate, samps_per_chan=len(ramp[0]))
-                pts = ao_task.write(ramp, auto_start=False, timeout=30)
+                pts = ao_task.write(ramp, auto_start=False, timeout=60)
                 ao_task.start()
-                ao_task.wait_until_done()
+                ao_task.wait_until_done(timeout=60)
                 log.debug('Wrote {} samples to {}.'.format(pts, ao_task.channel_names))
         else:
-            self.retract(speed=speed)
+            self.retract(quiet=True)
             cur_pos = self.get_pos()
-            self.goto([new_pos[0], new_pos[1], cur_pos[2]], speed=speed)
+            self.goto([new_pos[0], new_pos[1], cur_pos[2]], quiet=True)
             cur_pos = self.get_pos()
-            self.goto([cur_pos[0], cur_pos[1], new_pos[2]], speed=speed)
+            self.goto([cur_pos[0], cur_pos[1], new_pos[2]], quiet=True)
         current_pos = self.position()
         if quiet:
             log.debug('Moved scanner from {} V to {} V.'.format(old_pos, current_pos))
@@ -222,16 +223,21 @@ class Scanner(Instrument):
         log.debug('Writing line {}.'.format(line))
         self.ao_task.write(np.array(out), auto_start=False)
         
-    def goto_start_of_next_line(self, scan_grids: Dict[str, np.ndarray], counter: Any) -> None:
+    def goto_start_of_next_line(self, scan_grids: Dict[str, np.ndarray], counter: Any, wait: Optional[bool]=False, retractfirst: Optional[bool]=False) -> None:
         """Moves scanner to the start of the next line to scan.
         Args:
             scan_grids: Dict of {axis_name: axis_meshgrid} from utils.make_scan_grids().
             counter: utils.Counter instance, determines current line of the grid.
+            wait: wait at the fisrt position of next line before start scan
+            retractfirst: retract first when scan finishes
         """
         line = counter.count
         try:
             start_of_next_line = [scan_grids[axis][line+1][0] for axis in ['x', 'y', 'z']]
-            self.goto(start_of_next_line, quiet=True)
+            self.goto(start_of_next_line, retract_first=retractfirst, quiet=True)
+            #wait 5 sec
+            if wait:
+                time.sleep(5)
         #: If `line` is the last line in the scan, do nothing.
         except IndexError:
             pass

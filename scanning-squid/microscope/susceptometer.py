@@ -21,7 +21,7 @@
 # THE SOFTWARE.
 
 #: Various Python utilities
-from typing import Dict, List, Sequence, Any, Union, Tuple
+from typing import Dict, List, Sequence, Any, Union, Tuple, Optional
 import time
 
 #: Qcodes for running measurements and saving data
@@ -110,13 +110,15 @@ class SusceptometerMicroscope(Microscope):
             prefactors.update({ch: prefactor.to('{}/V'.format(measurement['channels'][ch]['unit']))})
         return prefactors
 
-    def scan_surface(self, scan_params: Dict[str, Any], ring: int=None) -> None:
+    def scan_surface(self, scan_params: Dict[str, Any], ring: int=None, scanwait: Optional[bool]=False, retractfirst: Optional[bool]=False) -> None:
         """
         Scan the current surface while acquiring data in the channels defined in
         measurement configuration file (e.g. MAG, SUSCX, SUSCY, CAP).
         Args:
             scan_params: Dict of scan parameters as defined
                 in measuremnt configuration file.
+            wait: wait at the fisrt position of next line before start scan
+            retractfirst: retract first when scan finishes
         Returns:
             Tuple[qcodes.DataSet, plots.ScanPlot]: data, plot
                 qcodes DataSet containing acquired arrays and metdata,
@@ -165,6 +167,8 @@ class SusceptometerMicroscope(Microscope):
         utils.validate_scan_params(self.scanner.metadata, scan_params,
                                    scan_grids, self.temp, self.ureg, log)
         self.scanner.goto([scan_grids[axis][0][0] for axis in ['x', 'y', 'z']])
+        #: Wait 30 s
+        time.sleep(30)
         self.set_lockins(scan_params)
         #: get channel prefactors in pint Quantity form
         prefactors = self.get_prefactors(scan_params)
@@ -244,7 +248,7 @@ class SusceptometerMicroscope(Microscope):
                 #: Stop and close AO task so that AOs can be used for goto
                 qc.Task(self.scanner.control_ao_task, 'stop'),
                 qc.Task(self.scanner.control_ao_task, 'close'),
-                qc.Task(self.scanner.goto_start_of_next_line, scan_grids, loop_counter),
+                qc.Task(self.scanner.goto_start_of_next_line, scan_grids, loop_counter, wait=scanwait, retractfirst=retractfirst),
                 #: Update and save plot
                 qc.Task(scan_plot.update, qc.loops.active_data_set, loop_counter),
                 qc.Task(scan_plot.save),
@@ -440,223 +444,4 @@ class SusceptometerMicroscope(Microscope):
             self.fig.canvas.draw()
 
 
-    """def fft_noise_plane(self, scan_params: Dict[str, Any]) -> None:
-    """
-
-    """
-        Scan the current surface while acquiring fft data in the channels defined in
-        measurement configuration file (e.g. MAG, SUSCX, SUSCY, CAP).
-        Args:
-            scan_params: Dict of scan parameters as defined
-                in measuremnt configuration file.
-        Returns:
-            Tuple[qcodes.DataSet, plots.ScanPlot]: data, plot
-                qcodes DataSet containing acquired arrays and metdata,
-                and ScanPlot instance populated with acquired data.
-    """
-    """
-        if not self.atto.surface_is_current:
-            raise RuntimeError('Surface is not current. Aborting scan.')
-        surface_type = scan_params['surface_type'].lower()
-        if surface_type not in ['plane', 'surface']:
-            raise ValueError('surface_type must be "plane" or "surface".')
-
-        old_pos = self.scanner.position()
-        
-        daq_config = self.config['instruments']['daq']
-        ao_channels = daq_config['channels']['analog_outputs']
-        ai_channels = daq_config['channels']['analog_inputs']
-        meas_channels = scan_params['channels']
-        channels = {}
-        for ch in meas_channels:
-            channels.update({ch: ai_channels[ch]})
-        nchannels = len(channels.keys())
-
-        daq_name = daq_config['name']
-        #: DAQ AI sampling rate is divided amongst all active AI channels
-        daq_rate = self.Q_(daq_config['rate']).to('Hz').magnitude / nchannels
-        
-        fast_ax = scan_params['fast_ax'].lower()
-        slow_ax = 'x' if fast_ax == 'y' else 'y'
-        
-        pix_per_line = scan_params['scan_size'][fast_ax]
-        line_duration = pix_per_line * self.ureg('pixels') / self.Q_(scan_params['scan_rate'])
-        pts_per_line = int(daq_rate * line_duration.to('s').magnitude)
-        
-        height = self.Q_(scan_params['height']).to('V').magnitude
-        
-        scan_vectors = utils.make_scan_vectors(scan_params, self.ureg)
-        #scan_grids = utils.make_scan_grids(scan_vectors, slow_ax, fast_ax,
-        #                                   pts_per_line, plane, height)
-        plane = self.scanner.metadata['plane']
-        if surface_type == 'plane':
-            scan_grids = utils.make_scan_surface(surface_type, scan_vectors, slow_ax, fast_ax,
-                                                pts_per_line, plane, height)
-        else:
-            scan_grids = utils.make_scan_surface(surface_type, scan_vectors, slow_ax, fast_ax,
-                                                pts_per_line, plane, height, interpolator=self.scanner.surface_interp)
-        utils.validate_scan_params(self.scanner.metadata, scan_params,
-                                   scan_grids, self.temp, self.ureg, log)
-        self.scanner.goto([scan_grids[axis][0][0] for axis in ['x', 'y', 'z']])
-        self.set_lockins(scan_params)
-        #: get channel prefactors in pint Quantity form
-        prefactors = self.get_prefactors(scan_params)
-        #: get channel prefactors in string form so they can be saved in metadata
-        prefactor_strs = {}
-        for ch, prefac in prefactors.items():
-            unit = scan_params['channels'][ch]['unit']
-            pre = prefac.to('{}/V'.format(unit))
-            prefactor_strs.update({ch: '{} {}'.format(pre.magnitude, pre.units)})
-        samplerate = scan_params['samplerate']
-        sampleduration = scan_params['sampleduration']
-        navg = scan_params['navg']
-        fmax = scan_params['fmax']
-        nsamples = int(samplerate * sampleduration)
-        v_fft_avg = np.zeros((nsamples // 2,))
-        ai_task = nidaqmx.Task('fft_noise_plane_ai_task')
-        self.remove_component('daq_ai')
-        if hasattr(self, 'daq_ai'):
-            #self.daq_ai.clear_instances()
-            self.daq_ai.close()
-        self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, samplerate, channels, ai_task,
-                                        samples_to_read=nsamples, timeout=sampleduration+10)
-        self.add_component(self.daq_ai)
-       
-        
-        mdict.update({
-            'v_fft_avg': v_fft_avg[freqs < fmax],
-            'sig_fft_avg': sig_fft_avg[freqs < fmax],
-            'freqs': freqs[freqs < fmax]})
-        
-        slow_ax_position = getattr(self.scanner, 'position_{}'.format(slow_ax))
-        slow_ax_start = scan_vectors[slow_ax][0]
-        slow_ax_end = scan_vectors[slow_ax][-1]
-        slow_ax_step = scan_vectors[slow_ax][1] - scan_vectors[slow_ax][0]
-        #: There is probably a counter built in to qc.Loop, but I couldn't find it
-        loop_counter = utils.Counter()
-        scan_plot = ScanPlot(scan_params, self.ureg)
-        
-        loop = qc.Loop(slow_ax_position.sweep(start=slow_ax_start,
-                                          stop=slow_ax_end,
-                                          step=slow_ax_step), delay=0.1
-            ).each(
-            #: Create AO task and queue data to be written to AOs
-            qc.Task(self.scanner.scan_line, scan_grids, ao_channels, daq_rate, loop_counter),
-            #: Start AI task; acquisition won't start until AO task is started
-            qc.Task(ai_task.start),
-            #: Start AO task
-            qc.Task(self.scanner.control_ao_task, 'start'),
-            #: Acquire voltage from all active AI channels for navg samples
-            v_fft_avg = np.zeros((nsamples // 2,)),
-            for i in range(navg):
-                data_v = self.daq_ai.voltage()[0].T
-                Fs = nsamples / sampleduration
-                v_fft = np.fft.fft(data_v) / (nsamples / np.sqrt(2 * sampleduration))
-                v_fft_abs = np.abs(v_fft[:nsamples//2])
-                freqs = np.fft.fftfreq(nsamples, d=1/Fs)[:nsamples//2]
-                v_fft_avg += v_fft_abs,
-            v_fft_avg = v_fft_avg / navg,
-            sig_fft_avg = prefactor.magnitude * v_fft_avg,
-            qc.Task(ai_task.wait_until_done),
-            qc.Task(self.scanner.control_ao_task, 'wait_until_done'),
-            qc.Task(ai_task.stop),
-            #: Stop and close AO task so that AOs can be used for goto
-            qc.Task(self.scanner.control_ao_task, 'stop'),
-            qc.Task(self.scanner.control_ao_task, 'close'),
-            qc.Task(self.scanner.goto_start_of_next_line, scan_grids, loop_counter),
-            #: Update and save plot
-            qc.Task(scan_plot.update, qc.loops.active_data_set, loop_counter),
-            qc.Task(scan_plot.save),
-            qc.Task(loop_counter.advance)
-        ).then(
-            qc.Task(ai_task.stop),
-            qc.Task(ai_task.close),
-            qc.Task(self.daq_ai.close),
-            #qc.Task(self.daq_ai.clear_instances),
-            qc.Task(self.scanner.goto, old_pos),
-            #qc.Task(self.CAP_lockin.amplitude, 0.004),
-            #qc.Task(self.SUSC_lockin.amplitude, 0.004)
-        )
-        #: loop.metadata will be saved in DataSet
-        loop.metadata.update(scan_params)
-        loop.metadata.update({'prefactors': prefactor_strs})
-        for idx, ch in enumerate(meas_channels):
-            loop.metadata['channels'][ch].update({'idx': idx})
-        data = loop.get_data_set(name=scan_params['fname'])
-        #: Run the loop
-        try:
-            loop.run()
-            log.info('Scan completed. DataSet saved to {}.'.format(data.location))
-        #: If loop is aborted by user:
-        except KeyboardInterrupt:
-            log.warning('Scan interrupted by user. Going to [0, 0, -10] V.')
-            #: Stop 'scan_plane_ai_task' so that we can read our current position
-            ai_task.stop()
-            ai_task.close()
-            #: If there's an active AO task, close it so that we can use goto
-            try:
-                self.scanner.control_ao_task('stop')
-                self.scanner.control_ao_task('close')
-            except:
-                pass
-            self.scanner.goto([0, 0, -10])
-            #self.CAP_lockin.amplitude(0.004)
-            #self.SUSC_lockin.amplitude(0.004)
-            log.info('Scan aborted by user. DataSet saved to {}.'.format(data.location))
-        self.remove_component('daq_ai')
-        utils.scan_to_mat_file(data, real_units=True, interpolator=self.scanner.surface_interp)
-
-
-       fft_noise(dev_name, channel, unit, prefactor, samplerate, sampleduration, navg, fmax):
-    loc_provider = qc.FormatLocation(fmt='./data/{date}/#{counter}_{name}_{time}')
-    loc = loc_provider(DiskIO('.'), record={'name': 'fft_noise'})
-    pathlib.Path(loc).mkdir(parents=True, exist_ok=True)
-    prefactor_str = {}
-    prefactor.ito('{}/V'.format(unit))
-    prefactor_str.update({list(channel.keys())[0]: '{} {}'.format(prefactor.magnitude, prefactor.units)})
-    mdict = {
-        'metadata': {
-            #'channel': channel,
-            #'unit': unit,
-            #'prefactor': prefactor_str,
-            'samplerate': samplerate,
-            'sampleduration': sampleduration,
-            'navg': navg,
-            'fmax': fmax ,
-            'location': loc
-        }
-    }
-    nsamples = int(samplerate * sampleduration)
-    v_fft_avg = np.zeros((nsamples // 2,))
-    with nidaqmx.Task('fft_noise_ai_task') as ai_task:
-        for inst in DAQAnalogInputs.instances():
-            inst.close()
-        daq_ai = DAQAnalogInputs('daq_ai', dev_name, samplerate, channel, ai_task,
-            samples_to_read=nsamples, timeout=sampleduration+10)
-        for i in range(navg):
-            data_v = daq_ai.voltage()[0].T
-            Fs = nsamples / sampleduration
-            v_fft = np.fft.fft(data_v) / (nsamples / np.sqrt(2 * sampleduration))
-            v_fft_abs = np.abs(v_fft[:nsamples//2])
-            freqs = np.fft.fftfreq(nsamples, d=1/Fs)[:nsamples//2]
-            v_fft_avg += v_fft_abs
-        daq_ai.close()
-        v_fft_avg = v_fft_avg / navg
-        sig_fft_avg = prefactor.magnitude * v_fft_avg
-        mdict.update({
-            'v_fft_avg': v_fft_avg[freqs < fmax],
-            'sig_fft_avg': sig_fft_avg[freqs < fmax],
-            'freqs': freqs[freqs < fmax]})
-        fig, ax = plt.subplots(1,2, figsize=(8,4), tight_layout=True)
-        ax[0].loglog(freqs, v_fft_avg, lw=1)
-        ax[0].set_ylabel('V/sqrt(Hz)')
-        ax[1].loglog(freqs, sig_fft_avg, lw=1)
-        ax[1].set_ylabel('{}/sqrt(Hz)'.format(unit))
-        fig.suptitle(loc, x=0.5, y=1)
-        for i in [0,1]:
-            ax[i].set_xlabel('Frequency [Hz]')
-            ax[i].grid()
-        plt.savefig(loc + '/fft_noise.png')
-        io.savemat(loc + '/fft_noise.mat', mdict)
-        return mdict
-"""
+ 

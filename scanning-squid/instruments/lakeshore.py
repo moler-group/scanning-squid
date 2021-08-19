@@ -200,7 +200,7 @@ class Model_372(VisaInstrument):
     Adapted from QCoDeS Lakeshore 336 driver
     """
 
-    def __init__(self, name, address, active_channels={'ch1': '50K Plate', 'ch2': '3K Plate'}, **kwargs):
+    def __init__(self, name, address, active_channels={'A': 'sample'}, **kwargs):
         super().__init__(name, address, terminator="\r\n", **kwargs)
 
         # Allow access to channels either by referring to the channel name
@@ -221,29 +221,45 @@ class Model_372(VisaInstrument):
         channels.lock()
         self.add_submodule("channels", channels)
         ###############
-        # self.add_parameter(name='set_temperature',
-        #            get_cmd='SETP?',
-        #            get_parser=float,
-        #            set_cmd='SETP 1,{}',
-        #            label='Set Temerature',
-        #            vals=Numbers(4, 300),
-        #            unit='K')
-        # self.add_parameter(name='heater_range',
-        #            get_cmd='RANGE?',
-        #            get_parser=int,
-        #            set_cmd='RANGE 1,{}',
-        #            label='Heater range',
-        #            vals=Enum(0, 1, 2, 3),
-        #            unit='')
-        # self.add_parameter(name='ramp_rate',
-        #            get_cmd='RAMP? 1',
-        #            get_parser=str,
-        #            set_cmd='RAMP 1,1,{}',
-        #            label='Heater range',
-        #            vals=Numbers(min_value=0),
-        #            unit='K/min')
+        self.add_parameter(name='set_temperature',
+                    get_cmd='SETP?',
+                    get_parser=float,
+                    set_cmd='SETP 0,{}',
+                    label='Set Temerature',
+                    vals=Numbers(0.05, 40),
+                    unit='K')
+        self.add_parameter(name='heater_range',
+                    get_cmd='RANGE? 0',
+                    get_parser=int,
+                    set_cmd='RANGE 0, {}',
+                    label='Sample Heater range',
+                    vals=Enum(0, 1, 2, 3,4,5,6,7,8),
+                    unit='')
+        self.add_parameter(name='ramp_rate',
+                    get_cmd='RAMP? 0',
+                    get_parser=str,
+                    set_cmd='RAMP 0,1,{}',
+                    label='Heater range',
+                    vals=Numbers(min_value=0),
+                    unit='K/min')
+        self.add_parameter(
+                    name='heater_output',
+                    get_cmd='HTR?',
+                    get_parser=float,
+                    label='Heater Output',
+                    unit='%')
         ##############
         self.connect_message()
+
+    def configure_analog_output(self, input_name, low_value, high_value, maunal_value=0,
+        output=1, bipolar=0, source=1, mode=1):
+        msg = 'ANALOG {},{},{},{},{},{},{},{}'.format(
+            output, bipolar, mode, input_name, source, high_value, low_value, maunal_value)
+        self.write(msg)
+
+    def pid(self, p, i, d):
+        msg = ' PID 0,{},{},{}'.format(p, i, d)
+        self.write(msg)
 
 class SensorChannel34x(InstrumentChannel):
     """
