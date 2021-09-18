@@ -306,7 +306,7 @@ def td_to_arrays(td_data: Any, ureg: Optional[Any]=None, real_units: Optional[bo
     meta = td_data.metadata['loop']['metadata']
     h = [Q_(val).to('V').magnitude for val in meta['range']]
     dV = Q_(meta['dV']).to('V').magnitude
-    heights = np.linspace(h[0], h[1], int((h[1]-h[0])/dV))
+    heights = np.linspace(h[0], h[1], int((h[1]-h[0])/dV) + 1)
     arrays = {'height': heights * ureg('V')}
     for ch, info in meta['channels'].items():
         array = td_data.daq_ai_voltage[:,info['idx'],0] * ureg('V')

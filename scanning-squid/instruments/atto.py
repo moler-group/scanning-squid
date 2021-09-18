@@ -163,7 +163,8 @@ class AttocubeController(VisaInstrument):
         if not isinstance(steps, int):
             raise ValueError('steps must be an integer.')
         freq = getattr(self, 'freq_ax{}'.format(idx))()
-        log.info('Performing {} steps along axis {}.'.format(steps, axis))
+        log.info('Performing {} steps along axis {} at {} Hz.'.format(steps, axis,freq))
+        # log.info('Performing {} steps along axis {}.'.format(steps, axis))
         getattr(self, 'mode_ax{}'.format(idx))('stp')
         direc = 'u' if steps > 0 else 'd'
         self.ask('step{} {} {}'.format(direc, idx, abs(steps)))

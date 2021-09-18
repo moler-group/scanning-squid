@@ -22,6 +22,7 @@
 
 from qcodes import VisaInstrument, InstrumentChannel, ChannelList
 from qcodes.utils.validators import Enum, Strings, Numbers, Ints, MultiType
+# from qcodes.instrument.group_parameter import GroupParameter, Group
 import visa
 
 class SensorChannel33x(InstrumentChannel):
@@ -59,9 +60,10 @@ class Model_331(VisaInstrument):
     Lakeshore Model 331 Temperature Controller Driver
     Controlled via sockets
     Adapted from QCoDeS Lakeshore 336 driver
+    Add "loop" and group_parameter for PID setting(9/6/2021, Yusuke)
     """
 
-    def __init__(self, name, address, **kwargs):
+    def __init__(self, name, address, loop, **kwargs):
         super().__init__(name, address, terminator="\r\n", **kwargs)
 
         # Allow access to channels either by referring to the channel name
@@ -74,6 +76,9 @@ class Model_331(VisaInstrument):
         # self.visa_handle.stop_bits = visa.constants.StopBits.one
         # self.visa_handle.parity = visa.constants.Parity.odd
         # self.visa_handle.data_bits = 7
+        if loop not in [1, 2]:
+            raise ValueError("Please either specify loop 1 or 2")
+        self._loop = loop
         channels = ChannelList(self, "TempSensors", SensorChannel33x, snapshotable=False)
         for chan_name in ('A'):
             channel = SensorChannel33x(self, 'Chan{}'.format(chan_name), chan_name)
@@ -85,7 +90,7 @@ class Model_331(VisaInstrument):
         self.add_parameter(name='set_temperature',
                    get_cmd='SETP?',
                    get_parser=float,
-                   set_cmd='SETP 1,{}',
+                   set_cmd=f'SETP {self._loop},{{}}',
                    label='Set Temerature',
                    vals=Numbers(2.7, 300),
                    unit='K')
@@ -94,15 +99,52 @@ class Model_331(VisaInstrument):
                    get_parser=int,
                    set_cmd='RANGE {}',
                    label='Heater range',
-                   vals=Enum(0, 1, 2, 3),
+                   val_mapping={
+                        'Off':0,
+                        'Low':1,
+                        'Medium':2,
+                        'High':3
+                   },
                    unit='')
         self.add_parameter(name='ramp_rate',
-                   get_cmd='RAMP? 1',
+                   get_cmd=f'RAMP? {self._loop}',
                    get_parser=str,
-                   set_cmd='RAMP 1,1,{}',
+                   set_cmd=f'RAMP {self._loop},1,{{}}',
                    label='Ramp rate',
-                   vals=Numbers(min_value=0, max_value=100),
+                   vals=Numbers(min_value=0.1, max_value=100),
                    unit='K/min')
+        self.add_parameter(name='heater_output',
+                   get_cmd='HTR?',
+                   get_parser=float,
+                   label='Heater output',
+                   unit='%')
+        # self.add_parameter(
+        #     'P',
+        #     vals=Numbers(0.1, 1000),
+        #     get_parser=float,
+        #     parameter_class=GroupParameter
+        # )
+
+        # self.add_parameter(
+        #     'I',
+        #     vals=Numbers(0.1, 1000),
+        #     get_parser=float,
+        #     parameter_class=GroupParameter
+        # )
+
+        # self.add_parameter(
+        #     'D',
+        #     vals=Numbers(0, 200),
+        #     get_parser=float,
+        #     parameter_class=GroupParameter
+        # )
+
+        # Group(
+        #     [self.P, self.I, self.D],
+        #     set_cmd=f'PID {self._loop}, {{P}}, {{I}}, {{D}}',
+        #     get_cmd=f'PID? {self._loop}'
+        # )
+
         ##############
         self.connect_message()
 
@@ -290,7 +332,7 @@ class Model_340(VisaInstrument):
     Adapted from QCoDeS Lakeshore 336 driver
     """
 
-    def __init__(self, name, address, active_channels={'A': 'sample'}, **kwargs):
+    def __init__(self, name, address, active_channels={'A': '50K plate','B': '3K plate'}, **kwargs):
         super().__init__(name, address, terminator="\n\r", **kwargs)
 
         # Allow access to channels either by referring to the channel name

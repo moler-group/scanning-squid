@@ -56,7 +56,7 @@ import utils
 from scanner import Scanner
 from instruments.daq import DAQAnalogInputs
 from plots import ScanPlot, TDCPlot, RPlot, RvTPlot
-from instruments.lakeshore import Model_372, Model_331
+from instruments.lakeshore import Model_372, Model_331, Model_340
 from instruments.keithley import Keithley_2400
 from instruments.heater import EL320P
 
@@ -115,13 +115,14 @@ class Microscope(Station):
         self.temp = temp
 
         self._add_atto()
-        self._add_ls372()
         self._add_ls331()
+        #self._add_ls372()
+        self._add_ls340()
         #self._add_keithley()
         self._add_scanner()
         self._add_SQUID()
         self._add_lockins()
-        #self._add_ke2400()
+        self._add_ke2400()
 
     def _add_ke2400(self):
     	ke_config = self.config['instruments']['ke2400']
@@ -165,9 +166,21 @@ class Microscope(Station):
         #     self.atto.clear_instances()
             self.ls331.close()
         self.remove_component(ls_config['name'])
-        self.ls331 = Model_331(ls_config['name'], ls_config['address'])
+        self.ls331 = Model_331(ls_config['name'], ls_config['address'],ls_config['loop'])
         self.add_component(self.ls331)
         log.info('Lakeshore 331 successfully added to microscope.')
+
+    def _add_ls340(self):
+        """Add Lakeshore 340 temperature controller to microscope.
+        """
+        ls_config = self.config['instruments']['ls340']
+        if hasattr(self, 'ls340'):
+        #     self.atto.clear_instances()
+            self.ls340.close()
+        self.remove_component(ls_config['name'])
+        self.ls340 = Model_340(ls_config['name'], ls_config['address'])
+        self.add_component(self.ls340)
+        log.info('Lakeshore 340 successfully added to microscope.')
 
     def _add_scanner(self):
         """Add scanner instrument to microscope.
