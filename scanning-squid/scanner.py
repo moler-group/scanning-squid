@@ -68,6 +68,7 @@ class Scanner(Instrument):
         self.voltage_retract = {'RT': self.Q_(self.metadata['voltage_retract']['RT']),
                                 'LT': self.Q_(self.metadata['voltage_retract']['LT'])}
         self.speed = self.Q_(self.metadata['speed']['value'])
+        self.gate_speed = self.Q_(self.metadata['gate_speed']['value'])
         self.constants = {'comment': self.metadata['constants']['comment']}
         self.voltage_limits = {'RT': {},
                                'LT': {},
@@ -129,6 +130,23 @@ class Scanner(Instrument):
             else:
                 pos.append(pos_raw[i])
         return pos
+
+    def check_gate(self) -> float:
+        """Get current gate voltage.
+        Returns:
+            float of gate voltage(AO3).
+        """
+        idx = self.metadata['daq']['channels']['analog_inputs']['G']
+        channel = self.metadata['daq']['name'] + '/ai{}'.format(idx)    
+        with nidaqmx.Task('get_gate_ai_task') as ai_task:
+            ai_task.ai_channels.add_ai_voltage_chan(channel, 'G', min_val=-10, max_val=10)
+            result_raw = np.round(ai_task.read(), decimals=3)
+        result = 10 
+        if result_raw < 10:
+            result = result_raw
+        #ai_task.close()
+        return result
+
     
     def goto(self, new_pos: List[float], retract_first: Optional[bool]=False,
              speed: Optional[str]=None, quiet: Optional[bool]=False) -> None:
@@ -178,6 +196,46 @@ class Scanner(Instrument):
         else:
              log.info('Moved scanner from {} V to {} V.'.format(old_pos, current_pos))
     
+    def apply_gate(self, new_gate: float,
+             gate_speed: Optional[str]=None, quiet: Optional[bool]=False) -> None:
+        """apply a DC gate voltage from a DAC AO.
+        Args:
+            new_gate: a gate voltage one wants to apply through DAC's AO.
+
+            gated_speed: Speed at which to change gate voltage (e.g. '2 V/s') in DAQ voltage units.
+                Default set in microscope configuration JSON file.
+            quiet: If True, only logs changes in logging.DEBUG mode.
+                (goto is called many times during, e.g., a scan.) Default: False.
+        """
+        #ai_task.close()
+        old_gate = self.check_gate()
+        if gate_speed is None:
+            gate_speed = self.gate_speed.to('V/s').magnitude
+        else:
+            gate_speed = self.Q_(gate_speed).to('V/s').magnitude
+
+        gate_range = self.metadata['gate_range']
+        if new_gate > gate_range[1] or new_gate < gate_range[0]:
+                err = 'Requested gate is out of range. '
+                err += 'gate range is {} V.'
+                raise ValueError(err.format(gate_range))
+ 
+        ramp = self.gate_ramp(old_gate, new_gate, gate_speed)
+        with nidaqmx.Task('goto_ao_task') as ao_task:
+            axis = 'G'
+            idx = self.metadata['daq']['channels']['analog_outputs'][axis]
+            channel = self.metadata['daq']['name'] + '/ao{}'.format(idx, axis)
+            ao_task.ao_channels.add_ao_voltage_chan(channel)
+            ao_task.timing.cfg_samp_clk_timing(self.daq_rate, samps_per_chan=len(ramp))
+            pts = ao_task.write(ramp, auto_start=False, timeout=60)
+            ao_task.start()
+            ao_task.wait_until_done(timeout=60)
+            log.debug('Wrote {} samples to {}.'.format(pts, ao_task.channel_names))
+        current_gate = self.check_gate()
+        if quiet:
+            log.debug('Changed gate from {} V to {} V.'.format(old_gate, current_gate))
+        else:
+             log.info('Changed gate from {} V to {} V.'.format(old_gate, current_gate))
 
     def retract(self, speed: Optional[str]=None, quiet: Optional[bool]=False) -> None:
         """Retracts z-bender fully based on whether temp is LT or RT.
@@ -215,7 +273,71 @@ class Scanner(Instrument):
             step = 1
             last_point = -1
         for axis, idx in ao_channels.items():
-            out.append(scan_grids[axis][line][::step])
+            if axis in ['x','y','z']:
+                out.append(scan_grids[axis][line][::step])
+                self.ao_task.ao_channels.add_ao_voltage_chan('{}/ao{}'.format(daq_name, idx), axis)
+        self.ao_task.timing.cfg_samp_clk_timing(daq_rate,
+                                                sample_mode=AcquisitionType.FINITE,
+                                                samps_per_chan=len(out[0]))
+        log.debug('Writing line {}.'.format(line))
+        self.ao_task.write(np.array(out), auto_start=False)
+
+    def DAQ_line_gate(self, gate_grids: Dict[str, np.ndarray], ao_channels: Dict[str, int],
+                  daq_rate: Union[int, float], counter: Any, reverse=False) -> None:
+        """vary one gate that is output of DAC
+        Args:
+            gate_grids: Dict of {axis_name: axis_meshgrid} from utils.make_gate_grids().
+            ao_channels: Dict of {axis_name: ao_index} for the scanner ao channels.
+            daq_rate: DAQ sampling rate in Hz.
+            counter: utils.Counter instance, determines current line of the grid.
+            reverse: Determines scan direction (i.e. forward or backward).
+        """
+        daq_name = self.metadata['daq']['name']
+        self.ao_task = nidaqmx.Task('DAQ_line_gate_ao_task')
+        line = counter.count
+        if reverse:
+            step = -1
+            last_point = 0
+        else:
+            step = 1
+            last_point = -1
+        for axis, idx in ao_channels.items():
+            if axis == "G":
+                if gate_grids['DAQ'] == 'T':
+                    out = gate_grids['T'][line][::step]
+                    self.ao_task.ao_channels.add_ao_voltage_chan('{}/ao{}'.format(daq_name, idx), 'T')
+                elif gate_grids['DAQ'] == 'B':
+                    out = gate_grids['B'][line][::step]
+                    self.ao_task.ao_channels.add_ao_voltage_chan('{}/ao{}'.format(daq_name, idx), 'B')
+        self.ao_task.timing.cfg_samp_clk_timing(daq_rate,
+                                                sample_mode=AcquisitionType.FINITE,
+                                                samps_per_chan=len(out))
+
+        log.debug('Writing line {}.'.format(line))
+        self.ao_task.write(np.array(out), auto_start=False)
+
+    def gate_line(self, gate_grids: Dict[str, np.ndarray], ao_channels: Dict[str, int],
+                  daq_rate: Union[int, float], counter: Any, reverse=False) -> None:
+        """vary one gate that is output of DAC. The gate is assumed as top gate
+        Args:
+            gate_grids: Dict of {axis_name: axis_meshgrid} from utils.make_gate_grids().
+            ao_channels: Dict of {axis_name: ao_index} for the scanner ao channels.
+            daq_rate: DAQ sampling rate in Hz.
+            counter: utils.Counter instance, determines current line of the grid.
+            reverse: Determines scan direction (i.e. forward or backward).
+        """
+        daq_name = self.metadata['daq']['name']
+        self.ao_task = nidaqmx.Task('gate_line_ao_task')
+        out = []
+        line = counter.count
+        if reverse:
+            step = -1
+            last_point = 0
+        else:
+            step = 1
+            last_point = -1
+        for axis, idx in ao_channels.items():
+            out.append(gate_grids[axis][line][::step])
             self.ao_task.ao_channels.add_ao_voltage_chan('{}/ao{}'.format(daq_name, idx), axis)
         self.ao_task.timing.cfg_samp_clk_timing(daq_rate,
                                                 sample_mode=AcquisitionType.FINITE,
@@ -223,6 +345,25 @@ class Scanner(Instrument):
         log.debug('Writing line {}.'.format(line))
         self.ao_task.write(np.array(out), auto_start=False)
         
+    def apply_next_gate(self, gate_grids: Dict[str, np.ndarray], counter: Any, wait: Optional[bool]=False, retractfirst: Optional[bool]=False) -> None:
+        """Moves scanner to the start of the next line to scan.
+        Args:
+            scan_grids: Dict of {axis_name: axis_meshgrid} from utils.make_scan_grids().
+            counter: utils.Counter instance, determines current line of the grid.
+            wait: wait at the fisrt position of next line before start scan
+            retractfirst: retract first when scan finishes
+        """
+        line = counter.count
+        try:
+            start_of_next_line = [scan_grids[axis][line+1][0] for axis in ['x', 'y', 'z']]
+            self.goto(start_of_next_line, retract_first=retractfirst, quiet=True)
+            #wait 5 sec
+            if wait:
+                time.sleep(5)
+        #: If `line` is the last line in the scan, do nothing.
+        except IndexError:
+            pass
+
     def goto_start_of_next_line(self, scan_grids: Dict[str, np.ndarray], counter: Any, wait: Optional[bool]=False, retractfirst: Optional[bool]=False) -> None:
         """Moves scanner to the start of the next line to scan.
         Args:
@@ -466,6 +607,25 @@ class Scanner(Instrument):
             ramp.append(np.linspace(pos0[i], pos1[i], npts))
         return np.array(ramp)
 
+    def gate_ramp(self, old_gate: float, new_gate: float, gate_speed: Union[int, float]) -> np.ndarray:
+        """Generates a ramp to change gate voltage.
+        Args:
+            old_gate: original gate.
+            new_gate: gate to ramp to .
+            speed: Speed at which gate ramps.
+        Returns:
+            numpy.ndarray: ramp
+                Array to write to DAQ AO to change gate from old_gate to new_gate.
+        """
+        if gate_speed > self.gate_speed.to('V/s').magnitude:
+            msg = 'Setting ramp speed to maximum allowed: {} V/s.'
+            log.warning(msg.format(self.gate_speed.to('V/s').magnitude))
+        ramp_time = np.abs(old_gate - new_gate)/gate_speed
+        npts = int(ramp_time * self.daq_rate) + 2
+        ramp = np.linspace(old_gate, new_gate, npts)
+        return np.array(ramp)
+
+
     def _goto_x(self, xpos: float) -> None:
         """Go to given x position.
         Args:
@@ -489,3 +649,9 @@ class Scanner(Instrument):
         """
         current_pos = self.position()
         self.goto([current_pos[0], current_pos[1], zpos], quiet=True)
+    def _goto_T(self, zpos: float) -> None:
+        """Go to given z position.
+        Args:
+            zpos: z position to go to, in DAQ voltage.
+        """
+        pass

@@ -102,9 +102,30 @@ class SusceptometerMicroscope(Microscope):
                 prefactor /= r_lead
             elif ch == 'IV':
                 snap = getattr(self, 'SUSC_lockin').snapshot(update=update)['parameters']
+                r_lead = self.Q_(measurement['channels'][ch]['r_lead'])
+                amp = snap['amplitude']['value'] * self.ureg(snap['amplitude']['unit'])
+                log.info('currently ch1 measuring {}'.format(snap['ch1_display']['value']))
                 IV_sensitivity = snap['sensitivity']['value']
                 #: The factor of 10 here is because SR830 output gain is 10/sensitivity
-                prefactor *= IV_sensitivity/10
+                prefactor *= IV_sensitivity/10 * (r_lead / amp)
+                if measurement['channels'][ch]['attenuator'] == '-20dB':
+                    prefactor *= 10
+            elif ch == 'IVY':
+                snap = getattr(self, 'SUSC_lockin').snapshot(update=update)['parameters']
+                r_lead = self.Q_(measurement['channels'][ch]['r_lead'])
+                amp = snap['amplitude']['value'] * self.ureg(snap['amplitude']['unit'])
+                IV_sensitivity = snap['sensitivity']['value']
+                if snap['ch2_display']['value'] == "Y":
+                    log.info('currently ch2 measuring {}'.format(snap['ch2_display']['value']))
+                    #: The factor of 10 here is because SR830 output gain is 10/sensitivity
+                    prefactor *= IV_sensitivity/10 * (r_lead / amp)
+                    if measurement['channels'][ch]['attenuator'] == '-20dB':
+                        prefactor *= 10
+                elif snap['ch2_display']['value'] == "Phase":
+                    # phase is 18 degree per volt
+                    # e.g. 180deg is 10V
+                    log.info('currently ch2 measuring {}'.format(snap['ch2_display']['value']))
+                    prefactor *= 18 * self.ureg(snap['phase']['unit']) / self.ureg('V') 
             prefactor = self.ureg.Quantity(str(prefactor))
             prefactor /= measurement['channels'][ch]['gain']
             prefactors.update({ch: prefactor.to('{}/V'.format(measurement['channels'][ch]['unit']))})

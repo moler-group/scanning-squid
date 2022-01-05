@@ -56,10 +56,12 @@ import utils
 from scanner import Scanner
 from instruments.daq import DAQAnalogInputs
 from plots import ScanPlot, TDCPlot
-from plots import gatePlot
+from plots import gatePlot, DoubleGatedPlot
 from instruments.lakeshore import Model_372, Model_331, Model_340
 from instruments.keithley import Keithley_2400
 from instruments.heater import EL320P
+
+from typing import Optional
 
 #: Pint for manipulating physical units
 from pint import UnitRegistry
@@ -119,8 +121,8 @@ class Microscope(Station):
         self._add_ls372()
         #self._add_ls331()
         #self._add_keithley()
-        # self._add_ke2400()
-        self._add_ke2410()
+        self._add_ke2400()
+        #self._add_ke2410()
         #self._add_ls340()
         self._add_scanner()
         self._add_SQUID()
@@ -240,6 +242,22 @@ class Microscope(Station):
             self.add_component(getattr(self, '{}_lockin'.format(lockin)))
             log.info('{} successfully added to microscope.'.format(name))
             
+
+    def ramp_keithley_volt(self, new_volt: float, npts: int, gate_speed:Optional[str]=None):
+        old_volt = self.ke2410.volt()
+        gate_speed = self.Q_(gate_speed).to('V/s').magnitude
+        ramp_time = np.abs(old_volt - new_volt)/gate_speed
+        time_step = ramp_time/npts
+        ramp = np.linspace(old_volt, new_volt, npts)
+        msg = 'start ramping keithley at {} V/s.'
+        log.warning(msg.format(gate_speed))
+        for point in ramp:
+            time.sleep(time_step)
+            self.ke2410.volt(point)
+        log.warning('gate ramp completed')
+        
+
+
     def set_lockins(self, measurement: Dict[str, Any]) -> None:
         """Initialize lockins for given measurement.
         Args:
@@ -251,7 +269,14 @@ class Microscope(Station):
             if 'lockin' in channels[ch]:
                 lockin = '{}_lockin'.format(channels[ch]['lockin']['name'])
                 for param in channels[ch]['lockin']:
-                    if param != 'name':
+                    if param in{'ch1_display', 'ch2_display'}:
+                        parameters = getattr(self, lockin).parameters
+                        value = channels[ch]['lockin'][param]
+                        parameters[param].set(value)
+                        log.info('Setting {} on {} to {}.'.format(param, lockin, value))
+                        #print(parameters)
+
+                    elif param != 'name':
                         parameters = getattr(self, lockin).parameters
                         unit = parameters[param].unit
                         value = self.Q_(channels[ch]['lockin'][param]).to(unit).magnitude
@@ -332,7 +357,7 @@ class Microscope(Station):
             loop.run()
             if self.scanner.td_height is not None:
                 data.metadata['loop']['metadata'].update({'td_height': self.scanner.td_height})
-                if abs(old_pos[0]) < 0.002 and abs(old_pos[1]) < 0.002:
+                if abs(old_pos[0]) < 0.01 and abs(old_pos[1]) < 0.01:
                     self.scanner.metadata['plane'].update({'z': self.scanner.td_height})
         except KeyboardInterrupt:
             log.warning('Touchdown interrupted by user. Retracting scanner.')
@@ -389,8 +414,12 @@ class Microscope(Station):
             self.daq_ai.close()
         self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, daq_rate, channels, ai_task)
         loop_counter = utils.Counter()
-        gate_plot = gatePlot(gate_params, self.ureg) 
+        gate_plot = gatePlot(gate_params, self.ureg)
+        gate_speed = gate_params['ramp_rate']
+        npts = gate_params['ramp_points'] 
+        self.ke2410.volt(0)
         self.ke2410.output(1)
+        self.ramp_keithley_volt(startV, npts, gate_speed) 
         loop = qc.Loop(self.ke2410.volt.sweep(startV, endV, dV)
             ).each(
                 qc.Task(time.sleep, delay),
@@ -402,6 +431,7 @@ class Microscope(Station):
                 qc.Task(ai_task.close),
                 qc.Task(gate_plot.fig.show),
                 qc.Task(gate_plot.save)
+
             )
         #: loop.metadata will be saved in DataSet
         loop.metadata.update(gate_params)
@@ -418,13 +448,169 @@ class Microscope(Station):
             #: Stop 'td_cap_ai_task' so that we can read our current position
             ai_task.stop()
             ai_task.close()
+            self.ramp_keithley_volt(0, npts, gate_speed)
             self.ke2410.volt(0)
+            self.scanner.apply_gate(0)
             #self.CAP_lockin.amplitude(0.004)
             gate_plot.fig.show()
             gate_plot.save()
             log.info('Measurement aborted by user. DataSet saved to {}.'.format(data.location))
+        self.ramp_keithley_volt(0, npts, gate_speed)
+        self.ke2410.volt(0)
+        self.scanner.apply_gate(0)
         utils.gate_to_mat_file(data, real_units=True)
         return data, gate_plot
+
+    def double_gated_IV(self, gate_params: Dict[str, Any], update_snap: bool=True) -> Tuple[Any]:
+        """Performs a two prob measurement at various gate voltage from a Keithley 
+        Args:
+            gate_params: Dict of gate parameters as defined in measurement config file
+                in measurement configuration file.
+            update_snap: Whether to update the microscope snapshot. Default True.
+                (You may want this to be False when getting a plane or approaching.)
+        Returns:
+            Tuple[qcodes.DataSet, plots.TDCPlot]: data, tdc_plot
+                DataSet and plot generated by the touchdown Loop.
+        """
+
+        # take in all relavent constants
+        daq_config = self.config['instruments']['daq']
+        daq_name = daq_config['name']
+        daq_rate = self.Q_(daq_config['rate']).to('Hz').magnitude
+        ai_channels = daq_config['channels']['analog_inputs']
+        ao_channels = daq_config['channels']['analog_outputs']
+        meas_channels = gate_params['channels']
+        constants = gate_params['constants']
+
+        # set up channels to be measured 
+        channels = {} 
+        for ch in meas_channels:
+            channels.update({ch: ai_channels[ch]})    
+        nchannels = len(channels.keys())
+
+        # set up x y axis of maps
+        dVT = self.Q_(gate_params['dVT']).to('V').magnitude
+        dVB = self.Q_(gate_params['dVB']).to('V').magnitude
+        VTstartV, VTendV = sorted([self.Q_(lim).to('V').magnitude for lim in gate_params['VTrange']])
+        VBstartV, VBendV = sorted([self.Q_(lim).to('V').magnitude for lim in gate_params['VBrange']])
+
+        # set up fast and slow axis
+        fast_ax = gate_params['DAQ_AO']
+        slow_ax = 'B' if fast_ax == 'T' else 'T'
+        if fast_ax == 'T':
+            pix_per_line = int((VTendV - VTstartV)/dVT) + 1 
+            startV = VBstartV 
+            endV = VBendV 
+            dV = dVB
+            line_startV = VTstartV
+            line_endV = VTendV
+        else:
+            pix_per_line = int((VBendV - VBstartV)/dVB) + 1
+            startV = VTstartV 
+            endV = VTendV 
+            dV = dVT
+            line_startV = VBstartV
+            line_endV = VTendV
+        delay = constants['wait_factor'] * self.SUSC_lockin.time_constant() *self.ureg('s')
+        line_delay = constants['line_wait_factor'] * self.SUSC_lockin.time_constant()
+        line_duration = pix_per_line * delay
+        pts_per_line = int(daq_rate * line_duration.to('s').magnitude)
+        gate_vectors = utils.make_gate_vectors(gate_params, self.ureg)
+        gate_grids = utils.make_gate_grids(gate_vectors, slow_ax, fast_ax,
+                                           pts_per_line)
+        self.set_lockins(gate_params)
+        self.snapshot(update=update_snap)
+        prefactors = self.get_prefactors(gate_params)
+
+        #: get channel prefactors in string form so they can be saved in metadata
+        prefactor_strs = {}
+        for ch, prefac in prefactors.items():
+            unit = gate_params['channels'][ch]['unit']
+            pre = prefac.to('{}/V'.format(unit))
+            prefactor_strs.update({ch: '{} {}'.format(pre.magnitude, pre.units)})
+
+        ai_task =  nidaqmx.Task('double_gated_IV_ai_task')
+        self.remove_component('daq_ai')
+        if hasattr(self, 'daq_ai'):
+            self.daq_ai.clear_instances()
+            self.daq_ai.close()
+        self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, daq_rate, channels, ai_task,
+                                      samples_to_read=pts_per_line, target_points=pix_per_line,
+                                      #: Very important to synchronize AOs and AIs
+                                      clock_src='ao/SampleClock', timeout=200)
+        self.add_component(self.daq_ai)
+
+        loop_counter = utils.Counter()
+        double_gate_plot = DoubleGatedPlot(gate_params, self.ureg) 
+        gate_speed = gate_params['ramp_rate']
+        npts = gate_params['ramp_points'] 
+        self.ke2410.volt(0)
+        self.ke2410.output(1)
+        self.ramp_keithley_volt(startV, npts, gate_speed)
+
+
+        # DAQ output is fast axis
+        loop = qc.Loop(self.ke2410.volt.sweep(startV, endV, dV)
+            ).each(
+                # pause between lines
+                qc.Task(time.sleep, line_delay),
+                # apply target voltage
+                qc.Task(self.scanner.apply_gate, line_startV, None, True),
+                # create AO tast
+                qc.Task(self.scanner.DAQ_line_gate, gate_grids, ao_channels, daq_rate, loop_counter),
+                # start AI task               
+                qc.Task(ai_task.start),
+                #: Start AO task
+                qc.Task(self.scanner.control_ao_task, 'start'),
+                #: Acquire voltage from all active AI channels
+                self.daq_ai.voltage,
+                # wait until both are done
+                qc.Task(ai_task.wait_until_done, timeout=200),
+                qc.Task(self.scanner.control_ao_task, 'wait_until_done'),
+                # stop ai task when it is done
+                qc.Task(ai_task.stop),
+                # stop and close ao task for the next line
+                qc.Task(self.scanner.control_ao_task, 'stop'),
+                qc.Task(self.scanner.control_ao_task, 'close'),
+                #: Update and save plot
+                qc.Task(double_gate_plot.update, qc.loops.active_data_set, loop_counter),
+                qc.Task(double_gate_plot.save),
+                qc.Task(loop_counter.advance)
+
+            ).then(
+                qc.Task(ai_task.stop),
+                qc.Task(ai_task.close),
+                qc.Task(double_gate_plot.fig.show),
+                qc.Task(double_gate_plot.save)
+            )
+
+        #: loop.metadata will be saved in DataSet
+        loop.metadata.update(gate_params)
+        loop.metadata.update({'prefactors': prefactor_strs})
+        for idx, ch in enumerate(meas_channels):
+            loop.metadata['channels'][ch].update({'idx': idx})
+        data = loop.get_data_set(name=gate_params['fname'], write_period=None)
+
+        try:
+            log.info('Starting gating sample')
+            loop.run()
+        except KeyboardInterrupt:
+            log.warning('gating interrupted by user. setting gate back to 0')
+            #: Set break_loop = True so that get_plane() and approach() will be aborted
+            #: Stop 'td_cap_ai_task' so that we can read our current position
+            ai_task.stop()
+            ai_task.close()
+            self.ramp_keithley_volt(0, npts, gate_speed)
+            self.ke2410.output(0)
+            #self.CAP_lockin.amplitude(0.004)
+            double_gate_plot.fig.show()
+            double_gate_plot.save()
+            log.info('Measurement aborted by user. DataSet saved to {}.'.format(data.location))
+        utils.double_gate_to_mat_file(data, real_units=True)
+        # turn off both gates
+        self.ramp_keithley_volt(0, npts, gate_speed)
+        self.scanner.apply_gate(0, gate_speed=gate_speed)
+        return data, double_gate_plot
 
     def approach(self, tdc_params: Dict[str, Any], attosteps: int=100) -> None:
         """Approach the sample by iteratively stepping z Attocube and performing td_cap().

@@ -138,6 +138,53 @@ def make_scan_grids(scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
     Z = X * plane['x'] + Y * plane['y'] + plane['z'] + height
     return {'x': X, 'y': Y, 'z': Z}
 
+def make_gate_vectors(gate_params: Dict[str, Any], ureg: Any) -> Dict[str, Sequence[float]]:
+    """Creates x and y vectors for given scan parameters.
+    Args:
+        scan_params: Scan parameter dict
+        ureg: pint UnitRegistry, manages units.
+    Returns:
+        Dict: scan_vectors
+            {axis_name: axis_vector} for x, y axes.
+    """
+    Q_ = ureg.Quantity
+    for ax in ['T', 'B']:
+        if ax == 'T':
+            Tmin = Q_(gate_params['VTrange'][0]).to('V').magnitude
+            Tmax = Q_(gate_params['VTrange'][1]).to('V').magnitude
+            Tsize = Q_(gate_params['dVT']).to('V').magnitude
+        if ax == 'B':
+            Bmin = Q_(gate_params['VBrange'][0]).to('V').magnitude
+            Bmax = Q_(gate_params['VBrange'][1]).to('V').magnitude
+            Bsize = Q_(gate_params['dVB']).to('V').magnitude
+    TG = np.arange(Tmin, Tmax + Tsize * 1/10000, Tsize)
+    BG = np.arange(Bmin, Bmax + Bsize * 1/10000, Bsize)
+    return {'T': TG, 'B': BG, "DAQ_AO": gate_params["DAQ_AO"]}
+
+def make_gate_grids(gate_vectors: Dict[str, Sequence[float]], slow_ax: str,
+                    fast_ax: str, fast_ax_pts: int
+                    ) -> Dict[str, Any]:
+    """Makes meshgrids of top and bottom gate to write to DAQ analog outputs.
+    Args:
+        gate_vectors: Dict of {axis_name: axis_vector} for T(y), B(x) axes (from make_gate_vectors).
+        slow_ax: Name of the scan slow axis ('T' or 'B').
+        fast_ax: Name of the scan fast axis ('T' or 'B').
+        fast_ax_pts: Number of points to write to DAQ analog outputs to scan fast axis.
+    Returns:
+        Dict: scan_grids
+            {axis_name: axis_scan_grid} for x, y, z, axes.
+    """
+    slow_ax_vec = gate_vectors[slow_ax]
+    fast_ax_vec = np.linspace(gate_vectors[fast_ax][0],
+                              gate_vectors[fast_ax][-1],
+                              fast_ax_pts)
+    if fast_ax == 'T':
+        X, Y = np.meshgrid(slow_ax_vec, fast_ax_vec, indexing='ij')
+    else:
+        X, Y = np.meshgrid(fast_ax_vec, slow_ax_vec, indexing='xy')
+    return {'T': Y, 'B': X, 'DAQ': gate_vectors["DAQ_AO"]}
+
+
 def make_scan_surface(surface_type: str, scan_vectors: Dict[str, Sequence[float]], slow_ax: str,
                     fast_ax: str, fast_ax_pts: int, plane: Dict[str, float], height: float,
                     interpolator: Optional[Callable]=None):
@@ -283,6 +330,53 @@ def scan_to_arrays(scan_data: Any, ureg: Optional[Any]=None, real_units: Optiona
             arrays.update({ax.upper(): grid, ax: vector})
     return arrays
 
+def double_gate_to_arrays(gate_data: Any, ureg: Optional[Any]=None, real_units: Optional[bool]=True,
+                   xy_unit: Optional[str]=None) -> Dict[str, Any]:
+    """Extracts scan data from DataSet and converts to requested units.
+    Args:
+        gate_data: qcodes DataSet created by Microscope.scan_plane
+        ureg: pint UnitRegistry, manages physical units.
+        real_units: If True, converts z-axis data from DAQ voltage into
+            units specified in measurement configuration file.
+        xy_unit: String describing quantity with dimensions of length.
+            If xy_unit is not None, scanner x, y DAQ ao voltage will be converted to xy_unit
+            according to scanner constants defined in microscope configuration file.
+    Returns:
+        Dict: arrays
+            Dict of x, y vectors and grids, and measured data in requested units.
+    """
+    if ureg is None:
+        from pint import UnitRegistry
+        ureg = UnitRegistry()
+        #: Tell the UnitRegistry what a Phi0 is, and that ohm and Ohm are the same thing.
+        with open('squid_units.txt', 'w') as f:
+            f.write('Phi0 = 2.067833831e-15 * Wb\n')
+            f.write('Ohm = ohm\n')
+        ureg.load_definitions('./squid_units.txt')
+    Q_ = ureg.Quantity
+    meta = gate_data.metadata['loop']['metadata']
+    gate_vectors = make_gate_vectors(meta, ureg)
+    fast_ax = meta['DAQ_AO'] 
+    slow_ax = 'T' if fast_ax == 'B' else 'B'
+    num = len(gate_vectors[fast_ax])
+    grids = make_gate_grids(gate_vectors, slow_ax, fast_ax, num)
+    arrays = {'B_grid': grids['B'] * ureg('V'), 'T_grid': grids['T']* ureg('V')}
+    arrays.update({'B': gate_vectors['B'] * ureg('V'), 'T': gate_vectors['T'] * ureg('V')})
+    for ch, info in meta['channels'].items():
+        array = gate_data.daq_ai_voltage[:,info['idx'],:] * ureg('V')
+        if real_units:
+            pre = meta['prefactors'][ch]
+            arrays.update({ch: (Q_(pre) * array).to(info['unit'])})
+        else:
+            arrays.update({ch: array})
+    if real_units and xy_unit is not None:
+        bendc = scan_data.metadata['station']['instruments']['benders']['metadata']['constants']
+        for ax in ['B', 'T']:
+            grid = (grids[ax] * ureg('V') * Q_(bendc[ax])).to(xy_unit)
+            vector = (scan_vectors[ax] * ureg('V') * Q_(bendc[ax])).to(xy_unit)
+            arrays.update({ax.upper(): grid, ax: vector})
+    return arrays
+
 def td_to_arrays(td_data: Any, ureg: Optional[Any]=None, real_units: Optional[bool]=True) -> Dict[str, Any]:
     """Extracts scan data from DataSet and converts to requested units.
     Args:
@@ -340,8 +434,7 @@ def gate_to_arrays(gate_data: Any, ureg: Optional[Any]=None, real_units: Optiona
         ureg.load_definitions('./squid_units.txt')
     Q_ = ureg.Quantity
     meta = gate_data.metadata['loop']['metadata']
-    G = [Q_(val).to('V').magnitude for val in meta['range']]
-    
+    G = [Q_(val).to('V').magnitude for val in meta['range']]   
     dV = Q_(meta['dV']).to('V').magnitude
     G_array = np.linspace(G[0], G[1], int((G[1]-G[0])/dV) + 1)
     arrays = {'gate': G_array * ureg('V')}
@@ -434,6 +527,46 @@ def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True, xy_unit: O
         fname = meta['fname']
     fpath = scan_data.location + '/'
     io.savemat(next_file_name(fpath + fname, 'mat'), mdict)
+
+def double_gate_to_mat_file(gate_data: Any, real_units: Optional[bool]=True, xy_unit: Optional[bool]=None,
+    fname: Optional[str]=None, interpolator: Optional[Callable]=None) -> None:
+    """Export double gate map.
+    Args:
+        gate_data: qcodes DataSet created by Microscope.scan_plane
+        real_units: If True, converts z-axis data from DAQ voltage into
+            units specified in measurement configuration file.
+        xy_unit: String describing quantity with dimensions of length.
+            If xy_unit is not None, scanner x, y DAQ ao voltage will be converted to xy_unit
+            according to scanner constants defined in microscope configuration file.
+        fname: File name (without extension) for resulting .mat file.
+            If None, uses the file name defined in measurement configuration file.
+        interpolator: Instance of scipy.interpolate.Rbf, used to interpolate touchdown points.
+            Default: None.
+    """
+    from pint import UnitRegistry
+    ureg = UnitRegistry()
+    ureg.load_definitions('./squid_units.txt')
+    Q_ = ureg.Quantity
+    meta = gate_data.metadata['loop']['metadata']
+    arrays = double_gate_to_arrays(gate_data, ureg=ureg, real_units=real_units, xy_unit=xy_unit)
+    mdict = {}
+    for name, arr in arrays.items():
+        if real_units:
+            if xy_unit:
+                unit = meta['channels'][name]['unit'] if name not in ['T', 'B', 'T_grid', 'B_grid'] else xy_unit
+            else: 
+                unit = meta['channels'][name]['unit'] if name not in ['T', 'B', 'T_grid', 'B_grid'] else 'V'
+        else:
+            unit = 'V'
+        if meta['DAQ_AO'] == 'T':
+            arr = arr.T
+        mdict.update({name: {'array': arr.to(unit).magnitude, 'unit': unit}})
+    mdict.update({'prefactors': meta['prefactors'], 'location': gate_data.location})
+    if fname is None:
+        fname = meta['fname']
+    fpath = gate_data.location + '/'
+    io.savemat(next_file_name(fpath + fname, 'mat'), mdict)
+
 
 def td_to_mat_file(td_data: Any, real_units: Optional[bool]=True, fname: Optional[str]=None) -> None:
     """Export DataSet created by microscope.td_cap to .mat file for analysis.

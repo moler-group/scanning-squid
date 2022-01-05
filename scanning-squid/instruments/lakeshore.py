@@ -252,7 +252,7 @@ class Model_372(VisaInstrument):
         self.connect_message()
 
     def configure_analog_output(self, input_name, low_value, high_value, maunal_value=0,
-        output=1, bipolar=0, source=1, mode=1):
+        output=2, bipolar=0, source=1, mode=1):
         msg = 'ANALOG {},{},{},{},{},{},{},{}'.format(
             output, bipolar, mode, input_name, source, high_value, low_value, maunal_value)
         self.write(msg)
