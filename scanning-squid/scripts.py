@@ -136,8 +136,7 @@ def time_trace(dev_name: str, channels: Dict[str,int], units: Dict[str,str],
             'location': loc
         }
     }
-    nsamples = int(samplerate * sampleduration)
-    time = np.linspace(0, sampleduration, nsamples)
+
     with nidaqmx.Task('time_trace_ai_task') as ai_task:
         for inst in DAQAnalogInputs.instances():
             inst.close()
@@ -149,6 +148,10 @@ def time_trace(dev_name: str, channels: Dict[str,int], units: Dict[str,str],
         mdict.update({ch: {'array': data_v[i] * prefactors[ch].magnitude, 'unit': units[ch], 'prefactor': prefactor_strs[ch]}})
     io.savemat(loc + '/time_trace.mat', mdict)
     return mdict
+
+
+
+
 
 
 

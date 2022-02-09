@@ -54,8 +54,9 @@ import squids
 import instruments.atto as atto
 import utils
 from scanner import Scanner
+from dclocfc import Dclocfc
 from instruments.daq import DAQAnalogInputs
-from plots import ScanPlot, TDCPlot, RPlot, RvTPlot
+from plots import ScanPlot, TDCPlot, RPlot, RvTPlot, MSvTPlot
 from instruments.lakeshore import Model_372, Model_331, Model_340
 from instruments.keithley import Keithley_2400
 from instruments.heater import EL320P
@@ -63,11 +64,16 @@ from instruments.heater import EL320P
 #: Pint for manipulating physical units
 from pint import UnitRegistry
 ureg = UnitRegistry()
-#: Tell UnitRegistry instance what a Phi0 is, and that Ohm = ohm
+#: Tell UnitRegistry instance what a Phi0 is, that Ohm = ohm, and what percent or pct is
 with open('squid_units.txt', 'w') as f:
     f.write('Phi0 = 2.067833831e-15 * Wb\n')
     f.write('Ohm = ohm\n')
+    f.write('Ohms = ohm\n')
+    f.write('ohms = ohm\n')
+    f.write('fraction = [] = frac\n')
+    f.write('percent = 1e-2 frac = pct\n')
 ureg.load_definitions('./squid_units.txt')
+
 
 import logging
 log = logging.getLogger(__name__)
@@ -120,6 +126,7 @@ class Microscope(Station):
         self._add_ls340()
         #self._add_keithley()
         self._add_scanner()
+        self._add_dclocfc()
         self._add_SQUID()
         self._add_lockins()
         self._add_ke2400()
@@ -166,7 +173,7 @@ class Microscope(Station):
         #     self.atto.clear_instances()
             self.ls331.close()
         self.remove_component(ls_config['name'])
-        self.ls331 = Model_331(ls_config['name'], ls_config['address'],ls_config['loop'])
+        self.ls331 = Model_331(ls_config['name'], ls_config['address'], ls_config['loop'],ls_config['Tmin_K'],ls_config['Tmax_K'])
         self.add_component(self.ls331)
         log.info('Lakeshore 331 successfully added to microscope.')
 
@@ -194,6 +201,19 @@ class Microscope(Station):
         self.scanner = Scanner(scanner_config, daq_config, self.temp, self.ureg)
         self.add_component(self.scanner)
         log.info('Scanner successfully added to microscope.')
+
+    def _add_dclocfc(self):
+        """Add dc local field through FC instrument to microscope.
+        """
+        dclocfc_config = self.config['instruments']['dclocfc']
+        daq_config = self.config['instruments']['daq']
+        if hasattr(self, 'dclocfc'):
+            #self.dclocfc.clear_instances()
+            self.dclocfc.close()
+        self.remove_component(dclocfc_config['name'])
+        self.dclocfc = Dclocfc(dclocfc_config, daq_config, self.temp, self.ureg)
+        self.add_component(self.dclocfc)
+        log.info('dclocfc successfully added to microscope.')
     
     def _add_SQUID(self):
         """Add SQUID instrument to microscope.
@@ -537,6 +557,112 @@ class Microscope(Station):
 
         return data, RvT_plot
 
+
+    def temp_series(self, temps_params: Dict[str, Any], update_snap: bool=True) -> Tuple[Any]:
+        """Performs MAG and SUSCX measurements over a range of temperature
+
+        Args:
+            temps_params: Dict of temperature range and scan parameters as defined
+                in measurement configuration file.
+            update_snap: Whether to update the microscope snapshot. Default True.
+                (You may want this to be False when getting a plane or approaching.)
+
+        Returns:
+            Tuple[qcodes.DataSet, plots.temp_series]: data, MSvTPlot
+                DataSet and plot.
+        """
+        daq_config = self.config['instruments']['daq']
+        daq_name = daq_config['name']
+        ai_channels = daq_config['channels']['analog_inputs']
+        meas_channels = temps_params['channels']
+        Tramp_rate = self.Q_(temps_params['ramp_rate']).to('K/min').magnitude
+        constants = temps_params['constants']
+        channels = {} 
+        for ch in meas_channels:
+            channels.update({ch: ai_channels[ch]})
+        # daq_rate = self.Q_(daq_config['rate']).to('Hz').magnitude
+        daq_rate = self.Q_(constants['daq_rate']).to('Hz').magnitude
+        sampleduration = self.Q_(constants['sampleduration']).to('sec').magnitude
+        nsamples = int(daq_rate * sampleduration)
+        
+
+        self.set_lockins(temps_params)
+        self.snapshot(update=update_snap)
+        #: delta T
+        dT = self.Q_(temps_params['dT']).to('K').magnitude
+        #: temperature range
+        self.ls331.ramp_rate(Tramp_rate)
+        ramp_rate = self.ls331.ramp_rate()
+        ramp_rate = ramp_rate.split(',')[1]
+        ramp_rate = float(ramp_rate)
+        startT, endT = [self.Q_(lim).to('K').magnitude for lim in temps_params['range']]
+
+
+        delay = constants['wait_factor'] * self.SUSC_lockin.time_constant()
+        T_delay = constants['T_wait_factor'] * abs(dT)/ramp_rate * 60 + delay
+        # print("data acquization time interval is(s)")
+        # print(T_delay)
+
+        prefactors = self.get_prefactors(temps_params)
+        #: get channel prefactors in string form so they can be saved in metadata
+        prefactor_strs = {}
+        for ch, prefac in prefactors.items():
+            unit = temps_params['channels'][ch]['unit']
+            pre = prefac.to('{}/V'.format(unit))
+            prefactor_strs.update({ch: '{} {}'.format(pre.magnitude, pre.units)})
+        ai_task =  nidaqmx.Task('MAG_SUSCX_v_T_ai_task')
+        self.remove_component('daq_ai')
+        if hasattr(self, 'daq_ai'):
+            self.daq_ai.clear_instances()
+            self.daq_ai.close()
+        # self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, daq_rate, channels, ai_task)
+        self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, daq_rate, channels, ai_task,samples_to_read=nsamples,target_points=1, timeout=sampleduration+1)
+        loop_counter = utils.Counter()
+        MSvT_plot = MSvTPlot(temps_params, self.ureg) 
+        loop = qc.Loop(self.ls331.set_temperature.sweep(startT, endT, dT)
+            ).each(
+                qc.Task(time.sleep, T_delay),
+                self.daq_ai.voltage,
+                qc.Task(self.scanner.get_MSvT, MSvT_plot, qc.loops.active_data_set, loop_counter),
+                qc.Task(loop_counter.advance),
+            ).then(
+                qc.Task(ai_task.stop),
+                qc.Task(ai_task.close),
+                #qc.Task(self.CAP_lockin.amplitude, 0.004),
+                #qc.Task(self.SUSC_lockin.amplitude, 0.004),
+                qc.Task(MSvT_plot.fig.show),
+                qc.Task(MSvT_plot.save)
+            )
+        #: loop.metadata will be saved in DataSet
+        loop.metadata.update(temps_params)
+        loop.metadata.update({'prefactors': prefactor_strs})
+        for idx, ch in enumerate(meas_channels):
+            loop.metadata['channels'][ch].update({'idx': idx})
+        data = loop.get_data_set(name=temps_params['fname'], write_period=None)
+        try:
+            log.info('Starting temperature sweep:')
+            loop.run()
+        except KeyboardInterrupt:
+            log.warning('Temperature series interrupted by user. DataSet saved to {}.'.format(data.location))
+            #: Set break_loop = True so that get_plane() and approach() will be aborted
+            self.scanner.break_loop = True
+            ai_task.stop()
+            ai_task.close()
+        finally:
+            try:
+                #: Stop 'MAG_SUSCX_v_T_ai_task' so that we can read our current position
+                ai_task.stop()
+                ai_task.close()
+                MSvT_plot.fig.show()
+                MSvT_plot.save()
+            except:
+                pass
+        utils.MSvT_to_mat_file(data, real_units=True)
+
+        return data, MSvT_plot
+
+
+
     def approach(self, tdc_params: Dict[str, Any], attosteps: int=100) -> None:
         """Approach the sample by iteratively stepping z Attocube and performing td_cap().
 
@@ -684,4 +810,179 @@ class Microscope(Station):
             log.info('Removed {} from microscope.'.format(name))
         else:
             log.debug('Microscope has no component with the name {}'.format(name))  
+
+
+
+    def pulse_field(self, plsf_params: Dict[str, Any]):
+        """Records a time trace of data from DAQ analog input channels, converts data to desired units.
+
+        Args:
+            samplerate: DAQ sampling rate (for each channel) in Hz.
+            sampleduration1: Sampling time in seconds while applying fieldcurrent1
+            sampleduration2: Sampling time in seconds while applying fieldcurrent2
+            
+        Returns:
+            Dict: mdict
+        """
+        sampleduration1 = self.Q_(plsf_params['sampleduration1']).to('sec').magnitude
+        sampleduration2 = self.Q_(plsf_params['sampleduration2']).to('sec').magnitude
+        sampleduration = sampleduration1 +  sampleduration2
+        fieldcurrent1 = self.Q_(plsf_params['fieldcurrent1']).to('A').magnitude
+        fieldcurrent2 = self.Q_(plsf_params['fieldcurrent2']).to('A').magnitude
+        samplerate = self.Q_(plsf_params['samplerate']).to('Hz').magnitude
+        loc_provider = qc.FormatLocation(fmt='./data/{date}/#{counter}_{name}_{time}')
+        loc = loc_provider(DiskIO('.'), record={'name': 'pulse_field'})
+        pathlib.Path(loc).mkdir(parents=True, exist_ok=True)
+        daq_config = self.config['instruments']['daq']
+        daq_name = daq_config['name']
+        ai_channels = daq_config['channels']['analog_inputs']
+        meas_channels = plsf_params['channels']
+        channels = {} 
+        for ch in meas_channels:
+            channels.update({ch: ai_channels[ch]})
+        prefactors = self.get_prefactors(plsf_params)
+        #: get channel prefactors in string form so they can be saved in metadata
+        prefactor_strs = {}
+        units = {}
+        for ch, prefac in prefactors.items():
+            unit = plsf_params['channels'][ch]['unit']
+            units[ch] = unit
+            pre = prefac.to('{}/V'.format(unit))
+            prefactor_strs.update({ch: '{} {}'.format(pre.magnitude, pre.units)})
+        nsamples1 = int(samplerate * sampleduration1)
+        nsamples2 = int(samplerate * sampleduration2)
+        time = np.linspace(0, sampleduration1+sampleduration2, nsamples1+nsamples2)
+        field1 = np.linspace(0, sampleduration1, nsamples1)*0+fieldcurrent1
+        field2 = np.linspace(0, sampleduration2, nsamples2)*0+fieldcurrent2
+        field = np.append(field1,field2)
+        mdict = {
+            'time': {'array': time, 'unit': 's'},
+            'field': {'array': field, 'unit': 'A'},
+            'metadata': {
+                'samplerate': samplerate,
+                'sampleduration': sampleduration,
+                'location': loc
+            }
+        }
+
+        log.info('Applying Magnetic field {} A for {} sec, then quanching to {} A'.format(fieldcurrent1,sampleduration1,fieldcurrent2))
+        log.info('Start pluse field time trace of temperature')
+        with nidaqmx.Task('pulse_field_ai_task1') as ai_task1:
+            self.ke2400.rangei(fieldcurrent1)
+            self.ke2400.curr(fieldcurrent1)
+            for inst in DAQAnalogInputs.instances():
+                inst.close()
+            daq_ai = DAQAnalogInputs('daq_ai', daq_name, samplerate, channels, ai_task1,
+                                     samples_to_read=nsamples1, timeout=sampleduration1+10)
+            data_v1 = daq_ai.voltage()
+            daq_ai.close()
+        with nidaqmx.Task('pulse_field_ai_task2') as ai_task2:
+            self.ke2400.rangei(fieldcurrent2)
+            self.ke2400.curr(fieldcurrent2)
+            daq_ai = DAQAnalogInputs('daq_ai', daq_name, samplerate, channels, ai_task2,
+                                     samples_to_read=nsamples2, timeout=sampleduration2+10)
+            data_v2 = daq_ai.voltage()
+            daq_ai.close()
+        for i, ch in enumerate(channels):
+            mdict.update({ch: {'array': np.append(data_v1[i],data_v2[i]) * prefactors[ch].magnitude, 'unit': units[ch], 'prefactor': prefactor_strs[ch]}})
+        
+        fig, ax = plt.subplots(2, figsize=(8,4), tight_layout=True, sharex=True)
+        ax[0].plot(time, np.append(data_v1[0],data_v2[0]) *prefactors['TEMP'].magnitude, lw=1)
+        ax[0].set_ylabel(plsf_params['channels']['TEMP']['label'] + plsf_params['channels']['TEMP']['unit_latex'])
+        ax[0].grid()
+        ax[1].plot(time, field, lw=1)
+        ax[1].set_ylabel('Field [A]')
+        fig.suptitle(loc, x=0.5, y=1)
+        ax[1].set_xlabel('Time [sec]')
+        ax[1].grid()
+        
+        plt.savefig(loc + '/pulse_field.png')
+        io.savemat(loc + '/pulse_field.mat', mdict)
+        return mdict
+
+
+    def pulse_heater(self, plsh_params: Dict[str, Any]):
+        """Records a time trace of data from DAQ analog input channels, converts data to desired units.
+
+        Args:
+            samplerate: DAQ sampling rate (for each channel) in Hz.
+            sampleduration1: Sampling time in seconds while applying manual heater power(mhp1)
+            sampleduration2: Sampling time in seconds while applying manual heater power(mhp2)
+            
+        Returns:
+            Dict: mdict
+        """
+        sampleduration1 = self.Q_(plsh_params['sampleduration1']).to('sec').magnitude
+        sampleduration2 = self.Q_(plsh_params['sampleduration2']).to('sec').magnitude
+        sampleduration = sampleduration1 +  sampleduration2
+        mhp1 = self.Q_(plsh_params['mhp1']).to('pct').magnitude
+        mhp2 = self.Q_(plsh_params['mhp2']).to('pct').magnitude
+        samplerate = self.Q_(plsh_params['samplerate']).to('Hz').magnitude
+        loc_provider = qc.FormatLocation(fmt='./data/{date}/#{counter}_{name}_{time}')
+        loc = loc_provider(DiskIO('.'), record={'name': 'pulse_field'})
+        pathlib.Path(loc).mkdir(parents=True, exist_ok=True)
+        daq_config = self.config['instruments']['daq']
+        daq_name = daq_config['name']
+        ai_channels = daq_config['channels']['analog_inputs']
+        meas_channels = plsh_params['channels']
+        channels = {} 
+        for ch in meas_channels:
+            channels.update({ch: ai_channels[ch]})
+        prefactors = self.get_prefactors(plsh_params)
+        #: get channel prefactors in string form so they can be saved in metadata
+        prefactor_strs = {}
+        units = {}
+        for ch, prefac in prefactors.items():
+            unit = plsh_params['channels'][ch]['unit']
+            units[ch] = unit
+            pre = prefac.to('{}/V'.format(unit))
+            prefactor_strs.update({ch: '{} {}'.format(pre.magnitude, pre.units)})
+        nsamples1 = int(samplerate * sampleduration1)
+        nsamples2 = int(samplerate * sampleduration2)
+        time = np.linspace(0, sampleduration1+sampleduration2, nsamples1+nsamples2)
+        heater1 = np.linspace(0, sampleduration1, nsamples1)*0+mhp1
+        heater2 = np.linspace(0, sampleduration2, nsamples2)*0+mhp2
+        heater = np.append(heater1,heater2)
+        mdict = {
+            'time': {'array': time, 'unit': 's'},
+            'mhp': {'array': heater, 'unit': '%'},
+            'metadata': {
+                'samplerate': samplerate,
+                'sampleduration': sampleduration,
+                'location': loc
+            }
+        }
+
+        log.info('Applying manual heater power {} %  for {} sec, then quanching to {} %'.format(mhp1,sampleduration1,mhp2))
+        log.info('Start pluse field time trace of temperature')
+        with nidaqmx.Task('pulse_heater_ai_task1') as ai_task1:
+            self.ls331.mhp(mhp1)
+            for inst in DAQAnalogInputs.instances():
+                inst.close()
+            daq_ai = DAQAnalogInputs('daq_ai', daq_name, samplerate, channels, ai_task1,
+                                     samples_to_read=nsamples1, timeout=sampleduration1+10)
+            data_v1 = daq_ai.voltage()
+            daq_ai.close()
+        with nidaqmx.Task('pulse_heater_ai_task2') as ai_task2:
+            self.ls331.mhp(mhp2)
+            daq_ai = DAQAnalogInputs('daq_ai', daq_name, samplerate, channels, ai_task2,
+                                     samples_to_read=nsamples2, timeout=sampleduration2+10)
+            data_v2 = daq_ai.voltage()
+            daq_ai.close()
+        for i, ch in enumerate(channels):
+            mdict.update({ch: {'array': np.append(data_v1[i],data_v2[i]) * prefactors[ch].magnitude, 'unit': units[ch], 'prefactor': prefactor_strs[ch]}})
+        
+        fig, ax = plt.subplots(2, figsize=(8,4), tight_layout=True, sharex=True)
+        ax[0].plot(time, np.append(data_v1[0],data_v2[0]) *prefactors['TEMP'].magnitude, lw=1)
+        ax[0].set_ylabel(plsh_params['channels']['TEMP']['label'] + plsh_params['channels']['TEMP']['unit_latex'])
+        ax[0].grid()
+        ax[1].plot(time, heater, lw=1)
+        ax[1].set_ylabel('Heater [%]')
+        fig.suptitle(loc, x=0.5, y=1)
+        ax[1].set_xlabel('Time [sec]')
+        ax[1].grid()
+        
+        plt.savefig(loc + '/pulse_heater.png')
+        io.savemat(loc + '/pulse_heater.mat', mdict)
+        return mdict
             

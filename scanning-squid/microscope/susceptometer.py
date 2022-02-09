@@ -41,10 +41,14 @@ import utils
 #: Pint for manipulating physical units
 from pint import UnitRegistry
 ureg = UnitRegistry()
-#: Tell UnitRegistry instance what a Phi0 is, and that Ohm = ohm
+#: Tell UnitRegistry instance what a Phi0 is, that Ohm = ohm, and what percent or pct is
 with open('squid_units.txt', 'w') as f:
     f.write('Phi0 = 2.067833831e-15 * Wb\n')
     f.write('Ohm = ohm\n')
+    f.write('Ohms = ohm\n')
+    f.write('ohms = ohm\n')
+    f.write('fraction = [] = frac\n')
+    f.write('percent = 1e-2 frac = pct\n')
 ureg.load_definitions('./squid_units.txt')
 
 import logging
@@ -152,6 +156,14 @@ class SusceptometerMicroscope(Microscope):
                 Four_prob_sensitivity = snap['sensitivity']['value']
                 #: The factor of 10 here is because SR830 output gain is 10/sensitivity
                 prefactor *= Four_prob_sensitivity/10
+            elif ch == 'TEMP':
+                snap = getattr(self, 'ls331').snapshot(update=update)['parameters']
+                aout = snap['analog_output']['value']
+                aolist = aout.split(",")
+                #voltage*(Tmax-Tmin)/10+Tmin
+                #m.ls331.configure_analog_output('A', Tmin, Tmax)
+                #Tmin should be zero
+                prefactor = self.Q_((float(aolist[4])-float(aolist[5]))/10,'K/V')
             elif ch == 'NoiseTestRaw':
                 prefactor /= mod_width
             elif ch == 'NoiseTestPROut':
@@ -186,7 +198,11 @@ class SusceptometerMicroscope(Microscope):
         old_pos = self.scanner.position()
         
         daq_config = self.config['instruments']['daq']
-        ao_channels = daq_config['channels']['analog_outputs']
+        # ao_channels = daq_config['channels']['analog_outputs']
+        # changed for DAQ AO3 'dcFC'(Yusuke Iguchi, 1/3/2022)
+        ao_channels = {}
+        for axis in ['x', 'y', 'z']:
+                    ao_channels.update({axis: daq_config['channels']['analog_outputs'][axis]})
         ai_channels = daq_config['channels']['analog_inputs']
         meas_channels = scan_params['channels']
         channels = {}

@@ -22,7 +22,6 @@
 
 from qcodes import VisaInstrument, InstrumentChannel, ChannelList
 from qcodes.utils.validators import Enum, Strings, Numbers, Ints, MultiType
-# from qcodes.instrument.group_parameter import GroupParameter, Group
 import visa
 
 class SensorChannel33x(InstrumentChannel):
@@ -60,10 +59,11 @@ class Model_331(VisaInstrument):
     Lakeshore Model 331 Temperature Controller Driver
     Controlled via sockets
     Adapted from QCoDeS Lakeshore 336 driver
-    Add "loop" and group_parameter for PID setting(9/6/2021, Yusuke)
+    Add "loop"(9/6/2021, Yusuke)
+    Add analog output, pid (10/22/2021, Yusuke)
     """
 
-    def __init__(self, name, address, loop, **kwargs):
+    def __init__(self, name, address, loop, Tmin_K=0, Tmax_K=30, **kwargs):
         super().__init__(name, address, terminator="\r\n", **kwargs)
 
         # Allow access to channels either by referring to the channel name
@@ -86,6 +86,7 @@ class Model_331(VisaInstrument):
             self.add_submodule(chan_name, channel)
         channels.lock()
         self.add_submodule("channels", channels)
+        self.configure_analog_output('A',Tmin_K,Tmax_K)
         ###############
         self.add_parameter(name='set_temperature',
                    get_cmd='SETP?',
@@ -118,35 +119,35 @@ class Model_331(VisaInstrument):
                    get_parser=float,
                    label='Heater output',
                    unit='%')
-        # self.add_parameter(
-        #     'P',
-        #     vals=Numbers(0.1, 1000),
-        #     get_parser=float,
-        #     parameter_class=GroupParameter
-        # )
-
-        # self.add_parameter(
-        #     'I',
-        #     vals=Numbers(0.1, 1000),
-        #     get_parser=float,
-        #     parameter_class=GroupParameter
-        # )
-
-        # self.add_parameter(
-        #     'D',
-        #     vals=Numbers(0, 200),
-        #     get_parser=float,
-        #     parameter_class=GroupParameter
-        # )
-
-        # Group(
-        #     [self.P, self.I, self.D],
-        #     set_cmd=f'PID {self._loop}, {{P}}, {{I}}, {{D}}',
-        #     get_cmd=f'PID? {self._loop}'
-        # )
+        self.add_parameter(name='analog_output',
+                   get_cmd='ANALOG?',
+                   get_parser=str,
+                   label='Analog output parameters',
+                   unit='')
+        self.add_parameter(name='pid',
+                   get_cmd=f'PID? {self._loop}',
+                   get_parser=str,
+                   label='PID parameters',
+                   unit='')
+        self.add_parameter(name='mhp',
+                   get_cmd=f'MOUT? {self._loop}',
+                   get_parser=str,
+                   set_cmd=f'MOUT {self._loop},{{}}',
+                   label='Manual heater Output',
+                   vals=Numbers(min_value=0, max_value=100),
+                   unit='%')
 
         ##############
         self.connect_message()
+
+    def configure_analog_output(self, input_name, low_value, high_value, maunal_value=0,
+         bipolar=0, source=1, mode=1):
+        msg = 'ANALOG {},{},{},{},{},{},{}'.format(
+             bipolar, mode, input_name, source, high_value, low_value, maunal_value)
+        self.write(msg)
+    def configure_pid(self, p, i, d, output=1):
+        msg = 'PID {},{},{},{}'.format(output, p, i, d)
+        self.write(msg)
 
 class Model_335(VisaInstrument):
     """
