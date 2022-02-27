@@ -229,25 +229,47 @@ class Model_372(VisaInstrument):
                     vals=Numbers(0.05, 40),
                     unit='K')
         self.add_parameter(name='heater_range',
-                    get_cmd='RANGE? 0',
+                    get_cmd='RANGE? A',
                     get_parser=int,
-                    set_cmd='RANGE 0, {}',
+                    set_cmd='RANGE A, {}',
                     label='Sample Heater range',
                     vals=Enum(0, 1, 2, 3,4,5,6,7,8),
                     unit='')
+        self.add_parameter(name='analog_output',
+                    get_cmd='ANALOG? 2',
+                    get_parser = str,
+                    label = 'Analog output parameters',
+                    unit = '')
         self.add_parameter(name='ramp_rate',
                     get_cmd='RAMP? 0',
                     get_parser=str,
-                    set_cmd='RAMP 0,1,{}',
+                    set_cmd='RAMP A,1,{}',
                     label='Heater range',
                     vals=Numbers(min_value=0),
                     unit='K/min')
-        self.add_parameter(
-                    name='heater_output',
+        self.add_parameter(name='heater_output',
                     get_cmd='HTR?',
                     get_parser=float,
                     label='Heater Output',
                     unit='%')
+        self.add_parameter(name='pid',
+                    get_cmd = 'PID? A',
+                    get_parser = str,
+                    label = 'PID parameters',
+                    unit = '')
+        self.add_parameter(name = 'mhp',
+                    get_cmd = 'MOUT? 0',
+                    get_parser = str,
+                    set_cmd = 'MOUT 0,{}',
+                    label = 'Manual heater output',
+                    unit = '%')
+        self.add_parameter(name = 'filter',
+                    get_cmd = 'FILTER? A',
+                    get_parser = str,
+                    set_cmd = 'FILTER A,{}',
+                    label = 'Filtering',
+                    unit = '')
+
         ##############
         self.connect_message()
 
@@ -257,8 +279,12 @@ class Model_372(VisaInstrument):
             output, bipolar, mode, input_name, source, high_value, low_value, maunal_value)
         self.write(msg)
 
-    def pid(self, p, i, d):
-        msg = ' PID 0,{},{},{}'.format(p, i, d)
+    def pid_set(self, p, i, d):
+        msg = ' PID A,{},{},{}'.format(p, i, d)
+        self.write(msg)
+
+    def filter_set(self, on=1, time=1, window=10):
+        msg = ' FILTER A,{},{},{}'.format(on, time, window)
         self.write(msg)
 
 class SensorChannel34x(InstrumentChannel):

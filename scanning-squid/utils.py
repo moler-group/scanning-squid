@@ -485,6 +485,45 @@ def meas_to_arrays(meas_data: Any, co_freq:Union[int,float],
             arrays.update({ch: array})
     return arrays
 
+
+def MSvT_to_arrays(MS_data: Any, ureg: Optional[Any]=None, real_units: Optional[bool]=True) -> Dict[str, Any]:
+    """Extracts scan data from DataSet and converts to requested units.
+
+    Args:
+        MS_data: qcodes DataSet created by Microscope.temp_series
+        ureg: pint UnitRegistry, manages physical units.
+        real_units: If True, converts data from DAQ voltage into
+            units specified in measurement configuration file.
+    Returns:
+        Dict: arrays
+            Dict of measured data in requested units.
+    """
+    if ureg is None:
+        from pint import UnitRegistry
+        ureg = UnitRegistry()
+        #: Tell the UnitRegistry what a Phi0 is, and that ohm and Ohm are the same thing.
+        with open('squid_units.txt', 'w') as f:
+            f.write('Phi0 = 2.067833831e-15 * Wb\n')
+            f.write('Ohm = ohm\n')
+        ureg.load_definitions('./squid_units.txt')
+    Q_ = ureg.Quantity
+    meta = MS_data.metadata['loop']['metadata']
+    T = [Q_(val).to('K').magnitude for val in meta['range']]
+    
+    dT = Q_(meta['dT']).to('K').magnitude
+    T_array = np.linspace(T[0], T[1], int((T[1]-T[0])/dT) + 1)
+    arrays = {'temp': T_array * ureg('K')}
+    for ch, info in meta['channels'].items():
+        array = MS_data.daq_ai_voltage[:,info['idx'],0] * ureg('V')
+        if real_units:
+            pre = meta['prefactors'][ch]
+            arrays.update({ch: (Q_(pre) * array).to(info['unit'])})
+        else:
+            arrays.update({ch: array})
+    return arrays
+
+
+
 def scan_to_mat_file(scan_data: Any, real_units: Optional[bool]=True, xy_unit: Optional[bool]=None,
     fname: Optional[str]=None, interpolator: Optional[Callable]=None) -> None:
     """Export DataSet created by microscope.scan_surface to .mat file for analysis.
@@ -662,6 +701,39 @@ def gate_to_mat_file(gate_data: Any, real_units: Optional[bool]=True, fname: Opt
         fname = 'gated_IV'
     fpath = gate_data.location + '/'
     io.savemat(next_file_name(fpath + fname, 'mat'), mdict)
+
+
+
+def MSvT_to_mat_file(MS_data: Any, real_units: Optional[bool]=True, fname: Optional[str]=None) -> None:
+    """Export DataSet created by microscope.td_cap to .mat file for analysis.
+
+    Args:
+        MS_data: qcodes DataSet created by Microscope.temp_series
+        real_units: If True, converts data from DAQ voltage into
+            units specified in measurement configuration file.
+        fname: File name (without extension) for resulting .mat file.
+            If None, uses the file name defined in measurement configuration file.
+    """
+    from pint import UnitRegistry
+    ureg = UnitRegistry()
+    ureg.load_definitions('./squid_units.txt')
+    Q_ = ureg.Quantity
+    meta = MS_data.metadata['loop']['metadata']
+    arrays = MSvT_to_arrays(MS_data, ureg=ureg, real_units=real_units)
+    mdict = {}
+    for name, arr in arrays.items():
+        if name is not 'temp':
+            unit = meta['channels'][name]['unit'] if real_units else 'V'
+            mdict.update({name: {'array': arr.to(unit).magnitude, 'unit': unit}})
+    mdict.update({'temp': {'array': arrays['temp'].to('K').magnitude, 'unit': 'K'}})
+    mdict.update({
+        'prefactors': meta['prefactors'],
+        })
+    if fname is None:
+        fname = 'MSvT'
+    fpath = MS_data.location + '/'
+    io.savemat(next_file_name(fpath + fname, 'mat'), mdict)
+    
 
 
 def moving_avg(x: Union[List, np.ndarray], y: Union[List, np.ndarray],

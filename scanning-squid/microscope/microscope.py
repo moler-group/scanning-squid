@@ -55,7 +55,7 @@ import instruments.atto as atto
 import utils
 from scanner import Scanner
 from instruments.daq import DAQAnalogInputs
-from plots import ScanPlot, TDCPlot
+from plots import ScanPlot, TDCPlot, MSvTPlot
 from plots import gatePlot, DoubleGatedPlot
 from instruments.lakeshore import Model_372, Model_331, Model_340
 from instruments.keithley import Keithley_2400
@@ -151,6 +151,9 @@ class Microscope(Station):
         self.remove_component(ls_config['name'])
         self.ls372 = Model_372(ls_config['name'], ls_config['address'])
         self.add_component(self.ls372)
+        Tmin_K = ls_config['Tmin_K']
+        Tmax_K = ls_config['Tmax_K']
+        self.ls372.configure_analog_output('A', Tmin_K, Tmax_K)
         log.info('Lakeshore 372 successfully added to microscope.')
 
     def _add_ls331(self):
@@ -611,6 +614,116 @@ class Microscope(Station):
         self.ramp_keithley_volt(0, npts, gate_speed)
         self.scanner.apply_gate(0, gate_speed=gate_speed)
         return data, double_gate_plot
+
+
+
+    def temp_series(self, temps_params: Dict[str, Any], update_snap: bool=True) -> Tuple[Any]:
+        """Performs MAG and SUSCX measurements over a range of temperature
+
+        Args:
+            temps_params: Dict of temperature range and scan parameters as defined
+                in measurement configuration file.
+            update_snap: Whether to update the microscope snapshot. Default True.
+                (You may want this to be False when getting a plane or approaching.)
+
+        Returns:
+            Tuple[qcodes.DataSet, plots.temp_series]: data, MSvTPlot
+                DataSet and plot.
+        """
+        daq_config = self.config['instruments']['daq']
+        daq_name = daq_config['name']
+        ai_channels = daq_config['channels']['analog_inputs']
+        meas_channels = temps_params['channels']
+        Tramp_rate = self.Q_(temps_params['ramp_rate']).to('K/min').magnitude
+        constants = temps_params['constants']
+        channels = {} 
+        for ch in meas_channels:
+            channels.update({ch: ai_channels[ch]})
+        # daq_rate = self.Q_(daq_config['rate']).to('Hz').magnitude
+        daq_rate = self.Q_(constants['daq_rate']).to('Hz').magnitude
+        sampleduration = self.Q_(constants['sampleduration']).to('sec').magnitude
+        nsamples = int(daq_rate * sampleduration)
+        
+
+        self.set_lockins(temps_params)
+        self.snapshot(update=update_snap)
+        #: delta T
+        dT = self.Q_(temps_params['dT']).to('K').magnitude
+        #: temperature range
+        self.ls372.ramp_rate(Tramp_rate)
+        ramp_rate = self.ls372.ramp_rate()
+        ramp_rate = ramp_rate.split(',')[1]
+        ramp_rate = float(ramp_rate)
+        startT, endT = [self.Q_(lim).to('K').magnitude for lim in temps_params['range']]
+
+
+        delay = constants['wait_factor'] * self.SUSC_lockin.time_constant()
+        T_delay = constants['T_wait_factor'] * abs(dT)/ramp_rate * 60 + delay
+        # print("data acquization time interval is(s)")
+        # print(T_delay)
+
+        prefactors = self.get_prefactors(temps_params)
+        #: get channel prefactors in string form so they can be saved in metadata
+        prefactor_strs = {}
+        for ch, prefac in prefactors.items():
+            unit = temps_params['channels'][ch]['unit']
+            pre = prefac.to('{}/V'.format(unit))
+            prefactor_strs.update({ch: '{} {}'.format(pre.magnitude, pre.units)})
+        ai_task =  nidaqmx.Task('MAG_SUSCX_v_T_ai_task')
+        self.remove_component('daq_ai')
+        if hasattr(self, 'daq_ai'):
+            self.daq_ai.clear_instances()
+            self.daq_ai.close()
+        # self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, daq_rate, channels, ai_task)
+        self.daq_ai = DAQAnalogInputs('daq_ai', daq_name, daq_rate, channels, ai_task,samples_to_read=nsamples,target_points=1, timeout=sampleduration+1)
+        loop_counter = utils.Counter()
+        MSvT_plot = MSvTPlot(temps_params, self.ureg) 
+        loop = qc.Loop(self.ls372.set_temperature.sweep(startT, endT, dT)
+            ).each(
+                qc.Task(time.sleep, T_delay),
+                self.daq_ai.voltage,
+                qc.Task(self.scanner.get_MSvT, MSvT_plot, qc.loops.active_data_set, loop_counter),
+                qc.Task(loop_counter.advance),
+            ).then(
+                qc.Task(ai_task.stop),
+                qc.Task(ai_task.close),
+                #qc.Task(self.CAP_lockin.amplitude, 0.004),
+                #qc.Task(self.SUSC_lockin.amplitude, 0.004),
+                qc.Task(MSvT_plot.fig.show),
+                qc.Task(MSvT_plot.save)
+            )
+        #: loop.metadata will be saved in DataSet
+        loop.metadata.update(temps_params)
+        loop.metadata.update({'prefactors': prefactor_strs})
+        for idx, ch in enumerate(meas_channels):
+            loop.metadata['channels'][ch].update({'idx': idx})
+        data = loop.get_data_set(name=temps_params['fname'], write_period=None)
+        try:
+            log.info('Starting temperature sweep:')
+            loop.run()
+        except KeyboardInterrupt:
+            log.warning('Temperature series interrupted by user. DataSet saved to {}.'.format(data.location))
+            #: Set break_loop = True so that get_plane() and approach() will be aborted
+            self.scanner.break_loop = True
+            ai_task.stop()
+            ai_task.close()
+        finally:
+            try:
+                #: Stop 'MAG_SUSCX_v_T_ai_task' so that we can read our current position
+                ai_task.stop()
+                ai_task.close()
+                MSvT_plot.fig.show()
+                MSvT_plot.save()
+            except:
+                pass
+        utils.MSvT_to_mat_file(data, real_units=True)
+
+        return data, MSvT_plot
+
+
+
+
+
 
     def approach(self, tdc_params: Dict[str, Any], attosteps: int=100) -> None:
         """Approach the sample by iteratively stepping z Attocube and performing td_cap().

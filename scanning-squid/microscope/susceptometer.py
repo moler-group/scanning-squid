@@ -110,6 +110,14 @@ class SusceptometerMicroscope(Microscope):
                 prefactor *= IV_sensitivity/10 * (r_lead / amp)
                 if measurement['channels'][ch]['attenuator'] == '-20dB':
                     prefactor *= 10
+            elif ch == 'Sample_T':
+                snap = getattr(self,'ls372').snapshot(update=update)['parameters']
+                aout = snap['analog_output']['value']
+                aolist = aout.split(",")
+                #For Lakeshore372, 0V:Tmin [K], 10V:Tmax [K]
+                #return voltage*(Tmax-Tmin)/10 + Tmin
+                # Tmin should be zero
+                prefactor = self.Q_((float(aolist[4])-float(aolist[5]))/10,'K/V')
             elif ch == 'IVY':
                 snap = getattr(self, 'SUSC_lockin').snapshot(update=update)['parameters']
                 r_lead = self.Q_(measurement['channels'][ch]['r_lead'])
